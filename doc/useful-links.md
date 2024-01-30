@@ -1,4 +1,3 @@
-![FRC 5290 - VIKotics](./graphics/5920-vikotics-logo_80x80.png "FRC 5290 - VIKotics")
 **FRC 5290 - VIKotics**
 
 ---
