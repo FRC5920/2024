@@ -12,3 +12,9 @@ of the robot.
 - [AdvantageScope Log Viwer](https://github.com/Mechanical-Advantage/AdvantageScope/tree/main)
 - [PathPlanner Manual](https://pathplanner.dev/pplib-getting-started.html)
 - [PathPlannerLib Java API Docs](https://pathplanner.dev/api/java/)
+- [Motor Controller docs](https://docs.ctr-electronics.com/)
+- [PhotonVision](https://docs.photonvision.org/en/latest/)
+- [Laser Rangefinder Docs](https://grapplerobotics.au/product/lasercan/)
+- [Barcode Scanner](https://github.com/Mechanical-Advantage/RobotCode2023/blob/main/src/main/java/org/littletonrobotics/frc2023/util/BatteryTracker.java)
+- [Cubing Inputs "Joystick sensitivity"](./graphics/cubing_inputs.mov)
+
