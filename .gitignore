@@ -163,3 +163,14 @@ bin/
 
 # Don't track the generated build info file
 **/GenBuildInfo.java
+
+# CTRE simulation data
+ctre_sim/**
+
+# Simulation GUI configuration files
+networktables.json
+simgui-ds.json
+simgui.json
+
+# Log files produced during simulation and playback
+logs/**
