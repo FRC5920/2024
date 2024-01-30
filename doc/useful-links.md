@@ -16,5 +16,5 @@ of the robot.
 - [PhotonVision](https://docs.photonvision.org/en/latest/)
 - [Laser Rangefinder Docs](https://grapplerobotics.au/product/lasercan/)
 - [Barcode Scanner](https://github.com/Mechanical-Advantage/RobotCode2023/blob/main/src/main/java/org/littletonrobotics/frc2023/util/BatteryTracker.java)
-- [Cubing Inputs:Joystick sensitivity](./graphics/cubing_inputs.mov)
+- [Cubing Inputs:Joystick sensitivity](https://github.com/FRC5920/2024/blob/main/doc//graphics/cubing_inputs.mov)
 
