@@ -52,15 +52,14 @@
 package frc.lib.joystick;
 
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.event.EventLoop;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import edu.wpi.first.wpilibj2.command.button.JoystickButton;
+import edu.wpi.first.wpilibj.XboxController.Axis;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import java.util.HashMap;
 
 /////////////////////////////////////////////////////////////////////////////
 /** This utility class wraps the functionality of a joystick controller for driving the robot */
-public class ProcessedXboxController extends XboxController {
+public class ProcessedXboxController extends CommandXboxController {
 
   /** Stick processing defaults */
   private static final double kDefaultStickSensitivity = 1.0;
@@ -97,25 +96,35 @@ public class ProcessedXboxController extends XboxController {
   }
 
   /** Xbox controller 'A' button */
-  public final JoystickButton A;
+  public final Trigger A;
   /** Xbox controller 'B' button */
-  public final JoystickButton B;
+  public final Trigger B;
   /** Xbox controller 'X' button */
-  public final JoystickButton X;
+  public final Trigger X;
   /** Xbox controller 'Y' button */
-  public final JoystickButton Y;
+  public final Trigger Y;
   /** Xbox controller left bumper button */
-  public final JoystickButton leftBumper;
+  public final Trigger leftBumper;
   /** Xbox controller right bumper button */
-  public final JoystickButton rightBumper;
+  public final Trigger rightBumper;
   /** Xbox controller left bumper button */
-  public final JoystickButton leftStickPress;
+  public final Trigger leftStickPress;
   /** Xbox controller right bumper button */
-  public final JoystickButton rightStickPress;
+  public final Trigger rightStickPress;
   /** Xbox controller 'Back' button */
-  public final JoystickButton back;
+  public final Trigger back;
   /** Xbox controller 'Start' button */
-  public final JoystickButton start;
+  public final Trigger start;
+
+  public final Trigger povUp;
+  public final Trigger povUpRight;
+  public final Trigger povRight;
+  public final Trigger povDownRight;
+  public final Trigger povDown;
+  public final Trigger povDownLeft;
+  public final Trigger povLeft;
+  public final Trigger povUpLeft;
+  public final Trigger povCenterPress;
 
   /** Left trigger as a button */
   public Trigger leftTriggerAsButton;
@@ -155,18 +164,27 @@ public class ProcessedXboxController extends XboxController {
         XboxController.Axis.kRightTrigger, new AxisProcChain(defaultTriggerConfig));
 
     // Create buttons
-    A = new JoystickButton(this, XboxController.Button.kA.value);
-    B = new JoystickButton(this, XboxController.Button.kB.value);
-    X = new JoystickButton(this, XboxController.Button.kX.value);
-    Y = new JoystickButton(this, XboxController.Button.kY.value);
-    leftBumper = new JoystickButton(this, XboxController.Button.kLeftBumper.value);
-    rightBumper = new JoystickButton(this, XboxController.Button.kRightBumper.value);
-    leftStickPress = new JoystickButton(this, XboxController.Button.kLeftStick.value);
-    rightStickPress = new JoystickButton(this, XboxController.Button.kRightStick.value);
-    back = new JoystickButton(this, XboxController.Button.kBack.value);
-    start = new JoystickButton(this, XboxController.Button.kStart.value);
-    leftTriggerAsButton = new Trigger(() -> this.getLeftTriggerAxis() > 0.5);
-    rightTriggerAsButton = new Trigger(() -> this.getRightTriggerAxis() > 0.5);
+    A = this.a();
+    B = this.b();
+    X = this.x();
+    Y = this.y();
+    leftBumper = this.leftBumper();
+    rightBumper = this.rightBumper();
+    leftStickPress = this.leftStick();
+    rightStickPress = this.rightStick();
+    back = this.back();
+    start = this.start();
+    leftTriggerAsButton = this.leftTrigger(0.5);
+    rightTriggerAsButton = this.rightTrigger(0.5);
+    povUp = pov(POVAngle.Up.angleDeg);
+    povUpRight = pov(POVAngle.UpRight.angleDeg);
+    povRight = pov(POVAngle.Right.angleDeg);
+    povDownRight = pov(POVAngle.DownRight.angleDeg);
+    povDown = pov(POVAngle.Down.angleDeg);
+    povDownLeft = pov(POVAngle.DownLeft.angleDeg);
+    povLeft = pov(POVAngle.Left.angleDeg);
+    povUpLeft = pov(POVAngle.UpLeft.angleDeg);
+    povCenterPress = pov(POVAngle.CenterPress.angleDeg);
   }
 
   /** Return a mutable reference to the processing chain applied to a specified stick */
@@ -249,12 +267,6 @@ public class ProcessedXboxController extends XboxController {
   @Override
   public double getRightTriggerAxis() {
     return processAxis(Axis.kRightTrigger);
-  }
-
-  /** Returns the Trigger for a specified button on the POV pad */
-  public Trigger povTrigger(POVAngle povAngle) {
-    EventLoop eventLoop = CommandScheduler.getInstance().getDefaultButtonLoop();
-    return new Trigger(eventLoop, () -> this.getPOV() == povAngle.angleDeg);
   }
 
   /** Return the value of a given axis after processing it through its chain */

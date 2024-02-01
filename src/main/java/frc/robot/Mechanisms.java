@@ -51,60 +51,94 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.lib.LED.LEDConstants;
-import frc.robot.autos.AutoDashboardTab;
-import frc.robot.commands.TeleopSwerveCTRE;
-import frc.robot.subsystems.JoystickSubsystem;
-import frc.robot.subsystems.LEDs.LEDSubsystem;
-import frc.robot.subsystems.dashboard.DashboardSubsystem;
-import frc.robot.subsystems.pivot.PivotSubsystem;
-import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
-import frc.robot.subsystems.swerveCTRE.Telemetry;
-import frc.robot.subsystems.swerveCTRE.TunerConstants;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
+import java.util.Optional;
 
-public class RobotContainer {
-  /** Subsystem providing Xbox controllers */
-  public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
+/** Class to keep all the mechanism-specific objects together and out of the main example */
+public class Mechanisms {
+  double HEIGHT = 1; // Controls the height of the mech2d SmartDashboard
+  double WIDTH = 1; // Controls the height of the mech2d SmartDashboard
 
-  /** Swerve drive subsystem */
-  public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
+  private static final double kPivotRootX = 0.5;
+  private static final double kPivotRootY = 0.25;
 
-  /** Pivot subsystem */
-  public final PivotSubsystem pivotSubsystem = new PivotSubsystem();
+  private static final double kClimberBaseLength = 0.2;
+  private static final double kClimberInitialLength = 0.4;
+  private static final double kClimberMinLength = 0.05;
+  private static final double kInitialPivotAngleDeg = 0.0;
 
-  // Subsystem facilitating display of dashboard tabs
-  public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
+  /** Official FIRST alliance colors */
+  private static final Color8Bit kAllianceBlue = new Color8Bit(Color.kFirstBlue);
 
-  private final AutoDashboardTab autoDashboardTab = new AutoDashboardTab();
+  private static final Color8Bit kAllianceRed = new Color8Bit(Color.kFirstRed);
+  private static final Color8Bit kNoAllianceGray = new Color8Bit(Color.kGray);
 
-  // driving in open loop
-  public final Telemetry swerveTelemetry = new Telemetry(TeleopSwerveCTRE.kMaxSpeed);
+  /** Mechanism used to display the arm and climber assembly on the dashboard */
+  private final Mechanism2d m_mechanism = new Mechanism2d(WIDTH, HEIGHT);
 
-  // Subsystem used to drive addressable LEDs
-  public final LEDSubsystem ledSubsystem = new LEDSubsystem(LEDConstants.kOff);
+  /////////////////////////////
+  // LEADER MECHANISIMS
+  /////////////////////////////
+  /** Mechanism ligament used to display the arm segment attached to the pivot motors */
+  private final MechanismLigament2d m_leaderPivot =
+      m_mechanism
+          .getRoot("pivotRoot", kPivotRootX, kPivotRootY)
+          .append(
+              new MechanismLigament2d(
+                  "pivotSegment",
+                  kClimberBaseLength,
+                  kInitialPivotAngleDeg,
+                  6,
+                  new Color8Bit(Color.kBlue)));
 
-  /** Called to create the robot container */
-  public RobotContainer() {
-    joystickSubsystem.configureButtonBindings(this);
-    // Set up a command to drive the swerve in Teleoperated mode
-    driveTrain.setDefaultCommand(
-        new TeleopSwerveCTRE(driveTrain, joystickSubsystem.getDriverController()));
+  /** Mechanism ligament used to show the climber segment of the arm */
+  private final MechanismLigament2d m_leaderClimber =
+      m_leaderPivot.append(
+          new MechanismLigament2d(
+              "climberSegment", kClimberInitialLength, 0.0, 4, new Color8Bit(Color.kLightBlue)));
 
-    // Register a function to be called to receive swerve telemetry
-    driveTrain.registerTelemetry(swerveTelemetry::telemeterize);
+  /////////////////////////////
+  // DECORATION MECHANISIMS
+  /////////////////////////////
+  /** Mechanism ligament used to display a representation of the support for the pivot */
+  private final MechanismLigament2d m_pivotBase =
+      m_mechanism
+          .getRoot("pivotOffsetRoot", kPivotRootX, 0.1)
+          .append(
+              new MechanismLigament2d(
+                  "pivotOffset", 0.15, 90.0, 16, new Color8Bit(Color.kDarkSlateGray)));
 
-    // Add the field dashboard tab
-    dashboardSubsystem.add(autoDashboardTab);
+  /** Mechanism ligament used to display a representation of robot bumpers */
+  private final MechanismLigament2d m_bumpers =
+      m_mechanism
+          .getRoot("robotBumperRoot", 0.2, 0.1)
+          .append(new MechanismLigament2d("robotBumper", 0.6, 0.0, 16, kNoAllianceGray));
 
-    // if (Utils.isSimulation()) {
-    //   driveTrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
-    // }
+  /**
+   * Updates the angle of pivot mechanisms
+   *
+   * @param angleDeg Angle of the leader motor
+   */
+  public void updatePivotAngle(double angleDeg) {
+    m_leaderPivot.setAngle(angleDeg);
   }
 
-  /** Returns the present autonomous command */
-  public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+  /** Sends the present mechanism values to the dashboard widget */
+  public void sendToDashboard() {
+    // Refresh the bot base with the Color of the active alliance
+    Color8Bit allianceColor = kNoAllianceGray;
+    Optional<Alliance> alliance = DriverStation.getAlliance();
+    if (alliance.isPresent()) {
+      allianceColor = (alliance.get() == Alliance.Blue) ? kAllianceBlue : kAllianceRed;
+    }
+    m_bumpers.setColor(allianceColor);
+
+    SmartDashboard.putData("mech2d", m_mechanism); // Creates mech2d in SmartDashboard
   }
 }
