@@ -29,3 +29,8 @@ code modules (e.g. Swerve Drive, Joystick, etc.).
 * [Useful Links](./doc/useful-links.md)
 
 ## References
+
+### Resources for learning to Program
+
+- [Basic Java Programming](./doc/learn-programming/basic-java-programming.md)
+- [FRC Robot Programming](./doc/learn-programming/frc-java-programming.md)
