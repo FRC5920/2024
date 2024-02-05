@@ -13,6 +13,8 @@ public class HALSubsystem extends SubsystemBase {
     private LaserCan lcHALRight;
   /** Creates a new HALSubsystem. */
   public HALSubsystem() {
+    lcHALLeft = new LaserCan(1);
+    lcHALRight = new LaserCan(2);
     try {
       lcHALLeft.setRangingMode(LaserCan.RangingMode.LONG);
       lcHALLeft.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
