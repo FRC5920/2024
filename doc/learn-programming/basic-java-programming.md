@@ -15,7 +15,7 @@ of programming languages.  To help new programmers on the team quickly come up t
 writing Java code for the robot, this document provides a curated list of several of the w3schools
 Java tutorials and some associated exercises.  These tutorials were chosen because they focus on the
 basic, fundamental elements of the Java programming language that must be understood to begin
-writing code.  
+writing code.
 
 The last couple of tutorials on this page provide a brief introduction to concepts of
 object-oriented programming: a style of programming that provides structure and reuse, and is used
