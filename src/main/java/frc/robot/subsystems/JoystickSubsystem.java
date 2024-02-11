@@ -60,6 +60,8 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.lib.joystick.JoystickSubsystemBase;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.RobotContainer;
+import frc.robot.commands.ArmCommands.ClimberCommand;
+import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.PivotCommand;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
@@ -173,6 +175,12 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     operatorController.X.onTrue(
         new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootForward));
     operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Climb));
+
+    // Map POV
+    operatorController.povUp.onTrue(
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.MaxExtension));
+    operatorController.povDown.onTrue(
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.MinExtension));
 
     // Map bumpers
     operatorController.leftBumper.whileTrue(kDoNothing);

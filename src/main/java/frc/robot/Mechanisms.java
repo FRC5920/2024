@@ -69,8 +69,9 @@ public class Mechanisms {
   private static final double kPivotRootY = 0.25;
 
   private static final double kClimberBaseLength = 0.2;
-  private static final double kClimberInitialLength = 0.4;
   private static final double kClimberMinLength = 0.05;
+  private static final double kClimberMaxLength = 0.4;
+  private static final double kClimberInitialLength = kClimberMinLength;
   private static final double kInitialPivotAngleDeg = 0.0;
 
   /** Official FIRST alliance colors */
@@ -103,9 +104,17 @@ public class Mechanisms {
           new MechanismLigament2d(
               "climberSegment", kClimberInitialLength, 0.0, 4, new Color8Bit(Color.kLightBlue)));
 
-  /////////////////////////////
+  /////////////////////////////////////////////////////
   // DECORATION MECHANISIMS
-  /////////////////////////////
+  //  These mechanisms are not manipulated directly.
+  //  They serve only as 'decorations'.
+  /////////////////////////////////////////////////////
+
+  /** Mechanism used to decorate the climber segment with a 'hook' */
+  private final MechanismLigament2d m_climberHook =
+      m_leaderClimber.append(
+          new MechanismLigament2d("climberhook", 0.075, 145.0, 4, new Color8Bit(Color.kLightBlue)));
+
   /** Mechanism ligament used to display a representation of the support for the pivot */
   private final MechanismLigament2d m_pivotBase =
       m_mechanism
@@ -127,6 +136,15 @@ public class Mechanisms {
    */
   public void updatePivotAngle(double angleDeg) {
     m_leaderPivot.setAngle(angleDeg);
+  }
+
+  /**
+   * Updates the extension of climber mechanisms
+   *
+   * @param percent Normalized percentage (0.0 to 1.0) of full climber extension
+   */
+  public void updateClimberExtension(double percent) {
+    m_leaderClimber.setLength(kClimberMaxLength * percent);
   }
 
   /** Sends the present mechanism values to the dashboard widget */

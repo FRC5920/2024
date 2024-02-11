@@ -49,66 +49,6 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot;
+package frc.robot.commands.ArmCommands;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.lib.LED.LEDConstants;
-import frc.robot.autos.AutoDashboardTab;
-import frc.robot.commands.TeleopSwerveCTRE;
-import frc.robot.subsystems.JoystickSubsystem;
-import frc.robot.subsystems.LEDs.LEDSubsystem;
-import frc.robot.subsystems.climber.ClimberSubsystem;
-import frc.robot.subsystems.dashboard.DashboardSubsystem;
-import frc.robot.subsystems.pivot.PivotSubsystem;
-import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
-import frc.robot.subsystems.swerveCTRE.Telemetry;
-import frc.robot.subsystems.swerveCTRE.TunerConstants;
-
-public class RobotContainer {
-  /** Subsystem providing Xbox controllers */
-  public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
-
-  /** Swerve drive subsystem */
-  public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
-
-  /** Pivot subsystem */
-  public final PivotSubsystem pivotSubsystem = new PivotSubsystem();
-
-  /** Climber subsystem */
-  public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
-
-  // Subsystem facilitating display of dashboard tabs
-  public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
-
-  private final AutoDashboardTab autoDashboardTab = new AutoDashboardTab();
-
-  // driving in open loop
-  public final Telemetry swerveTelemetry = new Telemetry(TeleopSwerveCTRE.kMaxSpeed);
-
-  // Subsystem used to drive addressable LEDs
-  public final LEDSubsystem ledSubsystem = new LEDSubsystem(LEDConstants.kOff);
-
-  /** Called to create the robot container */
-  public RobotContainer() {
-    joystickSubsystem.configureButtonBindings(this);
-    // Set up a command to drive the swerve in Teleoperated mode
-    driveTrain.setDefaultCommand(
-        new TeleopSwerveCTRE(driveTrain, joystickSubsystem.getDriverController()));
-
-    // Register a function to be called to receive swerve telemetry
-    driveTrain.registerTelemetry(swerveTelemetry::telemeterize);
-
-    // Add the field dashboard tab
-    dashboardSubsystem.add(autoDashboardTab);
-
-    // if (Utils.isSimulation()) {
-    //   driveTrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
-    // }
-  }
-
-  /** Returns the present autonomous command */
-  public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
-  }
-}
+public class ArmCommands {}

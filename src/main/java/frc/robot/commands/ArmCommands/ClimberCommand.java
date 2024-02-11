@@ -49,66 +49,62 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot;
+package frc.robot.commands.ArmCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.lib.LED.LEDConstants;
-import frc.robot.autos.AutoDashboardTab;
-import frc.robot.commands.TeleopSwerveCTRE;
-import frc.robot.subsystems.JoystickSubsystem;
-import frc.robot.subsystems.LEDs.LEDSubsystem;
 import frc.robot.subsystems.climber.ClimberSubsystem;
-import frc.robot.subsystems.dashboard.DashboardSubsystem;
-import frc.robot.subsystems.pivot.PivotSubsystem;
-import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
-import frc.robot.subsystems.swerveCTRE.Telemetry;
-import frc.robot.subsystems.swerveCTRE.TunerConstants;
 
-public class RobotContainer {
-  /** Subsystem providing Xbox controllers */
-  public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
+public class ClimberCommand extends Command {
+  /** The ClimberSubsystem operated on by the command */
+  private final ClimberSubsystem m_climberSubsystem;
 
-  /** Swerve drive subsystem */
-  public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
+  /** The desired normalized percentage of full climber extension (0.0 to 1.0) */
+  private final double m_targetExtensionPercent;
 
-  /** Pivot subsystem */
-  public final PivotSubsystem pivotSubsystem = new PivotSubsystem();
-
-  /** Climber subsystem */
-  public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
-
-  // Subsystem facilitating display of dashboard tabs
-  public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
-
-  private final AutoDashboardTab autoDashboardTab = new AutoDashboardTab();
-
-  // driving in open loop
-  public final Telemetry swerveTelemetry = new Telemetry(TeleopSwerveCTRE.kMaxSpeed);
-
-  // Subsystem used to drive addressable LEDs
-  public final LEDSubsystem ledSubsystem = new LEDSubsystem(LEDConstants.kOff);
-
-  /** Called to create the robot container */
-  public RobotContainer() {
-    joystickSubsystem.configureButtonBindings(this);
-    // Set up a command to drive the swerve in Teleoperated mode
-    driveTrain.setDefaultCommand(
-        new TeleopSwerveCTRE(driveTrain, joystickSubsystem.getDriverController()));
-
-    // Register a function to be called to receive swerve telemetry
-    driveTrain.registerTelemetry(swerveTelemetry::telemeterize);
-
-    // Add the field dashboard tab
-    dashboardSubsystem.add(autoDashboardTab);
-
-    // if (Utils.isSimulation()) {
-    //   driveTrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
-    // }
+  /**
+   * Creates a command that will move the pivot to a specified preset angle
+   *
+   * @param pivotSubsystem The PivotSubsystem to operate on
+   * @param angle Angle preset the pivot should be moved to
+   */
+  public ClimberCommand(ClimberSubsystem climberSubystem, ClimberPreset preset) {
+    m_climberSubsystem = climberSubystem;
+    m_targetExtensionPercent = preset.percent;
+    addRequirements(climberSubystem);
   }
 
-  /** Returns the present autonomous command */
-  public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {
+    m_climberSubsystem.setExtensionPercent(m_targetExtensionPercent);
+  }
+
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {}
+
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {}
+
+  // Returns true to end the command when the pivot reaches the target angle within one degree
+  @Override
+  public boolean isFinished() {
+    return Math.abs(m_climberSubsystem.getExtensionPercent() - m_targetExtensionPercent) < 0.02;
+  }
+
+  public enum ClimberPreset {
+    MaxExtension(1.0),
+    MinExtension(0.0),
+    Intake(1.0),
+    CaptureChain(0.8),
+    Climb(0.0);
+
+    /** Normalized percentage of full climber extension */
+    public final double percent;
+
+    private ClimberPreset(double percent) {
+      this.percent = percent;
+    }
   }
 }
