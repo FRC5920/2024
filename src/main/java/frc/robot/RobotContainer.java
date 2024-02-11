@@ -53,19 +53,27 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.lib.LED.LEDConstants;
+import frc.lib.LED.ColorConstants;
+import frc.robot.Constants.CANDevice;
+import frc.robot.Constants.RobotCANBus;
 import frc.robot.autos.AutoDashboardTab;
 import frc.robot.commands.TeleopSwerveCTRE;
+import frc.robot.commands.intakeCommands.TeleopIntakeTest;
 import frc.robot.subsystems.JoystickSubsystem;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
 import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.dashboard.DashboardSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystemIO;
+import frc.robot.subsystems.intake.IntakeSubsystemIOReal;
+import frc.robot.subsystems.intake.IntakeSubsystemIOSim;
 import frc.robot.subsystems.pivot.PivotSubsystem;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerveCTRE.Telemetry;
 import frc.robot.subsystems.swerveCTRE.TunerConstants;
 
 public class RobotContainer {
+
   /** Subsystem providing Xbox controllers */
   public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
 
@@ -73,10 +81,20 @@ public class RobotContainer {
   public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
 
   /** Pivot subsystem */
-  public final PivotSubsystem pivotSubsystem = new PivotSubsystem();
+  public final PivotSubsystem pivotSubsystem =
+      new PivotSubsystem(
+          RobotCANBus.Rio,
+          CANDevice.PivotLeaderMotor,
+          CANDevice.PivotFollowerMotor,
+          CANDevice.PivotCANcoder);
 
   /** Climber subsystem */
-  public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
+  public final ClimberSubsystem climberSubsystem =
+      new ClimberSubsystem(
+          RobotCANBus.Rio, CANDevice.ClimberLeaderMotor, CANDevice.ClimberFollowerMotor);
+
+  /** Intake subsystem */
+  public final IntakeSubsystem intakeSubsystem;
 
   // Subsystem facilitating display of dashboard tabs
   public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
@@ -87,10 +105,31 @@ public class RobotContainer {
   public final Telemetry swerveTelemetry = new Telemetry(TeleopSwerveCTRE.kMaxSpeed);
 
   // Subsystem used to drive addressable LEDs
-  public final LEDSubsystem ledSubsystem = new LEDSubsystem(LEDConstants.kOff);
+  public final LEDSubsystem ledSubsystem = new LEDSubsystem(ColorConstants.kOff);
 
   /** Called to create the robot container */
   public RobotContainer() {
+    IntakeSubsystemIO intakeIO = null;
+
+    switch (Constants.getMode()) {
+      case REAL:
+        intakeIO = new IntakeSubsystemIOReal(new IntakeSubsystemIO.Config());
+        break;
+
+      case SIM:
+        intakeIO = new IntakeSubsystemIOSim(new IntakeSubsystemIO.Config());
+        break;
+
+      case REPLAY:
+        // Create empty implementations for log replay
+        intakeIO = new IntakeSubsystemIO() {};
+        break;
+    }
+
+    // Set up intake subsystem
+    intakeSubsystem = new IntakeSubsystem(intakeIO);
+    intakeSubsystem.setDefaultCommand(new TeleopIntakeTest(intakeSubsystem, joystickSubsystem));
+
     joystickSubsystem.configureButtonBindings(this);
     // Set up a command to drive the swerve in Teleoperated mode
     driveTrain.setDefaultCommand(

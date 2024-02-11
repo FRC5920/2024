@@ -51,75 +51,83 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.climber;
 
-import com.ctre.phoenix6.StatusCode;
-import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.Slot1Configs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.Follower;
-import com.ctre.phoenix6.controls.NeutralOut;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
-import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.utility.Alert;
+import frc.lib.utility.Phoenix5Util;
+import frc.lib.utility.Phoenix5Util.Sensor;
+import frc.lib.utility.Phoenix5Util.SensorMeasurement;
+import frc.robot.Constants.CANDevice;
+import frc.robot.Constants.RobotCANBus;
 import frc.robot.sim.SimDeviceManager;
 
 // Reference Phoenix6 example:
 
-/** Subsystem for controlling the extension/retraction of climber mechanisms */
+/**
+ * Subsystem for controlling the extension/retraction of climber mechanisms
+ *
+ * @remarks Motor config is based on the CTRE Phoenix 5 library PositionClosedLoop example
+ *     https://github.com/CrossTheRoadElec/Phoenix5-Examples/blob/master/Java%20General/PositionClosedLoop/src/main/java/frc/robot/Robot.java
+ */
 public class ClimberSubsystem extends SubsystemBase {
 
   ////////////////////////////////////
   // CONSTANTS
   ////////////////////////////////////
 
-  /** Name of the CAN bus that climber motors are connected to */
-  private static final String kCANBusName = "canivore";
-
-  /** CAN ID of the climber lead motor */
-  private static final int kClimberLeaderCANId = 30;
-  /** CAN ID of the climber follower motor */
-  private static final int kClimberFollowerCANId = 21;
-
   /** Gear ratio between the Falcon motors and the climber mechanism */
-  private static final double kFalconToClimberGearRatio = 20.0 / 1.0;
+  private static final double kFalconToClimberGearRatio = 100.0 / 1.0;
 
   /** Max number of rotations to achieve full extension */
   private static final double kMaxRotations = 100.0; // TODO: set this value based on mechanisms
+
+  /** Peak output (%) that intake motors should run */
+  private static final double kMaxMotorOutputPercent = 1.0;
+
+  /**
+   * Which PID slot to pull gains from. Starting 2018, you can choose from 0,1,2 or 3. Only the
+   * first two (0,1) are visible in web-based configuration.
+   */
+  public static final int kSlotIdx = 0;
+
+  /**
+   * Talon SRX/ Victor SPX will supported multiple (cascaded) PID loops. For now we just want the
+   * primary one.
+   */
+  public static final int kPIDLoopIdx = 0;
+
+  /**
+   * Set to zero to skip waiting for confirmation, set to nonzero to wait and report to DS if action
+   * fails.
+   */
+  public static final int kTimeoutMs = 30;
 
   ////////////////////////////////////
   // Attributes
   ////////////////////////////////////
 
   /** Master motor used to control climber extension */
-  private final TalonFX m_climberLeader = new TalonFX(kClimberLeaderCANId, kCANBusName);
+  private final WPI_TalonSRX m_climberLeader;
   /** Slave motor used to control climber extension */
-  private final TalonFX m_climberFollower = new TalonFX(kClimberFollowerCANId, kCANBusName);
+  private final WPI_TalonSRX m_climberFollower;
 
-  private final StatusSignal<Double> m_leaderPositionSignal = m_climberLeader.getPosition();
-  private final StatusSignal<Double> m_followerPositionSignal = m_climberLeader.getPosition();
+  /** Object used to process measurements from the Talon SRX controllers */
+  private final SensorMeasurement m_sensorConverter =
+      new SensorMeasurement(Sensor.CTREMagEncoderAbsolute.unitsPerRotation, 1.0, false);
 
-  /* Be able to switch which control request to use based on a button press */
-  /* Start at position 0, enable FOC, no feed forward, use slot 0 */
-  private final PositionVoltage m_voltagePositionReq =
-      new PositionVoltage(0, 0, true, 0, 0, false, false, false);
-  /* Start at position 0, no feed forward, use slot 1 */
-  private final PositionTorqueCurrentFOC m_torquePositionReq =
-      new PositionTorqueCurrentFOC(0, 0, 0, 1, false, false, false);
-  /* Keep a brake request so we can disable the motor */
-  private final NeutralOut m_brakeReq = new NeutralOut();
-
-  /** Alert displayed when a logging error occurs */
+  /** Alert displayed on failure to configure motor controllers */
   private static final Alert s_motorConfigFailedAlert =
       new Alert("Failed to configure climber motors", Alert.AlertType.ERROR);
 
   /** Creates a new climber subsystem */
-  public ClimberSubsystem() {
+  public ClimberSubsystem(RobotCANBus bus, CANDevice leaderCAN, CANDevice followerCAN) {
+    m_climberLeader = new WPI_TalonSRX(leaderCAN.id);
+    m_climberFollower = new WPI_TalonSRX(followerCAN.id);
     configureMotors();
   }
 
@@ -130,8 +138,12 @@ public class ClimberSubsystem extends SubsystemBase {
    * @param degrees Normalized percentage of full climber extension (0.0 to 1.0)
    */
   public void setExtensionPercent(double percent) {
+    double targetRotations = percent * kMaxRotations;
+    double sensorUnits = m_sensorConverter.rotationsToSensorUnits(targetRotations);
     SmartDashboard.putNumber("climber/setExtension/percent", percent);
-    m_climberLeader.setControl(m_voltagePositionReq.withPosition(percent * kMaxRotations));
+    SmartDashboard.putNumber("climber/setExtension/rotations", targetRotations);
+    SmartDashboard.putNumber("climber/setExtension/sensorUnits", sensorUnits);
+    m_climberLeader.set(ControlMode.Position, sensorUnits);
   }
 
   public enum ClimberMotorID {
@@ -147,15 +159,17 @@ public class ClimberSubsystem extends SubsystemBase {
    * @return normalized percentage of maximum climber extension (0.0 to 1.0)
    */
   public double getExtensionPercent(ClimberMotorID motorID) {
-    double rotations =
+    double sensorUnits =
         (motorID == ClimberMotorID.Leader)
-            ? m_leaderPositionSignal.refresh().getValueAsDouble()
-            : m_followerPositionSignal.refresh().getValueAsDouble();
-    double percent = rotations / kMaxRotations; // TODO: convert to percentage of max rotations
+            ? m_climberLeader.getSelectedSensorPosition(0)
+            : m_climberFollower.getSelectedSensorPosition(0);
+    double rotations = m_sensorConverter.sensorUnitsToRotations(sensorUnits);
+    double percent = rotations / kMaxRotations;
 
     String motorName = (motorID == ClimberMotorID.Leader) ? "leader" : "follower";
     SmartDashboard.putNumber(String.format("climber/%s/percent", motorName), percent);
     SmartDashboard.putNumber(String.format("climber/%s/rotations", motorName), rotations);
+    SmartDashboard.putNumber(String.format("climber/%s/sensorUnits", motorName), sensorUnits);
     return percent;
   }
 
@@ -176,57 +190,108 @@ public class ClimberSubsystem extends SubsystemBase {
    * @param physicsSim Physics simulator engine for motors, etc.
    */
   public void simulationInit(SimDeviceManager simDeviceMgr) {
-    simDeviceMgr.addTalonFX(m_climberLeader, 0.001);
+    simDeviceMgr.addTalonSRX(m_climberLeader, 0.001);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   private void configureMotors() {
-    ////////////////////////////////
-    // Configure Falcon motors
-    ////////////////////////////////
+    ///////////////////////////////////
+    // Configure CTRE SRX controllers
+    ///////////////////////////////////
+    m_climberLeader.configFactoryDefault();
 
-    // Initialize leader and follower to factory configuration
-    TalonFXConfiguration falconConfig = new TalonFXConfiguration();
+    // Set based on what direction you want forward/positive to be. This does not affect sensor
+    // phase.
+    // Choose based on what direction you want to be positive, this does not affect motor invert
+    final boolean kMotorInvert = false;
+    m_climberLeader.setInverted(kMotorInvert);
 
-    // // Configure the direction of the leader motor
-    MotorOutputConfigs outputConfig = falconConfig.MotorOutput;
-    outputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
-    outputConfig.withNeutralMode(NeutralModeValue.Brake);
+    // Set motor to brake when not commanded
+    m_climberLeader.setNeutralMode(NeutralMode.Brake);
 
-    // set slot gains
-    //   Ks - output to overcome static friction (output)
-    //   Kv - output per unit of target velocity (output/rps)
-    //   Ka - output per unit of target acceleration (output/(rps/s))
-    //   Kp - output per unit of error in position (output/rotation)
-    //   Ki - output per unit of integrated error in position (output/(rotation*s))
-    //   Kd - output per unit of error in velocity (output/rps)
+    // Set neutral deadband to super small 0.001 (0.1 %) because the default deadband is 0.04 (4 %)
+    m_climberLeader.configNeutralDeadband(0.01, kTimeoutMs);
 
-    Slot0Configs slot0 = falconConfig.Slot0;
-    slot0.kP = 2.4; // An error of 0.5 rotations results in 1.2 volts output
-    slot0.kD = 0.1; // A change of 1 rotation per second results in 0.1 volts output
-    // falconConfig.Voltage.PeakForwardVoltage = 8; // Peak output of 8 volts
-    // falconConfig.Voltage.PeakReverseVoltage = -8;
+    /* Config the peak and nominal outputs, 12V means full */
+    m_climberLeader.configNominalOutputForward(0, kTimeoutMs);
+    m_climberLeader.configNominalOutputReverse(0, kTimeoutMs);
+    m_climberLeader.configPeakOutputForward(kMaxMotorOutputPercent, kTimeoutMs);
+    m_climberLeader.configPeakOutputReverse(-1.0 * kMaxMotorOutputPercent, kTimeoutMs);
 
-    Slot1Configs slot1 = falconConfig.Slot1;
-    slot1.kP = 40; // An error of 1 rotations results in 40 amps output
-    slot1.kD = 2; // A change of 1 rotation per second results in 2 amps output
-    falconConfig.TorqueCurrent.PeakForwardTorqueCurrent = 40; // Peak output of 40 amps
-    falconConfig.TorqueCurrent.PeakReverseTorqueCurrent = 40;
+    // Configure the SRX controller to use an attached CTRE magnetic encoder's absolute
+    // position measurement
+    FeedbackDevice feedBackDevice =
+        RobotBase.isReal()
+            ? FeedbackDevice.CTRE_MagEncoder_Absolute
+            : FeedbackDevice.PulseWidthEncodedPosition;
+    m_climberLeader.configSelectedFeedbackSensor(feedBackDevice, kPIDLoopIdx, kTimeoutMs);
 
-    StatusCode status = StatusCode.StatusCodeNotInitialized;
-    for (int i = 0; i < 5; ++i) {
-      status = m_climberLeader.getConfigurator().apply(falconConfig);
-      if (status.isOK()) break;
+    // Ensure sensor is positive when output is positive
+    // Choose so that Talon does not report sensor out of phase
+    final boolean kSensorPhase = false;
+    m_climberLeader.setSensorPhase(kSensorPhase);
+
+    configureClosedLoopControl();
+    // configureMotionMagicControl();
+
+    /**
+     * Grab the 360 degree position of the MagEncoder's absolute position, and intitally set the
+     * relative sensor to match.
+     */
+    int absolutePosition = m_climberLeader.getSensorCollection().getPulseWidthPosition();
+
+    /* Mask out overflows, keep bottom 12 bits */
+    absolutePosition &= 0xFFF;
+    if (kSensorPhase) {
+      absolutePosition *= -1;
     }
-    if (!status.isOK()) {
-      s_motorConfigFailedAlert.set(true);
-      System.out.println("Could not configure device. Error: " + status.toString());
+    if (kMotorInvert) {
+      absolutePosition *= -1;
     }
 
-    // Configure follower motor to follow leader in the opposite direction
-    m_climberFollower.setControl(new Follower(m_climberLeader.getDeviceID(), true));
+    /* Set the quadrature (absolute) sensor to match absolute */
+    m_climberLeader.setSelectedSensorPosition(absolutePosition, kPIDLoopIdx, kTimeoutMs);
 
-    // Set the initial motor positions
-    // m_climberLeader.setPosition(0);
+    // Configure follower motor to follow leader motor
+    m_climberFollower.follow(m_climberLeader);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Configure to use PID-based closed-loop control */
+  void configureClosedLoopControl() {
+    // Configure the allowable closed-loop error, Closed-Loop output will be neutral within this
+    // range.
+    // See Table in Section 17.2.1 for native units per rotation.
+
+    // final double deadbandRotations = kMaxRotations * 0.01; // TODO: set up allowable deadband
+    // final double deadbandSensorUnits =
+    // m_sensorConverter.rotationsToSensorUnits(deadbandRotations);
+    // m_climberLeader.configAllowableClosedloopError(0, deadbandSensorUnits, kTimeoutMs);
+
+    /* Config Position Closed Loop gains in slot0, tsypically kF stays zero. */
+    m_climberLeader.config_kF(kPIDLoopIdx, 0.0, kTimeoutMs);
+    m_climberLeader.config_kP(kPIDLoopIdx, 0.15, kTimeoutMs);
+    m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs);
+    m_climberLeader.config_kD(kPIDLoopIdx, 1.0, kTimeoutMs);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Configure to use Motion Magic trapezoidal profile motor control */
+  void configureMotionMagicControl() {
+    // Select a motion profile slot
+    int kSlotIdx = 0;
+    m_climberLeader.selectProfileSlot(kSlotIdx, kPIDLoopIdx);
+
+    // Set up PID gains
+    m_climberLeader.config_kF(kPIDLoopIdx, 0.3, kTimeoutMs);
+    m_climberLeader.config_kP(kPIDLoopIdx, 0.25, kTimeoutMs);
+    m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs);
+    m_climberLeader.config_kD(kPIDLoopIdx, 0.005, kTimeoutMs);
+    m_climberLeader.config_IntegralZone(kPIDLoopIdx, 0.01);
+
+    // Set acceleration and cruise velocity
+    m_climberLeader.configMotionCruiseVelocity(Phoenix5Util.degreesToFalconTicks(7.6), kTimeoutMs);
+    m_climberLeader.configMotionAcceleration(Phoenix5Util.degreesToFalconTicks(4.94), kTimeoutMs);
+    m_climberLeader.configMotionSCurveStrength(6);
   }
 }
