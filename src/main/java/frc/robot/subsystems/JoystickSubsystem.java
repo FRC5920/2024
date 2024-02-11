@@ -59,15 +59,16 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.lib.joystick.JoystickSubsystemBase;
 import frc.lib.joystick.ProcessedXboxController;
-import frc.lib.joystick.ProcessedXboxController.POVAngle;
 import frc.robot.RobotContainer;
+import frc.robot.commands.ArmCommands.PivotCommand;
+import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 
 /** A subsystem providing Xbox controllers for driving the robot manually */
 public class JoystickSubsystem extends JoystickSubsystemBase {
 
   /** true to support a second "operator" controller */
-  public static final boolean kOperatorControllerIsEnabled = false;
+  public static final boolean kOperatorControllerIsEnabled = true;
 
   /** A placeholder command that does nothing for unused button bindings */
   public static final InstantCommand kDoNothing = new InstantCommand();
@@ -124,16 +125,10 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
                             -1.0f * driverController.getLeftY(),
                             -1.0f * driverController.getLeftX()))));
 
-    driverController
-        .povTrigger(POVAngle.Up)
-        .whileTrue(
-            driveTrain.applyRequest(
-                () -> m_driveForwardStraight.withVelocityX(0.5).withVelocityY(0)));
-    driverController
-        .povTrigger(POVAngle.Down)
-        .whileTrue(
-            driveTrain.applyRequest(
-                () -> m_driveForwardStraight.withVelocityX(-0.5).withVelocityY(0)));
+    driverController.povUp.whileTrue(
+        driveTrain.applyRequest(() -> m_driveForwardStraight.withVelocityX(0.5).withVelocityY(0)));
+    driverController.povDown.whileTrue(
+        driveTrain.applyRequest(() -> m_driveForwardStraight.withVelocityX(-0.5).withVelocityY(0)));
 
     driverController.X.onTrue(kDoNothing);
     driverController.Y.onTrue(kDoNothing);
@@ -172,10 +167,12 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     ProcessedXboxController operatorController = getOperatorController();
 
     // Map buttons
-    operatorController.A.onTrue(kDoNothing);
-    operatorController.B.onTrue(kDoNothing);
-    operatorController.X.onTrue(kDoNothing);
-    operatorController.Y.onTrue(kDoNothing);
+    operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
+    operatorController.B.onTrue(
+        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootBackward));
+    operatorController.X.onTrue(
+        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootForward));
+    operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Climb));
 
     // Map bumpers
     operatorController.leftBumper.whileTrue(kDoNothing);

@@ -49,62 +49,61 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot;
+package frc.robot.sim.ctreSim;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.lib.LED.LEDConstants;
-import frc.robot.autos.AutoDashboardTab;
-import frc.robot.commands.TeleopSwerveCTRE;
-import frc.robot.subsystems.JoystickSubsystem;
-import frc.robot.subsystems.LEDs.LEDSubsystem;
-import frc.robot.subsystems.dashboard.DashboardSubsystem;
-import frc.robot.subsystems.pivot.PivotSubsystem;
-import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
-import frc.robot.subsystems.swerveCTRE.Telemetry;
-import frc.robot.subsystems.swerveCTRE.TunerConstants;
+import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.robot.sim.SimDeviceManager.SimProfile;
 
-public class RobotContainer {
-  /** Subsystem providing Xbox controllers */
-  public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
+/**
+ * Simulated device profile for a CTRE TalonFX motor controller
+ *
+ * @remarks This profile was copied from the MotionMagic example provided with Phoenix6 Java
+ *     examples: https://github.com/CrossTheRoadElec/Phoenix6-Examples/tree/main/java/MotionMagic
+ */
+public class TalonFXProfile implements SimProfile {
+  private static final double kMotorResistance =
+      0.002; // Assume 2mOhm resistance for voltage drop calculation
+  private final TalonFX _falcon;
 
-  /** Swerve drive subsystem */
-  public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
+  private final DCMotorSim _motorSim;
 
-  /** Pivot subsystem */
-  public final PivotSubsystem pivotSubsystem = new PivotSubsystem();
-
-  // Subsystem facilitating display of dashboard tabs
-  public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
-
-  private final AutoDashboardTab autoDashboardTab = new AutoDashboardTab();
-
-  // driving in open loop
-  public final Telemetry swerveTelemetry = new Telemetry(TeleopSwerveCTRE.kMaxSpeed);
-
-  // Subsystem used to drive addressable LEDs
-  public final LEDSubsystem ledSubsystem = new LEDSubsystem(LEDConstants.kOff);
-
-  /** Called to create the robot container */
-  public RobotContainer() {
-    joystickSubsystem.configureButtonBindings(this);
-    // Set up a command to drive the swerve in Teleoperated mode
-    driveTrain.setDefaultCommand(
-        new TeleopSwerveCTRE(driveTrain, joystickSubsystem.getDriverController()));
-
-    // Register a function to be called to receive swerve telemetry
-    driveTrain.registerTelemetry(swerveTelemetry::telemeterize);
-
-    // Add the field dashboard tab
-    dashboardSubsystem.add(autoDashboardTab);
-
-    // if (Utils.isSimulation()) {
-    //   driveTrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
-    // }
+  /**
+   * Creates a new simulation profile for a TalonFX device.
+   *
+   * @param falcon The TalonFX device
+   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
+   */
+  public TalonFXProfile(final TalonFX falcon, final double rotorInertia) {
+    this._falcon = falcon;
+    this._motorSim = new DCMotorSim(DCMotor.getFalcon500Foc(1), 1.0, rotorInertia);
   }
 
-  /** Returns the present autonomous command */
-  public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+  /**
+   * Calculates the simulated device state
+   *
+   * @param elapsedSeconds Number of seconds that have elapsed since the last time calculateState()
+   *     was calculated. This value is guaranteed to be non-negative and will be exactly equal to
+   *     zero when the initial state is being calculated.
+   */
+  public void calculateState(double elapsedSeconds) {
+    /// DEVICE SPEED SIMULATION
+
+    _motorSim.setInputVoltage(_falcon.getSimState().getMotorVoltage());
+
+    _motorSim.update(elapsedSeconds);
+
+    /// SET SIM PHYSICS INPUTS
+    final double position_rot = _motorSim.getAngularPositionRotations();
+    final double velocity_rps = Units.radiansToRotations(_motorSim.getAngularVelocityRadPerSec());
+
+    _falcon.getSimState().setRawRotorPosition(position_rot);
+    _falcon.getSimState().setRotorVelocity(velocity_rps);
+
+    _falcon
+        .getSimState()
+        .setSupplyVoltage(12 - _falcon.getSimState().getSupplyCurrent() * kMotorResistance);
   }
 }

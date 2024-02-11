@@ -61,7 +61,9 @@ import frc.lib.utility.Alert.AlertType;
 import frc.lib.utility.CanBusErrorAlert;
 import frc.robot.commands.LEDCommands.LEDsToPattern;
 import frc.robot.commands.LEDCommands.LEDsToSolidColor;
+import frc.robot.sim.SimDeviceManager;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
+import frc.robot.subsystems.pivot.PivotSubsystem;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 
@@ -79,11 +81,17 @@ public class Robot extends LoggedRobot {
   private final Alert lowBatteryAlert =
       new Alert("Low battery voltage detected.", AlertType.WARNING);
 
+  /** Container of subsystems and other components that make up the robot */
+  private final RobotContainer m_robotContainer = new RobotContainer();
+
+  /** Simulated devices - used only during simulation mode */
+  private SimDeviceManager m_simDeviceManager;
+
+  /** Mechanism2D for displaying arm components on the dashboard */
+  public final Mechanisms m_botMechanisms = new Mechanisms();
+
   /** The present selected auto command */
   private Command m_autonomousCommand;
-
-  /** Container of subsystems and other components that make up the robot */
-  private RobotContainer m_robotContainer;
 
   /** Time when the present auto command was started */
   private double m_autoStartTime;
@@ -110,8 +118,6 @@ public class Robot extends LoggedRobot {
    */
   @Override
   public void robotInit() {
-
-    m_robotContainer = new RobotContainer();
 
     // Initialize dashboards
     m_robotContainer.dashboardSubsystem.initialize(m_robotContainer);
@@ -146,11 +152,29 @@ public class Robot extends LoggedRobot {
     m_canBusErrorAlert.update(RobotController.getCANStatus());
 
     // TODO: low battery alert
+
+    // Update display of robot mechanisms
+    PivotSubsystem pivotSubsystem = m_robotContainer.pivotSubsystem;
+    m_botMechanisms.updatePivotAngle(pivotSubsystem.getAngleDeg());
+    m_botMechanisms.sendToDashboard();
+  }
+
+  //////////////////////////////////////
+  // SIMULATION MODE
+  //////////////////////////////////////
+
+  /** This function is run once when the robot is first started in simulation mode */
+  @Override
+  public void simulationInit() {
+    m_simDeviceManager = new SimDeviceManager();
+    m_robotContainer.pivotSubsystem.simulationInit(m_simDeviceManager);
   }
 
   /** This function is called every 20 ms when the robot is running in simulation mode */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    m_simDeviceManager.calculateSimStates();
+  }
 
   //////////////////////////////////////
   // DISABLED MODE
