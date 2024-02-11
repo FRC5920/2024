@@ -94,7 +94,6 @@ public class PivotCommand extends Command {
   }
 
   public enum AnglePreset {
-    Park(PivotSubsystem.kParkAngleDeg),
     ShootForward(120.0),
     ShootBackward(60.0),
     Intake(195.0),

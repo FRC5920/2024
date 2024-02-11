@@ -74,21 +74,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.utility.Alert;
 import frc.robot.sim.SimDeviceManager;
 
-// Reference Phoenix6 example:
-
-/**
- * Subsystem for the pivot point of the robot arm
- *
- * @see CTRE Phoenix 6 closed-loop position example:
- *     https://github.com/CrossTheRoadElec/Phoenix6-Examples/tree/main/java/PositionClosedLoop
- */
+/** Subsystem for controlling the pivot mechanism on the robot arm */
 public class PivotSubsystem extends SubsystemBase {
 
   ////////////////////////////////////
   // CONSTANTS
   ////////////////////////////////////
 
-  /** Name of the CAN bus that pivot and extender motors are connected to */
+  /** Name of the CAN bus that pivot motors are connected to */
   private static final String kCANBusName = "canivore";
 
   /** CAN ID of the pivot lead motor */
@@ -101,11 +94,8 @@ public class PivotSubsystem extends SubsystemBase {
   /** Offset of the CANcoder magnet in rotations */
   private static final double kCANcoderMagnetOffsetRot = 0.4;
 
-  /** Gear ratio between the Falcon motors and the pivot axle (motor-to-mechanism) */
+  /** Gear ratio between the Falcon motors and the pivot axle */
   private static final double kFalconToPivotGearRatio = 20.0 / 1.0;
-
-  /** Initial position of the motor */
-  public static final double kParkAngleDeg = 60.0;
 
   ////////////////////////////////////
   // Attributes
@@ -125,7 +115,7 @@ public class PivotSubsystem extends SubsystemBase {
   /** Motion magic request used to set pivot position */
   private final MotionMagicVoltage m_mmReq = new MotionMagicVoltage(0.0);
 
-  /** Alert displayed when a logging error occurs */
+  /** Alert displayed on failure to configure pivot motors */
   private static final Alert s_motorConfigFailedAlert =
       new Alert("Failed to configure pivot motors", Alert.AlertType.ERROR);
 
@@ -194,16 +184,6 @@ public class PivotSubsystem extends SubsystemBase {
     simDeviceMgr.addTalonFXWithFusedCANcoder(
         m_pivotLeader, m_canCoder, 1.0 / kFalconToPivotGearRatio, 0.001);
   }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** This method gets called once per scheduler run */
-  @Override
-  public void periodic() {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** This method gets called once per scheduler run in simulation mode */
-  @Override
-  public void simulationPeriodic() {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Configures motors used to control the pivot angle */
@@ -275,8 +255,5 @@ public class PivotSubsystem extends SubsystemBase {
 
     // Configure pivot follower motor to follow pivot leader in the opposite direction
     m_pivotFollower.setControl(new Follower(m_pivotLeader.getDeviceID(), true));
-
-    // Set the initial motor position
-    // m_pivotLeader.setPosition(0);
   }
 }
