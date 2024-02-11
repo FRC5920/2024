@@ -51,11 +51,13 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.sim;
 
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
 import frc.robot.sim.ctreSim.TalonFXProfile;
+import frc.robot.sim.ctreSim.TalonSRXSimProfile;
 import java.util.ArrayList;
 
 /** An object that tracks and manages recalculation of a collection of simulated devices */
@@ -99,6 +101,26 @@ public class SimDeviceManager {
       m_devices.add(
           new SimulatedDevice(
               new TalonFXFusedCANcoderProfile(falcon, can, gearRatio, rotorInertia)));
+    }
+  }
+
+  /**
+   * Adds a simulated TalonSRX controller
+   *
+   * @param talon The TalonSRX device
+   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
+   * @param fullVel The maximum motor velocity, in ticks per 100ms
+   * @param sensorPhase The phase of the TalonSRX sensors
+   */
+  public void addTalonSRX(
+      TalonSRX talon,
+      final double accelToFullTime,
+      final double fullVel,
+      final boolean sensorPhase) {
+    if (talon != null) {
+      m_devices.add(
+          new SimulatedDevice(
+              new TalonSRXSimProfile(talon, accelToFullTime, fullVel, sensorPhase)));
     }
   }
 
