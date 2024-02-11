@@ -63,7 +63,6 @@ import frc.robot.commands.LEDCommands.LEDsToPattern;
 import frc.robot.commands.LEDCommands.LEDsToSolidColor;
 import frc.robot.sim.SimDeviceManager;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
-import frc.robot.subsystems.pivot.PivotSubsystem;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 
@@ -154,8 +153,9 @@ public class Robot extends LoggedRobot {
     // TODO: low battery alert
 
     // Update display of robot mechanisms
-    PivotSubsystem pivotSubsystem = m_robotContainer.pivotSubsystem;
-    m_botMechanisms.updatePivotAngle(pivotSubsystem.getAngleDeg());
+
+    m_botMechanisms.updatePivotAngle(m_robotContainer.pivotSubsystem.getAngleDeg());
+    m_botMechanisms.updateClimberExtension(m_robotContainer.climberSubsystem.getExtensionPercent());
     m_botMechanisms.sendToDashboard();
   }
 
@@ -168,6 +168,7 @@ public class Robot extends LoggedRobot {
   public void simulationInit() {
     m_simDeviceManager = new SimDeviceManager();
     m_robotContainer.pivotSubsystem.simulationInit(m_simDeviceManager);
+    m_robotContainer.climberSubsystem.simulationInit(m_simDeviceManager);
   }
 
   /** This function is called every 20 ms when the robot is running in simulation mode */
