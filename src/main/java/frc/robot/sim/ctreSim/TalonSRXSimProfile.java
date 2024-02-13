@@ -51,7 +51,11 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.sim.ctreSim;
 
+import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.*;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.sim.SimDeviceManager.SimProfile;
 
 /**
@@ -62,10 +66,10 @@ import frc.robot.sim.SimDeviceManager.SimProfile;
  *     https://github.com/CrossTheRoadElec/Phoenix5-Examples/blob/master/Java%20General/PositionClosedLoop/src/main/java/frc/robot/sim/TalonSRXSimProfile.java
  */
 public class TalonSRXSimProfile implements SimProfile {
+  private static final double kRotorInertia = 0.001;
+  private static final double kSensorUnitsPerRotation = 4096;
   private final TalonSRX _talon;
-  private final double _accelToFullTime;
-  private final double _fullVel;
-  private final boolean _sensorPhase;
+  private final DCMotorSim _motorSim;
 
   /** The current position */
   // private double _pos = 0;
@@ -76,19 +80,11 @@ public class TalonSRXSimProfile implements SimProfile {
    * Creates a new simulation profile for a TalonSRX device.
    *
    * @param talon The TalonSRX device
-   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
-   * @param fullVel The maximum motor velocity, in ticks per 100ms
-   * @param sensorPhase The phase of the TalonSRX sensors
+   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
    */
-  public TalonSRXSimProfile(
-      final TalonSRX talon,
-      final double accelToFullTime,
-      final double fullVel,
-      final boolean sensorPhase) {
+  public TalonSRXSimProfile(final TalonSRX talon, final double rotorInertia) {
     this._talon = talon;
-    this._accelToFullTime = accelToFullTime;
-    this._fullVel = fullVel;
-    this._sensorPhase = sensorPhase;
+    this._motorSim = new DCMotorSim(DCMotor.getCIM(1), 1.0, rotorInertia);
   }
 
   /**
@@ -99,37 +95,39 @@ public class TalonSRXSimProfile implements SimProfile {
    *     zero when the initial state is being calculated.
    */
   public void calculateState(double elapsedSeconds) {
-    final double accelAmount = _fullVel / _accelToFullTime * elapsedSeconds / 1000;
-
     /// DEVICE SPEED SIMULATION
 
-    double outPerc = _talon.getSimCollection().getMotorOutputLeadVoltage() / 12;
-    if (_sensorPhase) {
-      outPerc *= -1;
-    }
-    // Calculate theoretical velocity with some randomness
-    double theoreticalVel = outPerc * _fullVel * random(0.95, 1);
-    // Simulate motor load
-    if (theoreticalVel > _vel + accelAmount) {
-      _vel += accelAmount;
-    } else if (theoreticalVel < _vel - accelAmount) {
-      _vel -= accelAmount;
-    } else {
-      _vel += 0.9 * (theoreticalVel - _vel);
-    }
-    // _pos += _vel * period / 100;
+    TalonSRXSimCollection simCollection = _talon.getSimCollection();
+
+    double motorInputVoltage = simCollection.getMotorOutputLeadVoltage();
+
+    // Run the DC motor simulation with the applied motor voltage and elapsed time
+    _motorSim.setInputVoltage(motorInputVoltage);
+    _motorSim.update(elapsedSeconds);
+
+    final double position_rot = _motorSim.getAngularPositionRotations();
+    final double velocity_rps = Units.radiansToRotations(_motorSim.getAngularVelocityRadPerSec());
 
     /// SET SIM PHYSICS INPUTS
 
-    _talon.getSimCollection().addQuadraturePosition((int) (_vel * elapsedSeconds / 100));
-    _talon.getSimCollection().setQuadratureVelocity((int) _vel);
+    // Set position in native units
+    int rawPosition = (int) (position_rot * kSensorUnitsPerRotation);
+    simCollection.setQuadratureRawPosition(rawPosition);
+    simCollection.setPulseWidthPosition(rawPosition);
+    simCollection.setAnalogPosition(rawPosition);
 
+    // Set velocity in native units per 100ms
+    int rawVelocity = (int) (velocity_rps * kSensorUnitsPerRotation * 0.1);
+    simCollection.setQuadratureVelocity(rawVelocity);
+    simCollection.setPulseWidthVelocity(rawVelocity);
+    simCollection.setAnalogVelocity(rawVelocity);
+
+    double outPerc = motorInputVoltage / 12.0;
     double supplyCurrent = Math.abs(outPerc) * 30 * random(0.95, 1.05);
     double statorCurrent = outPerc == 0 ? 0 : supplyCurrent / Math.abs(outPerc);
-    _talon.getSimCollection().setSupplyCurrent(supplyCurrent);
-    _talon.getSimCollection().setStatorCurrent(statorCurrent);
-
-    _talon.getSimCollection().setBusVoltage(12 - outPerc * outPerc * 3 / 4 * random(0.95, 1.05));
+    simCollection.setSupplyCurrent(supplyCurrent);
+    simCollection.setStatorCurrent(statorCurrent);
+    simCollection.setBusVoltage(12 - outPerc * outPerc * 3 / 4 * random(0.95, 1.05));
   }
 
   /* scales a random domain of [0, 2pi] to [min, max] while prioritizing the peaks */
