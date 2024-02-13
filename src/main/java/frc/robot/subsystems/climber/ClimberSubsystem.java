@@ -54,13 +54,12 @@ package frc.robot.subsystems.climber;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import com.ctre.phoenix6.controls.NeutralOut;
-import com.ctre.phoenix6.controls.PositionTorqueCurrentFOC;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.utility.Alert;
-import frc.lib.utility.Phoenix5Gains;
+import frc.lib.utility.Phoenix5Util.CTREGains;
+import frc.lib.utility.Phoenix5Util.Sensor;
+import frc.lib.utility.Phoenix5Util.SensorMeasurement;
 import frc.robot.sim.SimDeviceManager;
 
 // Reference Phoenix6 example:
@@ -119,7 +118,7 @@ public class ClimberSubsystem extends SubsystemBase {
    * Gains used in Positon Closed Loop, to be adjusted accordingly Gains(kp, ki, kd, kf, izone, peak
    * output);
    */
-  static final Phoenix5Gains kGains = new Phoenix5Gains(0.15, 0.0, 1.0, 0.0, 0, 1.0);
+  static final CTREGains kGains = new CTREGains(0.15, 0.0, 1.0, 0.0, 0, 1.0);
 
   ////////////////////////////////////
   // Attributes
@@ -130,17 +129,11 @@ public class ClimberSubsystem extends SubsystemBase {
   /** Slave motor used to control climber extension */
   private final WPI_TalonSRX m_climberFollower = new WPI_TalonSRX(kClimberFollowerCANId);
 
-  /* Be able to switch which control request to use based on a button press */
-  /* Start at position 0, enable FOC, no feed forward, use slot 0 */
-  private final PositionVoltage m_voltagePositionReq =
-      new PositionVoltage(0, 0, true, 0, 0, false, false, false);
-  /* Start at position 0, no feed forward, use slot 1 */
-  private final PositionTorqueCurrentFOC m_torquePositionReq =
-      new PositionTorqueCurrentFOC(0, 0, 0, 1, false, false, false);
-  /* Keep a brake request so we can disable the motor */
-  private final NeutralOut m_brakeReq = new NeutralOut();
+  /** Object used to process measurements from the Talon SRX controllers */
+  private final SensorMeasurement m_sensorConverter =
+      new SensorMeasurement(Sensor.CTREMagEncoderAbsolute.unitsPerRotation, 1.0, false);
 
-  /** Alert displayed when a logging error occurs */
+  /** Alert displayed on failure to configure motor controllers */
   private static final Alert s_motorConfigFailedAlert =
       new Alert("Failed to configure climber motors", Alert.AlertType.ERROR);
 
@@ -156,10 +149,12 @@ public class ClimberSubsystem extends SubsystemBase {
    * @param degrees Normalized percentage of full climber extension (0.0 to 1.0)
    */
   public void setExtensionPercent(double percent) {
-    double targetPositionTicks = percentToSensorPosition(percent);
+    double targetRotations = percent * kMaxRotations;
+    double sensorUnits = m_sensorConverter.rotationsToSensorUnits(targetRotations);
     SmartDashboard.putNumber("climber/setExtension/percent", percent);
-    SmartDashboard.putNumber("climber/setExtension/ticks", targetPositionTicks);
-    m_climberLeader.set(ControlMode.Position, targetPositionTicks);
+    SmartDashboard.putNumber("climber/setExtension/rotations", targetRotations);
+    SmartDashboard.putNumber("climber/setExtension/sensorUnits", sensorUnits);
+    m_climberLeader.set(ControlMode.Position, sensorUnits);
   }
 
   public enum ClimberMotorID {
@@ -175,15 +170,17 @@ public class ClimberSubsystem extends SubsystemBase {
    * @return normalized percentage of maximum climber extension (0.0 to 1.0)
    */
   public double getExtensionPercent(ClimberMotorID motorID) {
-    double ticks =
+    double sensorUnits =
         (motorID == ClimberMotorID.Leader)
             ? m_climberLeader.getSelectedSensorPosition(0)
             : m_climberFollower.getSelectedSensorPosition(0);
-    double percent = sensorPositionToPercent(ticks);
+    double rotations = m_sensorConverter.sensorUnitsToRotations(sensorUnits);
+    double percent = rotations / kMaxRotations;
 
     String motorName = (motorID == ClimberMotorID.Leader) ? "leader" : "follower";
     SmartDashboard.putNumber(String.format("climber/%s/percent", motorName), percent);
-    SmartDashboard.putNumber(String.format("climber/%s/ticks", motorName), ticks);
+    SmartDashboard.putNumber(String.format("climber/%s/rotations", motorName), rotations);
+    SmartDashboard.putNumber(String.format("climber/%s/sensorUnits", motorName), sensorUnits);
     return percent;
   }
 
@@ -214,9 +211,10 @@ public class ClimberSubsystem extends SubsystemBase {
     ///////////////////////////////////
     m_climberLeader.configFactoryDefault();
 
-    /* Config the sensor used for Primary PID and sensor direction */
+    // Configure the SRX controller to use an attached CTRE magnetic encoder's absolute
+    // position measurement
     m_climberLeader.configSelectedFeedbackSensor(
-        FeedbackDevice.CTRE_MagEncoder_Relative, kPIDLoopIdx, kTimeoutMs);
+        FeedbackDevice.CTRE_MagEncoder_Absolute, kPIDLoopIdx, kTimeoutMs);
 
     /* Ensure sensor is positive when output is positive */
     m_climberLeader.setSensorPhase(kSensorPhase);
@@ -237,7 +235,9 @@ public class ClimberSubsystem extends SubsystemBase {
      * Config the allowable closed-loop error, Closed-Loop output will be neutral within this range.
      * See Table in Section 17.2.1 for native units per rotation.
      */
-    m_climberLeader.configAllowableClosedloopError(0, kPIDLoopIdx, kTimeoutMs);
+    final double deadbandRotations = kMaxRotations * 0.01; // TODO: set up allowable deadband
+    final double deadbandSensorUnits = m_sensorConverter.rotationsToSensorUnits(deadbandRotations);
+    m_climberLeader.configAllowableClosedloopError(0, deadbandSensorUnits, kTimeoutMs);
 
     /* Config Position Closed Loop gains in slot0, tsypically kF stays zero. */
     m_climberLeader.config_kF(kPIDLoopIdx, kGains.kF, kTimeoutMs);
@@ -260,15 +260,10 @@ public class ClimberSubsystem extends SubsystemBase {
       absolutePosition *= -1;
     }
 
-    /* Set the quadrature (relative) sensor to match absolute */
+    /* Set the quadrature (absolute) sensor to match absolute */
     m_climberLeader.setSelectedSensorPosition(absolutePosition, kPIDLoopIdx, kTimeoutMs);
-  }
 
-  private double percentToSensorPosition(double percent) {
-    return percent; // TODO: convert percent of travel to sensor position (ticks)
-  }
-
-  private double sensorPositionToPercent(double ticks) {
-    return ticks; // TODO: convert sensor position (ticks) to percent of travel
+    // Configure follower motor to follow leader motor
+    m_climberFollower.follow(m_climberLeader);
   }
 }

@@ -51,22 +51,102 @@
 \-----------------------------------------------------------------------------*/
 package frc.lib.utility;
 
-/** An object that wraps closed-loop gains for a Phoenix5-based CTRE motor controller */
-public class Phoenix5Gains {
-  public final double kP;
-  public final double kI;
-  public final double kD;
-  public final double kF;
-  public final int kIzone;
-  public final double kPeakOutput;
+/** Utility functions and constants used in conjunction with the CTRE Phoenix 5 library */
+public class Phoenix5Util {
 
-  public Phoenix5Gains(
-      double _kP, double _kI, double _kD, double _kF, int _kIzone, double _kPeakOutput) {
-    kP = _kP;
-    kI = _kI;
-    kD = _kD;
-    kF = _kF;
-    kIzone = _kIzone;
-    kPeakOutput = _kPeakOutput;
+  /**
+   * Common sensor resolutions
+   *
+   * @see https://v5.docs.ctr-electronics.com/en/stable/ch14_MCSensor.html#sensor-resolution
+   */
+  public enum Sensor {
+    QuadratureEncoder(4096),
+    CTREMagEncoderRelative(4096),
+    CTREMagEncoderAbsolute(4096),
+    TalonFXIntegratedSensor(2048),
+    CANCoder(4096),
+    PWMEncoder(4096),
+    AndyMarkCIMCoder(80),
+    Analog(1024);
+
+    /** Number of units per sensor rotation */
+    public final double unitsPerRotation;
+
+    private Sensor(double unitsPerRotation) {
+      this.unitsPerRotation = unitsPerRotation;
+    }
+  }
+
+  /** Base class for objects that convert CTRE sensor measurements */
+  public static class SensorMeasurement {
+    /** Number of sensor units per rotation of the sensor shaft */
+    public final double kSensorUnitsPerRotation;
+    /** Gear ratio from the motor shaft to the rotation sensor */
+    public final double kMotorToSensorGearRatio;
+    /**
+     * Coefficient representing the relationship of motor shaft and sensor rotation direction: 1.0
+     * if the same; -1.0 if opposite
+     */
+    public final double kMotorToSensorDirection;
+
+    /**
+     * Creates an instance of the measurement object using given attributes
+     *
+     * @param sensorUnitsPerRotation Number of sensor units per rotation of the sensor shaft
+     * @param motorToSensorGearRatio Gear ratio from the motor shaft to the rotation sensor
+     * @param sensorDirectionIsInverted True if the motor rotates in the opposite direction of the
+     *     sensor; else false
+     */
+    public SensorMeasurement(
+        double sensorUnitsPerRotation,
+        double motorToSensorGearRatio,
+        boolean sensorDirectionIsInverted) {
+      kSensorUnitsPerRotation = sensorUnitsPerRotation;
+      kMotorToSensorGearRatio = motorToSensorGearRatio;
+      kMotorToSensorDirection = sensorDirectionIsInverted ? -1.0 : 1.0;
+    }
+
+    /**
+     * Converts a measurement in sensor units to a number of rotations
+     *
+     * @param sensorUnits Measurement in sensor units
+     * @return Number of rotations of the sensor
+     */
+    public double sensorUnitsToRotations(double sensorUnits) {
+      return sensorUnits
+          / kSensorUnitsPerRotation
+          * kMotorToSensorDirection
+          / kMotorToSensorGearRatio;
+    }
+
+    /**
+     * Converts a number of rotations to a corresponding measurement in sensor units
+     *
+     * @param rotations Number of rotations of the sensor
+     * @return Corresponding measurement in sensor units
+     */
+    public double rotationsToSensorUnits(double rotations) {
+      return rotations * kMotorToSensorGearRatio * kSensorUnitsPerRotation;
+    }
+  }
+
+  /** An object that wraps closed-loop gains for a Phoenix5-based CTRE motor controller */
+  public static class CTREGains {
+    public final double kP;
+    public final double kI;
+    public final double kD;
+    public final double kF;
+    public final int kIzone;
+    public final double kPeakOutput;
+
+    public CTREGains(
+        double _kP, double _kI, double _kD, double _kF, int _kIzone, double _kPeakOutput) {
+      kP = _kP;
+      kI = _kI;
+      kD = _kD;
+      kF = _kF;
+      kIzone = _kIzone;
+      kPeakOutput = _kPeakOutput;
+    }
   }
 }
