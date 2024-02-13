@@ -112,15 +112,9 @@ public class SimDeviceManager {
    * @param fullVel The maximum motor velocity, in ticks per 100ms
    * @param sensorPhase The phase of the TalonSRX sensors
    */
-  public void addTalonSRX(
-      TalonSRX talon,
-      final double accelToFullTime,
-      final double fullVel,
-      final boolean sensorPhase) {
+  public void addTalonSRX(TalonSRX talon, double rotorInertia) {
     if (talon != null) {
-      m_devices.add(
-          new SimulatedDevice(
-              new TalonSRXSimProfile(talon, accelToFullTime, fullVel, sensorPhase)));
+      m_devices.add(new SimulatedDevice(new TalonSRXSimProfile(talon, rotorInertia)));
     }
   }
 

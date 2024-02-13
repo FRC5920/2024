@@ -53,11 +53,12 @@ package frc.robot.subsystems.climber;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.utility.Alert;
-import frc.lib.utility.Phoenix5Util.CTREGains;
 import frc.lib.utility.Phoenix5Util.Sensor;
 import frc.lib.utility.Phoenix5Util.SensorMeasurement;
 import frc.robot.sim.SimDeviceManager;
@@ -107,18 +108,6 @@ public class ClimberSubsystem extends SubsystemBase {
    * fails.
    */
   public static final int kTimeoutMs = 30;
-
-  /* Choose so that Talon does not report sensor out of phase */
-  public static boolean kSensorPhase = true;
-
-  /** Choose based on what direction you want to be positive, this does not affect motor invert. */
-  public static boolean kMotorInvert = false;
-
-  /**
-   * Gains used in Positon Closed Loop, to be adjusted accordingly Gains(kp, ki, kd, kf, izone, peak
-   * output);
-   */
-  static final CTREGains kGains = new CTREGains(0.15, 0.0, 1.0, 0.0, 0, 1.0);
 
   ////////////////////////////////////
   // Attributes
@@ -201,7 +190,7 @@ public class ClimberSubsystem extends SubsystemBase {
    * @param physicsSim Physics simulator engine for motors, etc.
    */
   public void simulationInit(SimDeviceManager simDeviceMgr) {
-    simDeviceMgr.addTalonSRX(m_climberLeader, 0.75, 4000, kSensorPhase);
+    simDeviceMgr.addTalonSRX(m_climberLeader, 0.001);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,17 +202,27 @@ public class ClimberSubsystem extends SubsystemBase {
 
     // Configure the SRX controller to use an attached CTRE magnetic encoder's absolute
     // position measurement
-    m_climberLeader.configSelectedFeedbackSensor(
-        FeedbackDevice.CTRE_MagEncoder_Absolute, kPIDLoopIdx, kTimeoutMs);
+    FeedbackDevice feedBackDevice =
+        RobotBase.isReal()
+            ? FeedbackDevice.CTRE_MagEncoder_Absolute
+            : FeedbackDevice.PulseWidthEncodedPosition;
+    m_climberLeader.configSelectedFeedbackSensor(feedBackDevice, kPIDLoopIdx, kTimeoutMs);
+
+    // Choose so that Talon does not report sensor out of phase
+    final boolean kSensorPhase = false;
+
+    // Choose based on what direction you want to be positive, this does not affect motor invert
+    final boolean kMotorInvert = false;
 
     /* Ensure sensor is positive when output is positive */
     m_climberLeader.setSensorPhase(kSensorPhase);
 
-    /**
-     * Set based on what direction you want forward/positive to be. This does not affect sensor
-     * phase.
-     */
+    // Set based on what direction you want forward/positive to be. This does not affect sensor
+    // phase.
     m_climberLeader.setInverted(kMotorInvert);
+
+    // Set motor to brake when not commanded
+    m_climberLeader.setNeutralMode(NeutralMode.Brake);
 
     /* Config the peak and nominal outputs, 12V means full */
     m_climberLeader.configNominalOutputForward(0, kTimeoutMs);
@@ -235,15 +234,16 @@ public class ClimberSubsystem extends SubsystemBase {
      * Config the allowable closed-loop error, Closed-Loop output will be neutral within this range.
      * See Table in Section 17.2.1 for native units per rotation.
      */
-    final double deadbandRotations = kMaxRotations * 0.01; // TODO: set up allowable deadband
-    final double deadbandSensorUnits = m_sensorConverter.rotationsToSensorUnits(deadbandRotations);
-    m_climberLeader.configAllowableClosedloopError(0, deadbandSensorUnits, kTimeoutMs);
+    // final double deadbandRotations = kMaxRotations * 0.01; // TODO: set up allowable deadband
+    // final double deadbandSensorUnits =
+    // m_sensorConverter.rotationsToSensorUnits(deadbandRotations);
+    // m_climberLeader.configAllowableClosedloopError(0, deadbandSensorUnits, kTimeoutMs);
 
     /* Config Position Closed Loop gains in slot0, tsypically kF stays zero. */
-    m_climberLeader.config_kF(kPIDLoopIdx, kGains.kF, kTimeoutMs);
-    m_climberLeader.config_kP(kPIDLoopIdx, kGains.kP, kTimeoutMs);
-    m_climberLeader.config_kI(kPIDLoopIdx, kGains.kI, kTimeoutMs);
-    m_climberLeader.config_kD(kPIDLoopIdx, kGains.kD, kTimeoutMs);
+    m_climberLeader.config_kF(kPIDLoopIdx, 0.0, kTimeoutMs);
+    m_climberLeader.config_kP(kPIDLoopIdx, 0.15, kTimeoutMs);
+    m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs);
+    m_climberLeader.config_kD(kPIDLoopIdx, 1.0, kTimeoutMs);
 
     /**
      * Grab the 360 degree position of the MagEncoder's absolute position, and intitally set the
