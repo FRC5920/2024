@@ -77,4 +77,4 @@ drivers and operators with older, well-used controllers.
 
 ## CAN IDs
 
-![CAN ID's in the robot](../../../../../../doc/graphics/bot-motors.svg "FRC 5290 - VIKotics")
+![CAN ID's in the robot](../../../../../../doc/graphics/CAN-devices.svg "FRC 5290 - VIKotics")
