@@ -73,3 +73,8 @@ use buttons for multiple functions or variations of functionality.
 The subsystem base class implements deadbanding and sensitivity adjustment of
 joysticks and non-binary joystick axes to ensure a reliable experience for
 drivers and operators with older, well-used controllers.
+
+
+## CAN IDs
+
+![CAN ID's in the robot](../../../../../../doc/graphics/bot-motors.svg "FRC 5290 - VIKotics")
