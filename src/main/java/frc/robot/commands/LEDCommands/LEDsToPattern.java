@@ -52,7 +52,7 @@
 package frc.robot.commands.LEDCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.LED.LEDConstants;
+import frc.lib.LED.ColorConstants;
 import frc.lib.LED.LEDPattern;
 import frc.lib.LED.Patterns.BlasterBoltPattern;
 import frc.lib.LED.Patterns.RainbowPattern;
@@ -100,8 +100,8 @@ public class LEDsToPattern extends Command {
   public static LEDsToPattern newBlasterBoltPatternCommand(LEDSubsystem ledSubsystem) {
     return new LEDsToPattern(
         ledSubsystem,
-        new BlasterBoltPattern(ledSubsystem.getLeftStrip(), LEDConstants.kVikoticsYellow, 4),
-        new BlasterBoltPattern(ledSubsystem.getRightStrip(), LEDConstants.kVikoticsYellow, 4));
+        new BlasterBoltPattern(ledSubsystem.getLeftStrip(), ColorConstants.kVikoticsYellow, 4),
+        new BlasterBoltPattern(ledSubsystem.getRightStrip(), ColorConstants.kVikoticsYellow, 4));
   }
 
   /** Returns a command that displays a rainbow pattern on the LEDs */

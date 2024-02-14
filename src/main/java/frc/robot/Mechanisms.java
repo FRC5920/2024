@@ -95,14 +95,14 @@ public class Mechanisms {
                   "pivotSegment",
                   kClimberBaseLength,
                   kInitialPivotAngleDeg,
-                  6,
-                  new Color8Bit(Color.kBlue)));
+                  10,
+                  new Color8Bit(Color.kYellow)));
 
   /** Mechanism ligament used to show the climber segment of the arm */
   private final MechanismLigament2d m_leaderClimber =
       m_leaderPivot.append(
           new MechanismLigament2d(
-              "climberSegment", kClimberInitialLength, 0.0, 4, new Color8Bit(Color.kLightBlue)));
+              "climberSegment", kClimberInitialLength, 0.0, 8, new Color8Bit(Color.kGray)));
 
   /////////////////////////////////////////////////////
   // DECORATION MECHANISIMS
@@ -113,7 +113,7 @@ public class Mechanisms {
   /** Mechanism used to decorate the climber segment with a 'hook' */
   private final MechanismLigament2d m_climberHook =
       m_leaderClimber.append(
-          new MechanismLigament2d("climberhook", 0.075, 145.0, 4, new Color8Bit(Color.kLightBlue)));
+          new MechanismLigament2d("climberhook", 0.075, 145.0, 6, new Color8Bit(Color.kGray)));
 
   /** Mechanism ligament used to display a representation of the support for the pivot */
   private final MechanismLigament2d m_pivotBase =
@@ -121,13 +121,13 @@ public class Mechanisms {
           .getRoot("pivotOffsetRoot", kPivotRootX, 0.1)
           .append(
               new MechanismLigament2d(
-                  "pivotOffset", 0.15, 90.0, 16, new Color8Bit(Color.kDarkSlateGray)));
+                  "pivotOffset", 0.15, 90.0, 20, new Color8Bit(Color.kGoldenrod)));
 
   /** Mechanism ligament used to display a representation of robot bumpers */
   private final MechanismLigament2d m_bumpers =
       m_mechanism
           .getRoot("robotBumperRoot", 0.2, 0.1)
-          .append(new MechanismLigament2d("robotBumper", 0.6, 0.0, 16, kNoAllianceGray));
+          .append(new MechanismLigament2d("robotBumper", 0.6, 0.0, 16, new Color8Bit(Color.kPlum)));
 
   /**
    * Updates the angle of pivot mechanisms
