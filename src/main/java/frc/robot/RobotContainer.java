@@ -53,7 +53,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.lib.LED.LEDConstants;
+import frc.lib.LED.ColorConstants;
 import frc.robot.autos.AutoDashboardTab;
 import frc.robot.commands.TeleopSwerveCTRE;
 import frc.robot.subsystems.JoystickSubsystem;
@@ -87,7 +87,7 @@ public class RobotContainer {
   public final Telemetry swerveTelemetry = new Telemetry(TeleopSwerveCTRE.kMaxSpeed);
 
   // Subsystem used to drive addressable LEDs
-  public final LEDSubsystem ledSubsystem = new LEDSubsystem(LEDConstants.kOff);
+  public final LEDSubsystem ledSubsystem = new LEDSubsystem(ColorConstants.kOff);
 
   /** Called to create the robot container */
   public RobotContainer() {

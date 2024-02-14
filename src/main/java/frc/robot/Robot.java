@@ -54,7 +54,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.lib.LED.LEDConstants;
+import frc.lib.LED.ColorConstants;
 import frc.lib.utility.AdvantageKitLogInitializer;
 import frc.lib.utility.Alert;
 import frc.lib.utility.Alert.AlertType;
@@ -229,7 +229,7 @@ public class Robot extends LoggedRobot {
   public void teleopInit() {
     // Set LEDs
     LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
-    m_teleOpLEDCommand = new LEDsToSolidColor(ledSubsystem, LEDConstants.getAllianceColor());
+    m_teleOpLEDCommand = new LEDsToSolidColor(ledSubsystem, ColorConstants.getAllianceColor());
     m_teleOpLEDCommand.schedule();
 
     if (m_autonomousCommand != null) {

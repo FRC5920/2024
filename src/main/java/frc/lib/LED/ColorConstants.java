@@ -57,7 +57,7 @@ import edu.wpi.first.wpilibj.util.Color;
 import java.util.Optional;
 
 /** Add your docs here. */
-public class LEDConstants {
+public class ColorConstants {
 
   public static final Color kOff = new Color(0, 0, 0);
   public static final Color kWhite = new Color(255, 255, 255);
