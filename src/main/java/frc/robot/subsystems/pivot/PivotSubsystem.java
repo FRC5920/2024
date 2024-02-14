@@ -95,7 +95,7 @@ public class PivotSubsystem extends SubsystemBase {
   private static final double kCANcoderMagnetOffsetRot = 0.4;
 
   /** Gear ratio between the Falcon motors and the pivot axle */
-  private static final double kFalconToPivotGearRatio = 20.0 / 1.0;
+  private static final double kFalconToPivotGearRatio = 40.0 / 1.0;
 
   ////////////////////////////////////
   // Attributes

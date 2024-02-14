@@ -49,12 +49,14 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.climber;
+package frc.robot.subsystems.intake;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix6.hardware.TalonFX;
+
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -72,7 +74,7 @@ import frc.robot.sim.SimDeviceManager;
  * @remarks Motor config is based on the CTRE Phoenix 5 library PositionClosedLoop example
  *     https://github.com/CrossTheRoadElec/Phoenix5-Examples/blob/master/Java%20General/PositionClosedLoop/src/main/java/frc/robot/Robot.java
  */
-public class ClimberSubsystem extends SubsystemBase {
+public class IntakeSubsystem extends SubsystemBase {
 
   ////////////////////////////////////
   // CONSTANTS
@@ -81,46 +83,62 @@ public class ClimberSubsystem extends SubsystemBase {
   /** Name of the CAN bus that climber motors are connected to */
   private static final String kCANBusName = "rio";
 
-  /** CAN ID of the climber lead motor */
-  private static final int kClimberLeaderCANId = 30;
-  /** CAN ID of the climber follower motor */
-  private static final int kClimberFollowerCANId = 21;
+  /** CAN ID of the motor used to drive the intake flywheels */
+  private static final int kFlywheelMotorCANId = 40;
 
-  /** Gear ratio between the Falcon motors and the climber mechanism */
-  private static final double kFalconToClimberGearRatio = 100.0 / 1.0;
+  /** CAN ID of the motor used to drive the gamepiece indexer */
+  private static final int kIndexerMotorCANId = 41;
 
-  /** Max number of rotations to achieve full extension */
-  private static final double kMaxRotations = 100.0; // TODO: set this value based on mechanisms
-
-  /** Peak output (%) that intake motors should run */
-  private static final double kMaxMotorOutputPercent = 1.0;
-
-  /**
-   * Which PID slot to pull gains from. Starting 2018, you can choose from 0,1,2 or 3. Only the
-   * first two (0,1) are visible in web-based configuration.
+  /** CAN ID of the sensor used to detect the presence of a gamepiece in the intake 
+   * @see https://github.com/GrappleRobotics/LaserCAN.git
    */
-  public static final int kSlotIdx = 0;
+  private static final int kGamepieceSensorCANId = 42;
 
-  /**
-   * Talon SRX/ Victor SPX will supported multiple (cascaded) PID loops. For now we just want the
-   * primary one.
-   */
+
+
+  ////////////////////////////////////
+  // Flywheel Motor Configuration
+  ////////////////////////////////////
+
+  /** Gear ratio between the flywheel motor and the flywheel mechanism */
+  private static final double kFlywheelMotorGearRatio = 1.0 / 1.0;
+
+  /** Maximum velocity (rotations per second) that the flywheel motor should run at */
+  private static final double kMaxFlywheelMotorVelocity = 1.0;
+
+
+  ////////////////////////////////////
+  // Indexer Motor Configuration
+  ////////////////////////////////////
+
+  /** Gear ratio between the indexer motor and the indexer mechanism */
+  private static final double kIndexerMotorGearRatio = 5.0 / 1.0;
+
+  /** Maximum velocity (rotations per second) that the indexer motor should run at */
+  private static final double kMaxIndexerMotorVelocity = 1.0;
+
+  /** Index of the PID gains to use in the indexer motor */
+  public static final int kIndexerPIDSlotIdx = 0;
+
+  /** Talon SRX/ Victor SPX will supported multiple (cascaded) PID loops. For now we just want the
+   * primary one */
   public static final int kPIDLoopIdx = 0;
 
-  /**
-   * Set to zero to skip waiting for confirmation, set to nonzero to wait and report to DS if action
-   * fails.
-   */
+  /** Set to zero to skip waiting for confirmation, set to nonzero to wait and report to DS if action
+   * fails */
   public static final int kTimeoutMs = 30;
+
 
   ////////////////////////////////////
   // Attributes
   ////////////////////////////////////
 
-  /** Master motor used to control climber extension */
-  private final WPI_TalonSRX m_climberLeader = new WPI_TalonSRX(kClimberLeaderCANId);
-  /** Slave motor used to control climber extension */
-  private final WPI_TalonSRX m_climberFollower = new WPI_TalonSRX(kClimberFollowerCANId);
+  /** Motor used to drive the flywheels at the entrnce of the intake */
+  private final TalonFX m_flywheelMotor = new TalonFX(kFlywheelMotorCANId, kCANBusName);
+
+  /** Motor used to drive the indexer (internal) wheels of the intake */
+  private final WPI_TalonSRX m_indexerMotor = new WPI_TalonSRX(kGamepieceSensorCANId);
+
 
   /** Object used to process measurements from the Talon SRX controllers */
   private final SensorMeasurement m_sensorConverter =
@@ -131,7 +149,7 @@ public class ClimberSubsystem extends SubsystemBase {
       new Alert("Failed to configure climber motors", Alert.AlertType.ERROR);
 
   /** Creates a new climber subsystem */
-  public ClimberSubsystem() {
+  public IntakeSubsystem() {
     configureMotors();
   }
 
