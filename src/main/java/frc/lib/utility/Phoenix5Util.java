@@ -54,6 +54,37 @@ package frc.lib.utility;
 /** Utility functions and constants used in conjunction with the CTRE Phoenix 5 library */
 public class Phoenix5Util {
 
+  // Falcon motors report position in sensor units (ticks)
+  // 1 revolution = 2048 counts
+  private static final double kFalconTicksPerRevolution = 2048.0;
+
+  // Number of degrees per Falcon motor sensor tick
+  private static final double kDegreesPerFalconTick = 360.0 / kFalconTicksPerRevolution;
+  // Number of Falcon motor sensor ticks per degree
+  private static final double kFalconTicksPerDegree = kFalconTicksPerRevolution / 360.0;
+
+  /**
+   * Converts an angle in degrees to Falcon sensor units (ticks)
+   *
+   * @param degrees Angle in degrees to convert
+   * @return Equivalent value in Falcon ticks assuming a 1:1 coupling ratio between sensor and motor
+   *     shaft
+   */
+  public static final double degreesToFalconTicks(double degrees) {
+    return degrees / kFalconTicksPerDegree;
+  }
+
+  /**
+   * Converts a value in Falcon sensor units (ticks) to the equivalent motor shaft position in
+   * degrees
+   *
+   * @param falconTicks Falcon ticks value to convert
+   * @return Equivalent motor shaft position in degrees
+   */
+  public static final double falconTicksToDegrees(double falconTicks) {
+    return falconTicks * kDegreesPerFalconTick;
+  }
+
   /**
    * Common sensor resolutions
    *

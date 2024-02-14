@@ -59,6 +59,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.utility.Alert;
+import frc.lib.utility.Phoenix5Util;
 import frc.lib.utility.Phoenix5Util.Sensor;
 import frc.lib.utility.Phoenix5Util.SensorMeasurement;
 import frc.robot.sim.SimDeviceManager;
@@ -90,6 +91,9 @@ public class ClimberSubsystem extends SubsystemBase {
 
   /** Max number of rotations to achieve full extension */
   private static final double kMaxRotations = 100.0; // TODO: set this value based on mechanisms
+
+  /** Peak output (%) that intake motors should run */
+  private static final double kMaxMotorOutputPercent = 1.0;
 
   /**
    * Which PID slot to pull gains from. Starting 2018, you can choose from 0,1,2 or 3. Only the
@@ -200,6 +204,24 @@ public class ClimberSubsystem extends SubsystemBase {
     ///////////////////////////////////
     m_climberLeader.configFactoryDefault();
 
+    // Set based on what direction you want forward/positive to be. This does not affect sensor
+    // phase.
+    // Choose based on what direction you want to be positive, this does not affect motor invert
+    final boolean kMotorInvert = false;
+    m_climberLeader.setInverted(kMotorInvert);
+
+    // Set motor to brake when not commanded
+    m_climberLeader.setNeutralMode(NeutralMode.Brake);
+
+    // Set neutral deadband to super small 0.001 (0.1 %) because the default deadband is 0.04 (4 %)
+    m_climberLeader.configNeutralDeadband(0.01, kTimeoutMs);
+
+    /* Config the peak and nominal outputs, 12V means full */
+    m_climberLeader.configNominalOutputForward(0, kTimeoutMs);
+    m_climberLeader.configNominalOutputReverse(0, kTimeoutMs);
+    m_climberLeader.configPeakOutputForward(kMaxMotorOutputPercent, kTimeoutMs);
+    m_climberLeader.configPeakOutputReverse(-1.0 * kMaxMotorOutputPercent, kTimeoutMs);
+
     // Configure the SRX controller to use an attached CTRE magnetic encoder's absolute
     // position measurement
     FeedbackDevice feedBackDevice =
@@ -208,42 +230,13 @@ public class ClimberSubsystem extends SubsystemBase {
             : FeedbackDevice.PulseWidthEncodedPosition;
     m_climberLeader.configSelectedFeedbackSensor(feedBackDevice, kPIDLoopIdx, kTimeoutMs);
 
+    // Ensure sensor is positive when output is positive
     // Choose so that Talon does not report sensor out of phase
     final boolean kSensorPhase = false;
-
-    // Choose based on what direction you want to be positive, this does not affect motor invert
-    final boolean kMotorInvert = false;
-
-    /* Ensure sensor is positive when output is positive */
     m_climberLeader.setSensorPhase(kSensorPhase);
 
-    // Set based on what direction you want forward/positive to be. This does not affect sensor
-    // phase.
-    m_climberLeader.setInverted(kMotorInvert);
-
-    // Set motor to brake when not commanded
-    m_climberLeader.setNeutralMode(NeutralMode.Brake);
-
-    /* Config the peak and nominal outputs, 12V means full */
-    m_climberLeader.configNominalOutputForward(0, kTimeoutMs);
-    m_climberLeader.configNominalOutputReverse(0, kTimeoutMs);
-    m_climberLeader.configPeakOutputForward(1, kTimeoutMs);
-    m_climberLeader.configPeakOutputReverse(-1, kTimeoutMs);
-
-    /**
-     * Config the allowable closed-loop error, Closed-Loop output will be neutral within this range.
-     * See Table in Section 17.2.1 for native units per rotation.
-     */
-    // final double deadbandRotations = kMaxRotations * 0.01; // TODO: set up allowable deadband
-    // final double deadbandSensorUnits =
-    // m_sensorConverter.rotationsToSensorUnits(deadbandRotations);
-    // m_climberLeader.configAllowableClosedloopError(0, deadbandSensorUnits, kTimeoutMs);
-
-    /* Config Position Closed Loop gains in slot0, tsypically kF stays zero. */
-    m_climberLeader.config_kF(kPIDLoopIdx, 0.0, kTimeoutMs);
-    m_climberLeader.config_kP(kPIDLoopIdx, 0.15, kTimeoutMs);
-    m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs);
-    m_climberLeader.config_kD(kPIDLoopIdx, 1.0, kTimeoutMs);
+    configureClosedLoopControl();
+    // configureMotionMagicControl();
 
     /**
      * Grab the 360 degree position of the MagEncoder's absolute position, and intitally set the
@@ -265,5 +258,44 @@ public class ClimberSubsystem extends SubsystemBase {
 
     // Configure follower motor to follow leader motor
     m_climberFollower.follow(m_climberLeader);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Configure to use PID-based closed-loop control */
+  void configureClosedLoopControl() {
+    // Configure the allowable closed-loop error, Closed-Loop output will be neutral within this
+    // range.
+    // See Table in Section 17.2.1 for native units per rotation.
+
+    // final double deadbandRotations = kMaxRotations * 0.01; // TODO: set up allowable deadband
+    // final double deadbandSensorUnits =
+    // m_sensorConverter.rotationsToSensorUnits(deadbandRotations);
+    // m_climberLeader.configAllowableClosedloopError(0, deadbandSensorUnits, kTimeoutMs);
+
+    /* Config Position Closed Loop gains in slot0, tsypically kF stays zero. */
+    m_climberLeader.config_kF(kPIDLoopIdx, 0.0, kTimeoutMs);
+    m_climberLeader.config_kP(kPIDLoopIdx, 0.15, kTimeoutMs);
+    m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs);
+    m_climberLeader.config_kD(kPIDLoopIdx, 1.0, kTimeoutMs);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Configure to use Motion Magic trapezoidal profile motor control */
+  void configureMotionMagicControl() {
+    // Select a motion profile slot
+    int kSlotIdx = 0;
+    m_climberLeader.selectProfileSlot(kSlotIdx, kPIDLoopIdx);
+
+    // Set up PID gains
+    m_climberLeader.config_kF(kPIDLoopIdx, 0.3, kTimeoutMs);
+    m_climberLeader.config_kP(kPIDLoopIdx, 0.25, kTimeoutMs);
+    m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs);
+    m_climberLeader.config_kD(kPIDLoopIdx, 0.005, kTimeoutMs);
+    m_climberLeader.config_IntegralZone(kPIDLoopIdx, 0.01);
+
+    // Set acceleration and cruise velocity
+    m_climberLeader.configMotionCruiseVelocity(Phoenix5Util.degreesToFalconTicks(7.6), kTimeoutMs);
+    m_climberLeader.configMotionAcceleration(Phoenix5Util.degreesToFalconTicks(4.94), kTimeoutMs);
+    m_climberLeader.configMotionSCurveStrength(6);
   }
 }
