@@ -88,7 +88,7 @@ public class HALSubsystem extends SubsystemBase {
     LaserCan.Measurement measurementLeft = lcHALLeft.getMeasurement();
     if (measurementLeft != null
         && measurementLeft.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
-      //System.out.println("The target is " + measurementLeft.distance_mm + "mm away!");
+      // System.out.println("The target is " + measurementLeft.distance_mm + "mm away!");
       LeftRange = measurementLeft.distance_mm;
     } else {
       LeftRange = -1;
@@ -96,28 +96,29 @@ public class HALSubsystem extends SubsystemBase {
     LaserCan.Measurement measurementRight = lcHALRight.getMeasurement();
     if (measurementRight != null
         && measurementRight.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
-      //System.out.println("The target is " + measurementRight.distance_mm + "mm away!");
+      // System.out.println("The target is " + measurementRight.distance_mm + "mm away!");
       RightRange = measurementRight.distance_mm;
     } else {
-        RightRange = -1;
+      RightRange = -1;
     }
   }
 
-  public String queryHal(){
+  public String queryHal() {
     return "I'm sorry, Dave. I'm afraid I can't do that.";
   }
 
-  public double detectPotentialCollision(){
-    if (isObjectInRange()){
+  public double detectPotentialCollision() {
+    if (isObjectInRange()) {
       return Math.min(LeftRange, RightRange);
-    }else{
+    } else {
       return -1;
     }
   }
-  public boolean isObjectInRange(){
-    if (LeftRange > 0 && RightRange > 0){
+
+  public boolean isObjectInRange() {
+    if (LeftRange > 0 && RightRange > 0) {
       return true;
-    }else{
+    } else {
       return false;
     }
   }
