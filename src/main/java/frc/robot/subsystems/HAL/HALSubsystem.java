@@ -58,10 +58,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class HALSubsystem extends SubsystemBase {
   private LaserCan lcHALLeft;
   private LaserCan lcHALRight;
+  private double LeftRange;
+  private double RightRange;
+
   /** Creates a new HALSubsystem. */
   public HALSubsystem() {
-    lcHALLeft = new LaserCan(1);
-    lcHALRight = new LaserCan(2);
+    lcHALLeft = new LaserCan(31);
+    lcHALRight = new LaserCan(32);
+
     try {
       lcHALLeft.setRangingMode(LaserCan.RangingMode.LONG);
       lcHALLeft.setRegionOfInterest(new LaserCan.RegionOfInterest(8, 8, 16, 16));
@@ -84,22 +88,38 @@ public class HALSubsystem extends SubsystemBase {
     LaserCan.Measurement measurementLeft = lcHALLeft.getMeasurement();
     if (measurementLeft != null
         && measurementLeft.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
-      System.out.println("The target is " + measurementLeft.distance_mm + "mm away!");
+      // System.out.println("The target is " + measurementLeft.distance_mm + "mm away!");
+      LeftRange = measurementLeft.distance_mm;
     } else {
-      System.out.println(
-          "Oh no! The target is out of range, or we can't get a reliable measurement!");
-      // You can still use distance_mm in here, if you're ok tolerating a clamped value or an
-      // unreliable measurement.
+      LeftRange = -1;
     }
     LaserCan.Measurement measurementRight = lcHALRight.getMeasurement();
     if (measurementRight != null
         && measurementRight.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT) {
-      System.out.println("The target is " + measurementRight.distance_mm + "mm away!");
+      // System.out.println("The target is " + measurementRight.distance_mm + "mm away!");
+      RightRange = measurementRight.distance_mm;
     } else {
-      System.out.println(
-          "Oh no! The target is out of range, or we can't get a reliable measurement!");
-      // You can still use distance_mm in here, if you're ok tolerating a clamped value or an
-      // unreliable measurement.
+      RightRange = -1;
+    }
+  }
+
+  public String queryHal() {
+    return "I'm sorry, Dave. I'm afraid I can't do that.";
+  }
+
+  public double detectPotentialCollision() {
+    if (isObjectInRange()) {
+      return Math.min(LeftRange, RightRange);
+    } else {
+      return -1;
+    }
+  }
+
+  public boolean isObjectInRange() {
+    if (LeftRange > 0 && RightRange > 0) {
+      return true;
+    } else {
+      return false;
     }
   }
 }
