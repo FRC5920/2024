@@ -140,7 +140,24 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  public void processInputs(IntakeSubsystemInputs inputs) {}
+  /**
+   * This method is called each robot cycle to process inputs to the subsystem
+   *
+   * @param inputs Object to populate with subsystem input values to be logged
+   */
+  public void processInputs(IntakeSubsystemInputs inputs) {
+    // TODO: get input measurements for flywheel
+    inputs.flywheel.velocity = 0.0;
+    inputs.flywheel.voltage = 0.0;
+    inputs.flywheel.current = 0.0;
+    inputs.flywheel.tempCelsius = 0.0;
+
+    // TODO: get input measurements for indexer
+    inputs.indexer.velocity = 0.0;
+    inputs.indexer.voltage = 0.0;
+    inputs.indexer.current = 0.0;
+    inputs.indexer.tempCelsius = 0.0;
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**

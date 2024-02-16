@@ -105,7 +105,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private final IntakeSubsystemIO m_io;
 
   /** Logged subsystem inputs */
-  private final IntakeSubsystemInputs m_inputs = new IntakeSubsystemInputs();
+  private final IntakeSubsystemInputs m_inputs = new IntakeSubsystemInputs("Intake");
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**

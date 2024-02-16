@@ -84,4 +84,19 @@ public class IntakeSubsystemIOSim extends IntakeSubsystemIOReal {
     m_simIndexer =
         new SimulatedDevice(new TalonSRXSimProfile(m_indexerMotor, kIndexerRotorInertia));
   }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * This method is called each robot cycle to process inputs to the subsystem
+   *
+   * @param inputs Object to populate with subsystem input values to be logged
+   */
+  public void processInputs(IntakeSubsystemInputs inputs) {
+    // Update device simulations
+    m_simFlywheel.calculate();
+    m_simIndexer.calculate();
+
+    // Process inputs
+    super.processInputs(inputs);
+  }
 }
