@@ -54,7 +54,7 @@ package frc.robot.sim;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.wpilibj.Timer;
+import frc.robot.sim.ctreSim.SimulatedDevice;
 import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
 import frc.robot.sim.ctreSim.TalonFXProfile;
 import frc.robot.sim.ctreSim.TalonSRXSimProfile;
@@ -115,59 +115,6 @@ public class SimDeviceManager {
   public void addTalonSRX(TalonSRX talon, double rotorInertia) {
     if (talon != null) {
       m_devices.add(new SimulatedDevice(new TalonSRXSimProfile(talon, rotorInertia)));
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Interface implemented by simulated devices */
-  public interface SimProfile {
-
-    /**
-     * Calculates the simulated device state
-     *
-     * @param elapsedSeconds Number of seconds that have elapsed since the last time
-     *     calculateState() was calculated. This value is guaranteed to be non-negative and will be
-     *     exactly equal to zero when the initial state is being calculated.
-     */
-    public void calculateState(double elapsedSeconds);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Inner class used to track simulated devices */
-  private static class SimulatedDevice {
-    /** The simulated device implementation */
-    private final SimProfile m_profile;
-
-    /** Flag used to indicate the initial simulated device state calculation */
-    private boolean m_isInitialState = true;
-
-    /** Time in seconds when calculate() was last called */
-    private double m_lastSimTime = 0.0;
-
-    public SimulatedDevice(SimProfile profile) {
-      m_profile = profile;
-    }
-
-    /** Runs the simulation profile. Implemented by device-specific profiles. */
-    public void calculate() {
-      double currentTimeSec = Timer.getFPGATimestamp();
-
-      // Handle initial state calculation
-      if (m_isInitialState) {
-        m_lastSimTime = currentTimeSec;
-        m_isInitialState = false;
-      }
-
-      // Calculate the device's state using the elapsed time in seconds
-      double elapsedSeconds = currentTimeSec - m_lastSimTime;
-
-      if (elapsedSeconds < 0.0) {
-        System.out.println("*** WARNING *** skipping negative time step in simulation!");
-      } else {
-        m_profile.calculateState(elapsedSeconds);
-      }
-
-      m_lastSimTime = currentTimeSec;
     }
   }
 }

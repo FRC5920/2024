@@ -54,6 +54,7 @@ package frc.robot;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.utility.RobotRunMode;
 import frc.lib.utility.RobotType;
+import frc.robot.subsystems.swerveCTRE.TunerConstants;
 import java.util.Map;
 import org.littletonrobotics.junction.LoggedRobot;
 
@@ -108,5 +109,32 @@ public final class Constants {
     return RobotBase.isReal()
         ? RobotRunMode.REAL
         : (kLogPlaybackIsEnabled ? RobotRunMode.REPLAY : RobotRunMode.SIM);
+  }
+
+  public enum CANDevice {
+    SwerveFrontLeftDriveMotorId(TunerConstants.kFrontLeftDriveMotorId),
+    SwerveFrontLeftSteerMotorId(TunerConstants.kFrontLeftSteerMotorId),
+    SwerveFrontLeftEncoderId(TunerConstants.kFrontLeftEncoderId),
+    SwerveFrontRightDriveMotorId(TunerConstants.kFrontRightDriveMotorId),
+    SwerveFrontRightSteerMotorId(TunerConstants.kFrontRightSteerMotorId),
+    SwerveFrontRightEncoderId(TunerConstants.kFrontRightEncoderId),
+    SwerveBackLeftDriveMotorId(TunerConstants.kBackLeftDriveMotorId),
+    SwerveBackLeftSteerMotorId(TunerConstants.kBackLeftSteerMotorId),
+    SwerveBackLeftEncoderId(TunerConstants.kBackLeftEncoderId),
+    SwerveBackRightDriveMotorId(TunerConstants.kBackRightDriveMotorId),
+    SwerveBackRightSteerMotorId(TunerConstants.kBackRightSteerMotorId),
+    SwerveBackRightEncoderId(TunerConstants.kBackRightEncoderId),
+    kPigeonId(TunerConstants.kPigeonId),
+
+    IntakeFlywheelMotorCANId(40),
+    IntakeIndexerMotorCANId(41),
+    IntakeGamepieceSensorCANId(42);
+
+    /** CAN bus ID */
+    public final int id;
+
+    private CANDevice(int id) {
+      this.id = id;
+    }
   }
 }

@@ -54,18 +54,30 @@ package frc.robot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.LED.ColorConstants;
+import frc.robot.Constants.CANDevice;
 import frc.robot.autos.AutoDashboardTab;
 import frc.robot.commands.TeleopSwerveCTRE;
 import frc.robot.subsystems.JoystickSubsystem;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
 import frc.robot.subsystems.climber.ClimberSubsystem;
 import frc.robot.subsystems.dashboard.DashboardSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystemIO;
+import frc.robot.subsystems.intake.IntakeSubsystemIOReal;
+import frc.robot.subsystems.intake.IntakeSubsystemIOSim;
 import frc.robot.subsystems.pivot.PivotSubsystem;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerveCTRE.Telemetry;
 import frc.robot.subsystems.swerveCTRE.TunerConstants;
 
 public class RobotContainer {
+  public static final IntakeSubsystemIOReal.Config intakeConfig =
+      new IntakeSubsystemIOReal.Config(
+          "rio",
+          CANDevice.IntakeFlywheelMotorCANId.id,
+          CANDevice.IntakeIndexerMotorCANId.id,
+          CANDevice.IntakeGamepieceSensorCANId.id);
+
   /** Subsystem providing Xbox controllers */
   public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
 
@@ -77,6 +89,9 @@ public class RobotContainer {
 
   /** Climber subsystem */
   public final ClimberSubsystem climberSubsystem = new ClimberSubsystem();
+
+  /** Intake subsystem */
+  public final IntakeSubsystem IntakeSubsystem;
 
   // Subsystem facilitating display of dashboard tabs
   public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
@@ -91,6 +106,21 @@ public class RobotContainer {
 
   /** Called to create the robot container */
   public RobotContainer() {
+    IntakeSubsystemIO intakeIO = null;
+
+    switch (Constants.getMode()) {
+      case REAL:
+        intakeIO = new IntakeSubsystemIOReal(intakeConfig);
+      case SIM:
+        intakeIO = new IntakeSubsystemIOSim(intakeConfig);
+
+      case REPLAY:
+        // Create empty implementations for log replay
+        intakeIO = new IntakeSubsystemIO() {};
+        break;
+    }
+    IntakeSubsystem = new IntakeSubsystem(intakeIO);
+
     joystickSubsystem.configureButtonBindings(this);
     // Set up a command to drive the swerve in Teleoperated mode
     driveTrain.setDefaultCommand(

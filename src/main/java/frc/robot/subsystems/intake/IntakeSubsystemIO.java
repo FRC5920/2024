@@ -49,90 +49,98 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.sim.ctreSim;
+package frc.robot.subsystems.intake;
 
-import com.ctre.phoenix.motorcontrol.TalonSRXSimCollection;
-import com.ctre.phoenix.motorcontrol.can.*;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.sim.ctreSim.SimulatedDevice.SimProfile;
+import org.littletonrobotics.junction.AutoLog;
+import org.littletonrobotics.junction.LogTable;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-/**
- * Simulated device profile for a CTRE Talon SRX motor controller
- *
- * @remarks This profile was copied from the MotionMagic example provided with Phoenix6 Java
- *     examples:
- *     https://github.com/CrossTheRoadElec/Phoenix5-Examples/blob/master/Java%20General/PositionClosedLoop/src/main/java/frc/robot/sim/TalonSRXSimProfile.java
- */
-public class TalonSRXSimProfile implements SimProfile {
-  private static final double kRotorInertia = 0.001;
-  private static final double kSensorUnitsPerRotation = 4096;
-  private final TalonSRX _talon;
-  private final DCMotorSim _motorSim;
+/** I/O abstraction for the IntakeSubsystem */
+public interface IntakeSubsystemIO {
 
-  /** The current position */
-  // private double _pos = 0;
-  /** The current velocity */
-  private double _vel = 0;
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Update logged input quantities */
+  default void processInputs(IntakeSubsystemInputs inputs) {}
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Creates a new simulation profile for a TalonSRX device.
+   * Sets the desired velocity of the indexer mechanism
    *
-   * @param talon The TalonSRX device
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
+   * @param rotPerSec Desired velocity in rotations per second
    */
-  public TalonSRXSimProfile(final TalonSRX talon, final double rotorInertia) {
-    this._talon = talon;
-    this._motorSim = new DCMotorSim(DCMotor.getCIM(1), 1.0, rotorInertia);
+  default void setIndexerVelocity(double rotPerSec) {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Sets the desired velocity of the flywheel mechanism
+   *
+   * @param rotPerSec Desired velocity in rotations per second
+   */
+  default void setFlywheelVelocity(double rotPerSec) {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the current velocity of the indexer mechanism
+   *
+   * @return The velocity of the indexer mechanism in rotations per second
+   */
+  default double getIndexerVelocity() {
+    return 0.0;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Calculates the simulated device state
+   * Returns the current velocity of the flywheel mechanism
    *
-   * @param elapsedSeconds Number of seconds that have elapsed since the last time calculateState()
-   *     was calculated. This value is guaranteed to be non-negative and will be exactly equal to
-   *     zero when the initial state is being calculated.
+   * @return The velocity of the flywheel mechanism in rotations per second
    */
-  public void calculateState(double elapsedSeconds) {
-    /// DEVICE SPEED SIMULATION
-
-    TalonSRXSimCollection simCollection = _talon.getSimCollection();
-
-    double motorInputVoltage = simCollection.getMotorOutputLeadVoltage();
-
-    // Run the DC motor simulation with the applied motor voltage and elapsed time
-    _motorSim.setInputVoltage(motorInputVoltage);
-    _motorSim.update(elapsedSeconds);
-
-    final double position_rot = _motorSim.getAngularPositionRotations();
-    final double velocity_rps = Units.radiansToRotations(_motorSim.getAngularVelocityRadPerSec());
-
-    /// SET SIM PHYSICS INPUTS
-
-    // Set position in native units
-    int rawPosition = (int) (position_rot * kSensorUnitsPerRotation);
-    simCollection.setQuadratureRawPosition(rawPosition);
-    simCollection.setPulseWidthPosition(rawPosition);
-    simCollection.setAnalogPosition(rawPosition);
-
-    // Set velocity in native units per 100ms
-    int rawVelocity = (int) (velocity_rps * kSensorUnitsPerRotation * 0.1);
-    simCollection.setQuadratureVelocity(rawVelocity);
-    simCollection.setPulseWidthVelocity(rawVelocity);
-    simCollection.setAnalogVelocity(rawVelocity);
-
-    double outPerc = motorInputVoltage / 12.0;
-    double supplyCurrent = Math.abs(outPerc) * 30 * random(0.95, 1.05);
-    double statorCurrent = outPerc == 0 ? 0 : supplyCurrent / Math.abs(outPerc);
-    simCollection.setSupplyCurrent(supplyCurrent);
-    simCollection.setStatorCurrent(statorCurrent);
-    simCollection.setBusVoltage(12 - outPerc * outPerc * 3 / 4 * random(0.95, 1.05));
+  default double getFlywheelVelocity() {
+    return 0.0;
   }
 
-  /* scales a random domain of [0, 2pi] to [min, max] while prioritizing the peaks */
-  static double random(double min, double max) {
-    return (max - min) / 2 * Math.sin(Math.IEEEremainder(Math.random(), 2 * 3.14159))
-        + (max + min) / 2;
+  /** Input measurements for the indexer mechanism */
+  @AutoLog
+  public static class IndexerInputs {
+    /** Target velocity in rotations per second */
+    public double targetVelocity = 0.0;
+    /** Measured velocity of the indexer mechanism in rotations per second */
+    public double velocity = 0.0;
+    /** Voltage applied to the indexer motor in Volts */
+    public double voltage = 0.0;
+    /** Indexer motor current in Amps */
+    public double current = 0.0;
+    /** Indexer motor temperature in degrees Celcius */
+    public double tempCelsius = 0.0;
+  }
+
+  /** Input measurements for the flywheel mechanism */
+  @AutoLog
+  public static class FlywheelInputs {
+    /** Target velocity in rotations per second */
+    public double targetVelocity = 0.0;
+    /** Velocity of the flywheel mechanism in rotations per second */
+    public double velocityRotPerSec = 0.0;
+    /** Voltage applied to the flywheel motor in Volts */
+    public double voltage = 0.0;
+    /** Flywheel motor current in Amps */
+    public double current = 0.0;
+    /** Flywheel motor temperature in degrees Celcius */
+    public double tempCelsius = 0.0;
+  }
+
+  /** Input measurements for the intake subsystem */
+  public static class IntakeSubsystemInputs implements LoggableInputs {
+    final FlywheelInputsAutoLogged flywheel = new FlywheelInputsAutoLogged();
+    final IndexerInputsAutoLogged indexer = new IndexerInputsAutoLogged();
+
+    public void toLog(LogTable table) {
+      flywheel.toLog(table);
+      indexer.toLog(table);
+    }
+
+    public void fromLog(LogTable table) {
+      flywheel.fromLog(table);
+      indexer.fromLog(table);
+    }
   }
 }

@@ -56,12 +56,34 @@ public class Phoenix5Util {
 
   // Falcon motors report position in sensor units (ticks)
   // 1 revolution = 2048 counts
-  private static final double kFalconTicksPerRevolution = 2048.0;
+  private static final double kFalconTicksPerRotation = 2048.0;
 
   // Number of degrees per Falcon motor sensor tick
-  private static final double kDegreesPerFalconTick = 360.0 / kFalconTicksPerRevolution;
+  private static final double kDegreesPerFalconTick = 360.0 / kFalconTicksPerRotation;
   // Number of Falcon motor sensor ticks per degree
-  private static final double kFalconTicksPerDegree = kFalconTicksPerRevolution / 360.0;
+  private static final double kFalconTicksPerDegree = kFalconTicksPerRotation / 360.0;
+
+  /**
+   * Converts a number of rotations to Falcon sensor units (ticks)
+   *
+   * @param degrees Number of rotations to convert
+   * @return Equivalent value in Falcon ticks assuming a 1:1 coupling ratio between sensor and motor
+   *     shaft
+   */
+  public static final double rotationsToFalconTicks(double rotations) {
+    return rotations * kFalconTicksPerRotation;
+  }
+
+  /**
+   * Converts a value in Falcon sensor units (ticks) to an equivalent number of motor shaft
+   * rotations
+   *
+   * @param falconTicks Falcon ticks value to convert
+   * @return Equivalent number of motor shaft rotations
+   */
+  public static final double falconTicksToRotations(double falconTicks) {
+    return falconTicks / kFalconTicksPerRotation;
+  }
 
   /**
    * Converts an angle in degrees to Falcon sensor units (ticks)
