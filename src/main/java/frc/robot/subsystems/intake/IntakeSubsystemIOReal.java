@@ -52,13 +52,14 @@
 package frc.robot.subsystems.intake;
 
 import au.grapplerobotics.LaserCan;
-import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.utility.Alert;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
@@ -86,8 +87,12 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    * Request used to issue a velocity setpoint to the flywheel motor: Start at velocity 0, enable
    * FOC, no feed forward, use slot 0
    */
-  private final VelocityVoltage m_velocityReq =
+  private final VelocityVoltage m_voltsVelocityReq =
       new VelocityVoltage(0, 0, true, 0, kFlywheelPIDSlot, false, false, false);
+
+  /* Start at velocity 0, no feed forward, use slot 1 */
+  private final VelocityTorqueCurrentFOC m_torqueVelocityReq =
+      new VelocityTorqueCurrentFOC(0, 0, 0, 1, false, false, false);
 
   /** Status signal used to read the velocity of the flywheel motor */
   private final StatusSignal<Double> m_flywheelVelocitySignal;
@@ -145,7 +150,11 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
     m_flywheelTempSignal = m_flywheelMotor.getDeviceTemp();
 
     m_gamepieceSensor = new LaserCan(gamepieceSensorCAN.id);
+  }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Initializes and configures the I/O implementation */
+  public void initialize() {
     configureFlywheel();
     configureIndexer();
   }
@@ -190,7 +199,7 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    * @param rotPerSec Desired velocity in rotations per second
    */
   public void setFlywheelVelocity(double rotPerSec) {
-    m_flywheelMotor.setControl(m_velocityReq.withVelocity(rotPerSec));
+    m_flywheelMotor.setControl(m_voltsVelocityReq.withVelocity(rotPerSec));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -215,7 +224,44 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  private void configureFlywheel() {}
+  private void configureFlywheel() {
+    TalonFXConfiguration configs = new TalonFXConfiguration();
+
+    /* Voltage-based velocity requires a feed forward to account for the back-emf of the motor */
+    configs.Slot0.kP = 0.11; // An error of 1 rotation per second results in 2V output
+    configs.Slot0.kI =
+        0.5; // An error of 1 rotation per second increases output by 0.5V every second
+    configs.Slot0.kD =
+        0.0001; // A change of 1 rotation per second squared results in 0.01 volts output
+    configs.Slot0.kV =
+        0.12; // Falcon 500 is a 500kV motor, 500rpm per V = 8.333 rps per V, 1/8.33 = 0.12 volts /
+    // Rotation per second
+    // Peak output of 8 volts
+    configs.Voltage.PeakForwardVoltage = 8;
+    configs.Voltage.PeakReverseVoltage = -8;
+
+    /* Torque-based velocity does not require a feed forward, as torque will accelerate the rotor up to the desired velocity by itself */
+    configs.Slot1.kP = 5; // An error of 1 rotation per second results in 5 amps output
+    configs.Slot1.kI =
+        0.1; // An error of 1 rotation per second increases output by 0.1 amps every second
+    configs.Slot1.kD =
+        0.001; // A change of 1000 rotation per second squared results in 1 amp output
+
+    // Peak output of 40 amps
+    configs.TorqueCurrent.PeakForwardTorqueCurrent = 40;
+    configs.TorqueCurrent.PeakReverseTorqueCurrent = -40;
+
+    /* Retry config apply up to 5 times, report if failure */
+    StatusCode status = StatusCode.StatusCodeNotInitialized;
+    for (int i = 0; i < 5; ++i) {
+      status = m_flywheelMotor.getConfigurator().apply(configs);
+      if (status.isOK()) break;
+    }
+    if (!status.isOK()) {
+      s_flywheelMotorConfigFailedAlert.set(true);
+      System.out.println("Could not configure device. Error: " + status.toString());
+    }
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   private void configureIndexer() {
@@ -246,51 +292,7 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
     // m_indexerMotor.configPeakOutputForward(kMaxMotorOutputPercent, kTimeoutMs);
     // m_indexerMotor.configPeakOutputReverse(-1.0 * kMaxMotorOutputPercent, kTimeoutMs);
 
-    // Configure the SRX controller to use an attached CTRE magnetic encoder's absolute
-    // position measurement
-    FeedbackDevice feedBackDevice =
-        RobotBase.isReal()
-            ? FeedbackDevice.CTRE_MagEncoder_Absolute
-            : FeedbackDevice.PulseWidthEncodedPosition;
-    m_indexerMotor.configSelectedFeedbackSensor(feedBackDevice, kIndexerPIDSlot, kTimeoutMs);
-
-    // Ensure sensor is positive when output is positive
-    // Choose so that Talon does not report sensor out of phase
-    final boolean kSensorPhase = false;
-    m_indexerMotor.setSensorPhase(kSensorPhase);
-
-    // Configure the allowable closed-loop error, Closed-Loop output will be neutral within this
-    // range.
-    // See Table in Section 17.2.1 for native units per rotation.
-
-    // final double deadbandRotations = kMaxRotations * 0.01; // TODO: set up allowable deadband
-    // final double deadbandSensorUnits =
-    // m_sensorConverter.rotationsToSensorUnits(deadbandRotations);
-    // m_indexerMotor.configAllowableClosedloopError(0, deadbandSensorUnits, kTimeoutMs);
-
-    /* Config Position Closed Loop gains in slot0, tsypically kF stays zero. */
-    m_indexerMotor.config_kF(kIndexerPIDSlot, 0.0, kTimeoutMs);
-    m_indexerMotor.config_kP(kIndexerPIDSlot, 0.15, kTimeoutMs);
-    m_indexerMotor.config_kI(kIndexerPIDSlot, 0.0, kTimeoutMs);
-    m_indexerMotor.config_kD(kIndexerPIDSlot, 1.0, kTimeoutMs);
-
-    /**
-     * Grab the 360 degree position of the MagEncoder's absolute position, and intitally set the
-     * relative sensor to match.
-     */
-    int absolutePosition = m_indexerMotor.getSensorCollection().getPulseWidthPosition();
-
-    /* Mask out overflows, keep bottom 12 bits */
-    absolutePosition &= 0xFFF;
-    if (kSensorPhase) {
-      absolutePosition *= -1;
-    }
-    if (kMotorInvert) {
-      absolutePosition *= -1;
-    }
-
-    /* Set the quadrature (absolute) sensor to match absolute */
-    m_indexerMotor.setSelectedSensorPosition(absolutePosition, kIndexerPIDSlot, kTimeoutMs);
+    // TODO: configure motor current limits and ramping
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

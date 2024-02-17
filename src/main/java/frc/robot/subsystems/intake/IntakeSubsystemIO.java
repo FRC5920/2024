@@ -55,6 +55,10 @@ package frc.robot.subsystems.intake;
 public interface IntakeSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Initializes and configures the I/O implementation */
+  default void initialize() {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Update logged input quantities */
   default void processInputs(IntakeSubsystemInputs inputs) {}
 

@@ -119,6 +119,8 @@ public class RobotContainer {
                 CANDevice.IntakeFlywheelMotor,
                 CANDevice.IntakeIndexerMotor,
                 CANDevice.IntakeGamepieceSensor);
+        break;
+
       case SIM:
         intakeIO =
             new IntakeSubsystemIOSim(
@@ -126,6 +128,7 @@ public class RobotContainer {
                 CANDevice.IntakeFlywheelMotor,
                 CANDevice.IntakeIndexerMotor,
                 CANDevice.IntakeGamepieceSensor);
+        break;
 
       case REPLAY:
         // Create empty implementations for log replay

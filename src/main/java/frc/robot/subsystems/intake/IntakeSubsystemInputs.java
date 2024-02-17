@@ -244,15 +244,18 @@ public class IntakeSubsystemInputs implements LoggableInputs {
 
     /** Copies values from a LaserCAN measurement */
     public void fromMeasurement(Measurement measurement) {
-      status = kStatusMap.getOrDefault(measurement.status, String.format("%d", measurement.status));
-      distanceMeters = measurement.distance_mm * 0.001;
-      ambientLevel = measurement.ambient;
-      isLongDistance = measurement.is_long;
-      timingBudgetSec = kTimingBudgetMap.getOrDefault(measurement.budget_ms, -1.0);
-      roi.x = measurement.roi.x;
-      roi.y = measurement.roi.y;
-      roi.w = measurement.roi.w;
-      roi.h = measurement.roi.h;
+      if (measurement != null) {
+        status =
+            kStatusMap.getOrDefault(measurement.status, String.format("%d", measurement.status));
+        distanceMeters = measurement.distance_mm * 0.001;
+        ambientLevel = measurement.ambient;
+        isLongDistance = measurement.is_long;
+        timingBudgetSec = kTimingBudgetMap.getOrDefault(measurement.budget_ms, -1.0);
+        roi.x = measurement.roi.x;
+        roi.y = measurement.roi.y;
+        roi.w = measurement.roi.w;
+        roi.h = measurement.roi.h;
+      }
     }
 
     public void toLog(LogTable table) {

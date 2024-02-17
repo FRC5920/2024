@@ -105,12 +105,13 @@ public class IntakeSubsystem extends SubsystemBase {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Creates a new instance of the subsystem
+   * Creates a new instance of the subsystem and initializes its I/O
    *
    * @param io Subsystem I/O to use
    */
   public IntakeSubsystem(IntakeSubsystemIO io) {
     m_io = io;
+    m_io.initialize();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
