@@ -111,24 +111,44 @@ public final class Constants {
         : (kLogPlaybackIsEnabled ? RobotRunMode.REPLAY : RobotRunMode.SIM);
   }
 
-  public enum CANDevice {
-    SwerveFrontLeftDriveMotorId(TunerConstants.kFrontLeftDriveMotorId),
-    SwerveFrontLeftSteerMotorId(TunerConstants.kFrontLeftSteerMotorId),
-    SwerveFrontLeftEncoderId(TunerConstants.kFrontLeftEncoderId),
-    SwerveFrontRightDriveMotorId(TunerConstants.kFrontRightDriveMotorId),
-    SwerveFrontRightSteerMotorId(TunerConstants.kFrontRightSteerMotorId),
-    SwerveFrontRightEncoderId(TunerConstants.kFrontRightEncoderId),
-    SwerveBackLeftDriveMotorId(TunerConstants.kBackLeftDriveMotorId),
-    SwerveBackLeftSteerMotorId(TunerConstants.kBackLeftSteerMotorId),
-    SwerveBackLeftEncoderId(TunerConstants.kBackLeftEncoderId),
-    SwerveBackRightDriveMotorId(TunerConstants.kBackRightDriveMotorId),
-    SwerveBackRightSteerMotorId(TunerConstants.kBackRightSteerMotorId),
-    SwerveBackRightEncoderId(TunerConstants.kBackRightEncoderId),
-    kPigeonId(TunerConstants.kPigeonId),
+  /** CAN Buses available on the robot */
+  public enum RobotCANBus {
+    CANivore("canivore"),
+    Rio("rio");
 
-    IntakeFlywheelMotorCANId(40),
-    IntakeIndexerMotorCANId(41),
-    IntakeGamepieceSensorCANId(42);
+    public final String name;
+
+    private RobotCANBus(String name) {
+      this.name = name;
+    }
+  }
+
+  /** CAN device info */
+  public enum CANDevice {
+    SwerveFrontLeftDriveMotor(TunerConstants.kFrontLeftDriveMotorId),
+    SwerveFrontLeftSteerMotor(TunerConstants.kFrontLeftSteerMotorId),
+    SwerveFrontLeftEncoder(TunerConstants.kFrontLeftEncoderId),
+    SwerveFrontRightDriveMotor(TunerConstants.kFrontRightDriveMotorId),
+    SwerveFrontRightSteerMotor(TunerConstants.kFrontRightSteerMotorId),
+    SwerveFrontRightEncoder(TunerConstants.kFrontRightEncoderId),
+    SwerveBackLeftDriveMotor(TunerConstants.kBackLeftDriveMotorId),
+    SwerveBackLeftSteerMotor(TunerConstants.kBackLeftSteerMotorId),
+    SwerveBackLeftEncoder(TunerConstants.kBackLeftEncoderId),
+    SwerveBackRightDriveMotor(TunerConstants.kBackRightDriveMotorId),
+    SwerveBackRightSteerMotor(TunerConstants.kBackRightSteerMotorId),
+    SwerveBackRightEncoder(TunerConstants.kBackRightEncoderId),
+    Pigeon(TunerConstants.kPigeonId),
+
+    ClimberLeaderMotor(40),
+    ClimberFollowerMotor(41),
+
+    IntakeFlywheelMotor(42),
+    IntakeIndexerMotor(43),
+    IntakeGamepieceSensor(44),
+
+    PivotLeaderMotor(45),
+    PivotFollowerMotor(46),
+    PivotCANcoder(47);
 
     /** CAN bus ID */
     public final int id;

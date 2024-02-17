@@ -72,6 +72,8 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.utility.Alert;
+import frc.robot.Constants.CANDevice;
+import frc.robot.Constants.RobotCANBus;
 import frc.robot.sim.SimDeviceManager;
 
 /** Subsystem for controlling the pivot mechanism on the robot arm */
@@ -80,16 +82,6 @@ public class PivotSubsystem extends SubsystemBase {
   ////////////////////////////////////
   // CONSTANTS
   ////////////////////////////////////
-
-  /** Name of the CAN bus that pivot motors are connected to */
-  private static final String kCANBusName = "canivore";
-
-  /** CAN ID of the pivot lead motor */
-  private static final int kPivotLeaderCANId = 20;
-  /** CAN ID of the pivot follower motor */
-  private static final int kPivotFollowerCANId = 21;
-  /** CAN ID of the CANcoder used to measure pivot angle */
-  private static final int kPivotCANcoderCANId = 22;
 
   /** Offset of the CANcoder magnet in rotations */
   private static final double kCANcoderMagnetOffsetRot = 0.4;
@@ -102,15 +94,15 @@ public class PivotSubsystem extends SubsystemBase {
   ////////////////////////////////////
 
   /** Master motor used to control the pivot angle */
-  private final TalonFX m_pivotLeader = new TalonFX(kPivotLeaderCANId, kCANBusName);
+  private final TalonFX m_pivotLeader;
   /** Slave motor used to control the pivot angle */
-  private final TalonFX m_pivotFollower = new TalonFX(kPivotFollowerCANId, kCANBusName);
+  private final TalonFX m_pivotFollower;
 
   /** CANcoder used to measure the pivot angle */
-  private final CANcoder m_canCoder = new CANcoder(kPivotCANcoderCANId, kCANBusName);
+  private final CANcoder m_canCoder;
 
   /** Signal used to read the CANcoder angle */
-  private final StatusSignal<Double> m_cancoderAngle = m_canCoder.getPosition();
+  private final StatusSignal<Double> m_cancoderAngle;
 
   /** Motion magic request used to set pivot position */
   private final MotionMagicVoltage m_mmReq = new MotionMagicVoltage(0.0);
@@ -120,7 +112,12 @@ public class PivotSubsystem extends SubsystemBase {
       new Alert("Failed to configure pivot motors", Alert.AlertType.ERROR);
 
   /** Creates a new PivotSubsystem. */
-  public PivotSubsystem() {
+  public PivotSubsystem(
+      RobotCANBus canBus, CANDevice leaderCAN, CANDevice followerCAN, CANDevice cancoderCAN) {
+    m_pivotLeader = new TalonFX(leaderCAN.id, canBus.name);
+    m_pivotFollower = new TalonFX(followerCAN.id, canBus.name);
+    m_canCoder = new CANcoder(cancoderCAN.id, canBus.name);
+    m_cancoderAngle = m_canCoder.getPosition();
     configureCANcoder();
     configureMotors();
   }

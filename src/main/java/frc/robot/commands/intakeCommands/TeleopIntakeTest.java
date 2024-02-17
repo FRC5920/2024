@@ -49,112 +49,55 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot;
+package frc.robot.commands.intakeCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import frc.lib.LED.ColorConstants;
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
-import frc.robot.autos.AutoDashboardTab;
-import frc.robot.commands.TeleopSwerveCTRE;
-import frc.robot.commands.intakeCommands.TeleopIntakeTest;
+import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.subsystems.JoystickSubsystem;
-import frc.robot.subsystems.LEDs.LEDSubsystem;
-import frc.robot.subsystems.climber.ClimberSubsystem;
-import frc.robot.subsystems.dashboard.DashboardSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsystemIO;
-import frc.robot.subsystems.intake.IntakeSubsystemIOReal;
-import frc.robot.subsystems.intake.IntakeSubsystemIOSim;
-import frc.robot.subsystems.pivot.PivotSubsystem;
-import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
-import frc.robot.subsystems.swerveCTRE.Telemetry;
-import frc.robot.subsystems.swerveCTRE.TunerConstants;
 
-public class RobotContainer {
+public class TeleopIntakeTest extends Command {
+  /** Maximum flywheel velocity in rotations per second */
+  private static final double kMaxFlywheelVelocity = 4000.0;
 
-  /** Subsystem providing Xbox controllers */
-  public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
+  /** Intake subsystem to operate on */
+  private final IntakeSubsystem m_intakeSubsystem;
 
-  /** Swerve drive subsystem */
-  public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
+  /** Controller used to operate the intake */
+  private final ProcessedXboxController m_controller;
 
-  /** Pivot subsystem */
-  public final PivotSubsystem pivotSubsystem =
-      new PivotSubsystem(
-          RobotCANBus.Rio,
-          CANDevice.PivotLeaderMotor,
-          CANDevice.PivotFollowerMotor,
-          CANDevice.PivotCANcoder);
-
-  /** Climber subsystem */
-  public final ClimberSubsystem climberSubsystem =
-      new ClimberSubsystem(
-          RobotCANBus.Rio, CANDevice.ClimberLeaderMotor, CANDevice.ClimberFollowerMotor);
-
-  /** Intake subsystem */
-  public final IntakeSubsystem intakeSubsystem;
-
-  // Subsystem facilitating display of dashboard tabs
-  public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
-
-  private final AutoDashboardTab autoDashboardTab = new AutoDashboardTab();
-
-  // driving in open loop
-  public final Telemetry swerveTelemetry = new Telemetry(TeleopSwerveCTRE.kMaxSpeed);
-
-  // Subsystem used to drive addressable LEDs
-  public final LEDSubsystem ledSubsystem = new LEDSubsystem(ColorConstants.kOff);
-
-  /** Called to create the robot container */
-  public RobotContainer() {
-    IntakeSubsystemIO intakeIO = null;
-
-    switch (Constants.getMode()) {
-      case REAL:
-        intakeIO =
-            new IntakeSubsystemIOReal(
-                RobotCANBus.Rio,
-                CANDevice.IntakeFlywheelMotor,
-                CANDevice.IntakeIndexerMotor,
-                CANDevice.IntakeGamepieceSensor);
-      case SIM:
-        intakeIO =
-            new IntakeSubsystemIOSim(
-                RobotCANBus.Rio,
-                CANDevice.IntakeFlywheelMotor,
-                CANDevice.IntakeIndexerMotor,
-                CANDevice.IntakeGamepieceSensor);
-
-      case REPLAY:
-        // Create empty implementations for log replay
-        intakeIO = new IntakeSubsystemIO() {};
-        break;
-    }
-
-    // Set up intake subsystem
-    intakeSubsystem = new IntakeSubsystem(intakeIO);
-    intakeSubsystem.setDefaultCommand(new TeleopIntakeTest(intakeSubsystem, joystickSubsystem));
-
-    joystickSubsystem.configureButtonBindings(this);
-    // Set up a command to drive the swerve in Teleoperated mode
-    driveTrain.setDefaultCommand(
-        new TeleopSwerveCTRE(driveTrain, joystickSubsystem.getDriverController()));
-
-    // Register a function to be called to receive swerve telemetry
-    driveTrain.registerTelemetry(swerveTelemetry::telemeterize);
-
-    // Add the field dashboard tab
-    dashboardSubsystem.add(autoDashboardTab);
-
-    // if (Utils.isSimulation()) {
-    //   driveTrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
-    // }
+  /**
+   * Creates an instance of the comman
+   *
+   * @param intakeSubsystem Intake subsystem to operate on
+   * @param joystickSubsystem Joystick subsystem used to control the intake
+   */
+  public TeleopIntakeTest(IntakeSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
+    addRequirements(intakeSubsystem);
+    m_intakeSubsystem = intakeSubsystem;
+    m_controller = joystickSubsystem.getOperatorController();
   }
 
-  /** Returns the present autonomous command */
-  public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {}
+
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+    double indexerSpeed = -1.0 * m_controller.getRightY();
+    double flywheelVelocity = -1.0 * m_controller.getLeftY() * kMaxFlywheelVelocity;
+    m_intakeSubsystem.setIndexerSpeed(indexerSpeed);
+    m_intakeSubsystem.setFlywheelVelocity(flywheelVelocity);
+  }
+
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {}
+
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
   }
 }

@@ -68,9 +68,6 @@ public class IntakeSubsystem extends SubsystemBase {
   // CONSTANTS
   ////////////////////////////////////
 
-  /** Name of the CAN bus that climber motors are connected to */
-  public static final String kCANBusName = "rio";
-
   ////////////////////////////////////
   // Flywheel Motor Configuration
   ////////////////////////////////////
@@ -118,14 +115,14 @@ public class IntakeSubsystem extends SubsystemBase {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired velocity of the indexer mechanism
+   * Sets the desired speed of the indexer mechanism as a normalized percentage of full scale
    *
-   * @param rotPerSec Desired velocity in rotations per second
+   * @param percent Normalized percentage of full speed (0.0 to 1.0)
    */
-  public void setIndexerVelocity(double rotPerSec) {
-    SmartDashboard.putNumber("intake/indexer/setVelocity", rotPerSec);
-    m_inputs.indexer.targetVelocity = rotPerSec;
-    m_io.setIndexerVelocity(rotPerSec);
+  public void setIndexerSpeed(double percent) {
+    SmartDashboard.putNumber("intake/indexer/setSpeed", percent);
+    m_inputs.indexer.targetVelocity = percent;
+    m_io.setIndexerSpeed(percent);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,14 +139,14 @@ public class IntakeSubsystem extends SubsystemBase {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Returns the current velocity of the indexer mechanism
+   * Returns the current speed of the indexer mechanism as a percentage of full speed
    *
-   * @return The velocity of the indexer mechanism in rotations per second
+   * @return Normalized percentage of full speed (0.0 to 1.0)
    */
-  public double getIndexerVelocity() {
-    double rotPerSec = m_io.getIndexerVelocity();
-    SmartDashboard.putNumber("intake/indexer/velocity", rotPerSec);
-    return rotPerSec;
+  public double getIndexerSpeed() {
+    double percent = m_io.getIndexerSpeed();
+    SmartDashboard.putNumber("intake/indexer/speed", percent);
+    return percent;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

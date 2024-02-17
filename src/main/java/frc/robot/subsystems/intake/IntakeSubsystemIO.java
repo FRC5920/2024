@@ -60,11 +60,11 @@ public interface IntakeSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired velocity of the indexer mechanism
+   * Sets the desired speed of the indexer mechanism as a normalized percentage of full scale
    *
-   * @param rotPerSec Desired velocity in rotations per second
+   * @param percent Normalized percentage of full speed (0.0 to 1.0)
    */
-  default void setIndexerVelocity(double rotPerSec) {}
+  default void setIndexerSpeed(double percent) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -76,11 +76,11 @@ public interface IntakeSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Returns the current velocity of the indexer mechanism
+   * Returns the current speed of the indexer mechanism as a percentage of full speed
    *
-   * @return The velocity of the indexer mechanism in rotations per second
+   * @return Normalized percentage of full speed (0.0 to 1.0)
    */
-  default double getIndexerVelocity() {
+  default double getIndexerSpeed() {
     return 0.0;
   }
 

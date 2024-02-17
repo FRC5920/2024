@@ -62,6 +62,8 @@ import frc.lib.utility.Alert;
 import frc.lib.utility.Phoenix5Util;
 import frc.lib.utility.Phoenix5Util.Sensor;
 import frc.lib.utility.Phoenix5Util.SensorMeasurement;
+import frc.robot.Constants.CANDevice;
+import frc.robot.Constants.RobotCANBus;
 import frc.robot.sim.SimDeviceManager;
 
 // Reference Phoenix6 example:
@@ -77,14 +79,6 @@ public class ClimberSubsystem extends SubsystemBase {
   ////////////////////////////////////
   // CONSTANTS
   ////////////////////////////////////
-
-  /** Name of the CAN bus that climber motors are connected to */
-  private static final String kCANBusName = "rio";
-
-  /** CAN ID of the climber lead motor */
-  private static final int kClimberLeaderCANId = 30;
-  /** CAN ID of the climber follower motor */
-  private static final int kClimberFollowerCANId = 21;
 
   /** Gear ratio between the Falcon motors and the climber mechanism */
   private static final double kFalconToClimberGearRatio = 100.0 / 1.0;
@@ -118,9 +112,9 @@ public class ClimberSubsystem extends SubsystemBase {
   ////////////////////////////////////
 
   /** Master motor used to control climber extension */
-  private final WPI_TalonSRX m_climberLeader = new WPI_TalonSRX(kClimberLeaderCANId);
+  private final WPI_TalonSRX m_climberLeader;
   /** Slave motor used to control climber extension */
-  private final WPI_TalonSRX m_climberFollower = new WPI_TalonSRX(kClimberFollowerCANId);
+  private final WPI_TalonSRX m_climberFollower;
 
   /** Object used to process measurements from the Talon SRX controllers */
   private final SensorMeasurement m_sensorConverter =
@@ -131,7 +125,9 @@ public class ClimberSubsystem extends SubsystemBase {
       new Alert("Failed to configure climber motors", Alert.AlertType.ERROR);
 
   /** Creates a new climber subsystem */
-  public ClimberSubsystem() {
+  public ClimberSubsystem(RobotCANBus bus, CANDevice leaderCAN, CANDevice followerCAN) {
+    m_climberLeader = new WPI_TalonSRX(leaderCAN.id);
+    m_climberFollower = new WPI_TalonSRX(followerCAN.id);
     configureMotors();
   }
 

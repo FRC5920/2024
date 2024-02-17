@@ -52,7 +52,6 @@
 package frc.robot.subsystems.intake;
 
 import au.grapplerobotics.LaserCan;
-import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -61,7 +60,8 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.utility.Alert;
-import frc.lib.utility.Phoenix5Util;
+import frc.robot.Constants.CANDevice;
+import frc.robot.Constants.RobotCANBus;
 
 /** Implementation of the IntakeSubsystemIO interface using real hardware */
 public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
@@ -90,7 +90,13 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
       new VelocityVoltage(0, 0, true, 0, kFlywheelPIDSlot, false, false, false);
 
   /** Status signal used to read the velocity of the flywheel motor */
-  private final StatusSignal<Double> m_velocityStatus;
+  private final StatusSignal<Double> m_flywheelVelocitySignal;
+  /** Status signal used to read the voltage of the flywheel motor */
+  private final StatusSignal<Double> m_flywheelVoltageSignal;
+  /** Status signal used to read the current of the flywheel motor */
+  private final StatusSignal<Double> m_flywheelCurrentSignal;
+  /** Status signal used to read the temperature of the flywheel motor */
+  private final StatusSignal<Double> m_flywheelTempSignal;
 
   /** Alert displayed on failure to configure the indexer motor controller */
   private static final Alert s_indexerMotorConfigFailedAlert =
@@ -128,12 +134,17 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    *
    * @param config Configuration values for the I/O implementation
    */
-  public IntakeSubsystemIOReal(Config config) {
-    m_flywheelMotor = new TalonFX(config.flywheelMotorCANId, config.CANBus);
-    m_indexerMotor = new WPI_TalonSRX(config.indexerMotorCANId);
-    m_velocityStatus = m_flywheelMotor.getVelocity();
+  public IntakeSubsystemIOReal(
+      RobotCANBus bus, CANDevice flywheelCAN, CANDevice indexerCAN, CANDevice gamepieceSensorCAN) {
+    m_flywheelMotor = new TalonFX(flywheelCAN.id, bus.name);
+    m_indexerMotor = new WPI_TalonSRX(indexerCAN.id);
 
-    m_gamepieceSensor = new LaserCan(config.gamepieceSensorCANId);
+    m_flywheelVelocitySignal = m_flywheelMotor.getVelocity();
+    m_flywheelVoltageSignal = m_flywheelMotor.getMotorVoltage();
+    m_flywheelCurrentSignal = m_flywheelMotor.getStatorCurrent();
+    m_flywheelTempSignal = m_flywheelMotor.getDeviceTemp();
+
+    m_gamepieceSensor = new LaserCan(gamepieceSensorCAN.id);
 
     configureFlywheel();
     configureIndexer();
@@ -146,11 +157,11 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    * @param inputs Object to populate with subsystem input values to be logged
    */
   public void processInputs(IntakeSubsystemInputs inputs) {
-    // TODO: get input measurements for flywheel
-    inputs.flywheel.velocity = 0.0;
-    inputs.flywheel.voltage = 0.0;
-    inputs.flywheel.current = 0.0;
-    inputs.flywheel.tempCelsius = 0.0;
+    // Get input measurements for flywheel
+    inputs.flywheel.velocity = m_flywheelVelocitySignal.refresh().getValueAsDouble();
+    inputs.flywheel.voltage = m_flywheelVoltageSignal.refresh().getValueAsDouble();
+    inputs.flywheel.current = m_flywheelCurrentSignal.refresh().getValueAsDouble();
+    inputs.flywheel.tempCelsius = m_flywheelTempSignal.refresh().getValueAsDouble();
 
     // Get input measurements for indexer
     inputs.indexer.velocity = m_indexerMotor.getSelectedSensorVelocity();
@@ -164,12 +175,12 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired velocity of the indexer mechanism
+   * Sets the desired speed of the indexer mechanism as a normalized percentage of full scale
    *
-   * @param rotPerSec Desired velocity in rotations per second
+   * @param percent Normalized percentage of full speed (0.0 to 1.0)
    */
-  public void setIndexerVelocity(double rotPerSec) {
-    m_indexerMotor.set(ControlMode.Velocity, Phoenix5Util.rotationsToFalconTicks(rotPerSec));
+  public void setIndexerSpeed(double percent) {
+    m_indexerMotor.set(percent);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,14 +195,12 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Returns the current velocity of the indexer mechanism
+   * Returns the current speed of the indexer mechanism as a percentage of full speed
    *
-   * @return The velocity of the indexer mechanism in rotations per second
+   * @return Normalized percentage of full speed (0.0 to 1.0)
    */
-  public double getIndexerVelocity() {
-    double sensorVelocity = m_indexerMotor.getSelectedSensorPosition(0);
-    double rotPerSec = Phoenix5Util.falconTicksToRotations(sensorVelocity);
-    return rotPerSec;
+  public double getIndexerSpeed() {
+    return m_indexerMotor.get();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -201,7 +210,7 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    * @return The velocity of the flywheel mechanism in rotations per second
    */
   public double getFlywheelVelocity() {
-    double rotPerSec = m_velocityStatus.refresh().getValueAsDouble();
+    double rotPerSec = m_flywheelVelocitySignal.refresh().getValueAsDouble();
     return rotPerSec;
   }
 
