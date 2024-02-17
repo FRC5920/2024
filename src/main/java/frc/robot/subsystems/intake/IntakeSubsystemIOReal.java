@@ -152,11 +152,14 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
     inputs.flywheel.current = 0.0;
     inputs.flywheel.tempCelsius = 0.0;
 
-    // TODO: get input measurements for indexer
-    inputs.indexer.velocity = 0.0;
-    inputs.indexer.voltage = 0.0;
-    inputs.indexer.current = 0.0;
-    inputs.indexer.tempCelsius = 0.0;
+    // Get input measurements for indexer
+    inputs.indexer.velocity = m_indexerMotor.getSelectedSensorVelocity();
+    inputs.indexer.voltage = m_indexerMotor.getMotorOutputVoltage();
+    inputs.indexer.current = m_indexerMotor.getStatorCurrent();
+    inputs.indexer.tempCelsius = m_indexerMotor.getTemperature();
+
+    // Get input measurements for LaserCAN
+    inputs.laserCAN.fromMeasurement(m_gamepieceSensor.getMeasurement());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
