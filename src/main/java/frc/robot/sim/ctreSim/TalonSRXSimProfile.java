@@ -80,11 +80,12 @@ public class TalonSRXSimProfile implements SimProfile {
    * Creates a new simulation profile for a TalonSRX device.
    *
    * @param talon The TalonSRX device
+   * @param motorModel Motor model to simulate (e.g. returned by {@code DCMotor.getCIM(1)})
    * @param rotorInertia Rotational Inertia of the mechanism at the rotor
    */
-  public TalonSRXSimProfile(final TalonSRX talon, final double rotorInertia) {
+  public TalonSRXSimProfile(final TalonSRX talon, DCMotor motorModel, final double rotorInertia) {
     this._talon = talon;
-    this._motorSim = new DCMotorSim(DCMotor.getCIM(1), 1.0, rotorInertia);
+    this._motorSim = new DCMotorSim(motorModel, 1.0, rotorInertia);
   }
 
   /**

@@ -255,6 +255,16 @@ public class IntakeSubsystemInputs implements LoggableInputs {
         roi.y = measurement.roi.y;
         roi.w = measurement.roi.w;
         roi.h = measurement.roi.h;
+      } else {
+        status = "None";
+        distanceMeters = -1.0;
+        ambientLevel = -1;
+        isLongDistance = false;
+        timingBudgetSec = -1.0;
+        roi.x = 0;
+        roi.y = 0;
+        roi.w = 0;
+        roi.h = 0;
       }
     }
 

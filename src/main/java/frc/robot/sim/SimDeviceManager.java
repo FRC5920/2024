@@ -54,6 +54,7 @@ package frc.robot.sim;
 import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.sim.ctreSim.SimulatedDevice;
 import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
 import frc.robot.sim.ctreSim.TalonFXProfile;
@@ -114,7 +115,8 @@ public class SimDeviceManager {
    */
   public void addTalonSRX(TalonSRX talon, double rotorInertia) {
     if (talon != null) {
-      m_devices.add(new SimulatedDevice(new TalonSRXSimProfile(talon, rotorInertia)));
+      m_devices.add(
+          new SimulatedDevice(new TalonSRXSimProfile(talon, DCMotor.getCIM(1), rotorInertia)));
     }
   }
 }

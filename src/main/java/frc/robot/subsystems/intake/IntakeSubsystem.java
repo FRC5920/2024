@@ -53,6 +53,7 @@ package frc.robot.subsystems.intake;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.Logger;
 
 // Reference Phoenix6 example:
 
@@ -101,7 +102,7 @@ public class IntakeSubsystem extends SubsystemBase {
   private final IntakeSubsystemIO m_io;
 
   /** Logged subsystem inputs */
-  private final IntakeSubsystemInputs m_inputs = new IntakeSubsystemInputs("Intake");
+  private final IntakeSubsystemInputs m_inputs = new IntakeSubsystemInputs("");
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -165,6 +166,12 @@ public class IntakeSubsystem extends SubsystemBase {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   @Override
   public void periodic() {
+    getFlywheelVelocity();
+    getIndexerSpeed();
     m_io.processInputs(m_inputs);
+    Logger.processInputs(
+        "Intake",
+        m_inputs); // Send input data to the logging framework (or update from the log during
+    // replay)
   }
 }
