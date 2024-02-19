@@ -51,7 +51,9 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.intake;
 
+import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
+import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix6.StatusCode;
@@ -60,15 +62,23 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.utility.Alert;
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
+import frc.lib.utility.BotLog;
+import java.util.ArrayList;
 
 /** Implementation of the IntakeSubsystemIO interface using real hardware */
 public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
 
-  private static final int kIndexerPIDSlot = 0;
-  private static final int kFlywheelPIDSlot = 0;
+  /** PID slot used for Flywheel voltage control requests */
+  private static final int kFlywheelVoltsPIDSlot = 0;
+
+  /** PID slot used for Flywheel voltage control requests */
+  private static final int kFlywheelTorquePIDSlot = 1;
+
+  /** I/O configuration */
+  protected final Config m_config;
 
   /** Motor used to drive the flywheels at the entrnce of the intake */
   protected final TalonFX m_flywheelMotor;
@@ -88,11 +98,11 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    * FOC, no feed forward, use slot 0
    */
   private final VelocityVoltage m_voltsVelocityReq =
-      new VelocityVoltage(0, 0, true, 0, kFlywheelPIDSlot, false, false, false);
+      new VelocityVoltage(0, 0, true, 0, kFlywheelVoltsPIDSlot, false, false, false);
 
   /* Start at velocity 0, no feed forward, use slot 1 */
   private final VelocityTorqueCurrentFOC m_torqueVelocityReq =
-      new VelocityTorqueCurrentFOC(0, 0, 0, 1, false, false, false);
+      new VelocityTorqueCurrentFOC(0, 0, 0, kFlywheelTorquePIDSlot, false, false, false);
 
   /** Status signal used to read the velocity of the flywheel motor */
   private final StatusSignal<Double> m_flywheelVelocitySignal;
@@ -112,26 +122,8 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
       new Alert("Failed to configure flywheel motor", Alert.AlertType.ERROR);
 
   /** Alert displayed on failure to configure the gamepiece sensor */
-  private static final Alert s_gamepieceSensorConfigFailedAlert =
-      new Alert("Failed to configure intake gamepiece sensor", Alert.AlertType.ERROR);
-
-  public static class Config {
-    /** CAN bus attached to the subsystem */
-    String CANBus = "";
-    /** CAN ID of the flywheel motor */
-    int flywheelMotorCANId = -1;
-    /** CAN ID of the indexer motor */
-    int indexerMotorCANId = -1;
-    /** CAN ID of the gamepiece detector */
-    int gamepieceSensorCANId = -1;
-
-    public Config(String busName, int flywheelID, int indexerID, int gamepieceID) {
-      CANBus = busName;
-      flywheelMotorCANId = flywheelID;
-      indexerMotorCANId = indexerID;
-      gamepieceSensorCANId = gamepieceID;
-    }
-  }
+  private static final Alert s_laserCANConfigFailedAlert =
+      new Alert("Failed to configure intake LaserCAN sensor", Alert.AlertType.ERROR);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -139,17 +131,17 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    *
    * @param config Configuration values for the I/O implementation
    */
-  public IntakeSubsystemIOReal(
-      RobotCANBus bus, CANDevice flywheelCAN, CANDevice indexerCAN, CANDevice gamepieceSensorCAN) {
-    m_flywheelMotor = new TalonFX(flywheelCAN.id, bus.name);
-    m_indexerMotor = new WPI_TalonSRX(indexerCAN.id);
+  public IntakeSubsystemIOReal(IntakeSubsystemIO.Config config) {
+    m_config = config;
+    m_flywheelMotor = new TalonFX(config.flywheelMotorDevice.id, config.canBus.name);
+    m_indexerMotor = new WPI_TalonSRX(config.indexerMotorDevice.id);
 
     m_flywheelVelocitySignal = m_flywheelMotor.getVelocity();
     m_flywheelVoltageSignal = m_flywheelMotor.getMotorVoltage();
     m_flywheelCurrentSignal = m_flywheelMotor.getStatorCurrent();
     m_flywheelTempSignal = m_flywheelMotor.getDeviceTemp();
 
-    m_gamepieceSensor = new LaserCan(gamepieceSensorCAN.id);
+    m_gamepieceSensor = new LaserCan(config.gamepieceSensorDevice.id);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +149,7 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
   public void initialize() {
     configureFlywheel();
     configureIndexer();
+    configureLaserCAN();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -167,19 +160,44 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    */
   public void processInputs(IntakeSubsystemInputs inputs) {
     // Get input measurements for flywheel
-    inputs.flywheel.velocity = m_flywheelVelocitySignal.refresh().getValueAsDouble();
+    inputs.flywheel.velocity = getFlywheelVelocity();
     inputs.flywheel.voltage = m_flywheelVoltageSignal.refresh().getValueAsDouble();
     inputs.flywheel.current = m_flywheelCurrentSignal.refresh().getValueAsDouble();
     inputs.flywheel.tempCelsius = m_flywheelTempSignal.refresh().getValueAsDouble();
 
     // Get input measurements for indexer
-    inputs.indexer.velocity = m_indexerMotor.getSelectedSensorVelocity();
+    inputs.indexer.velocity = getIndexerSpeed();
     inputs.indexer.voltage = m_indexerMotor.getMotorOutputVoltage();
     inputs.indexer.current = m_indexerMotor.getStatorCurrent();
     inputs.indexer.tempCelsius = m_indexerMotor.getTemperature();
 
     // Get input measurements for LaserCAN
     inputs.laserCAN.fromMeasurement(m_gamepieceSensor.getMeasurement());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Sets the desired velocity of the flywheel mechanism
+   *
+   * @param rotPerSec Desired velocity in rotations per second
+   */
+  public void setFlywheelVelocity(double rotPerSec) {
+    // m_flywheelMotor.setControl(m_voltsVelocityReq.withVelocity(rotPerSec *
+    // m_config.flywheelGearRatio));
+    m_flywheelMotor.setControl(
+        m_torqueVelocityReq.withVelocity(rotPerSec * m_config.flywheelGearRatio));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the current velocity of the flywheel mechanism
+   *
+   * @return The velocity of the flywheel mechanism in rotations per second
+   */
+  public double getFlywheelVelocity() {
+    double rotPerSec =
+        m_flywheelVelocitySignal.refresh().getValueAsDouble() / m_config.flywheelGearRatio;
+    return rotPerSec;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,33 +212,12 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired velocity of the flywheel mechanism
-   *
-   * @param rotPerSec Desired velocity in rotations per second
-   */
-  public void setFlywheelVelocity(double rotPerSec) {
-    m_flywheelMotor.setControl(m_voltsVelocityReq.withVelocity(rotPerSec));
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
    * Returns the current speed of the indexer mechanism as a percentage of full speed
    *
    * @return Normalized percentage of full speed (0.0 to 1.0)
    */
   public double getIndexerSpeed() {
-    return m_indexerMotor.get();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current velocity of the flywheel mechanism
-   *
-   * @return The velocity of the flywheel mechanism in rotations per second
-   */
-  public double getFlywheelVelocity() {
-    double rotPerSec = m_flywheelVelocitySignal.refresh().getValueAsDouble();
-    return rotPerSec;
+    return m_indexerMotor.getMotorOutputPercent();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -237,8 +234,9 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
         0.12; // Falcon 500 is a 500kV motor, 500rpm per V = 8.333 rps per V, 1/8.33 = 0.12 volts /
     // Rotation per second
     // Peak output of 8 volts
-    configs.Voltage.PeakForwardVoltage = 8;
-    configs.Voltage.PeakReverseVoltage = -8;
+    // TODO: set peak output of voltage-based commands using measured values
+    configs.Voltage.PeakForwardVoltage = 12;
+    configs.Voltage.PeakReverseVoltage = -12;
 
     /* Torque-based velocity does not require a feed forward, as torque will accelerate the rotor up to the desired velocity by itself */
     configs.Slot1.kP = 5; // An error of 1 rotation per second results in 5 amps output
@@ -248,8 +246,20 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
         0.001; // A change of 1000 rotation per second squared results in 1 amp output
 
     // Peak output of 40 amps
+    // TODO: set peak output of torque-based commands using measured values
     configs.TorqueCurrent.PeakForwardTorqueCurrent = 40;
     configs.TorqueCurrent.PeakReverseTorqueCurrent = -40;
+
+    // Implement motor invert
+    configs.MotorOutput.Inverted =
+        m_config.invertFlywheelMotor
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
+    configs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
+
+    // Ramp flywheel speed slightly to avoid current spikes
+    // Set the time required to ramp from zero to full speed (12V) output
+    configs.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.15;
 
     /* Retry config apply up to 5 times, report if failure */
     StatusCode status = StatusCode.StatusCodeNotInitialized;
@@ -259,12 +269,14 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
     }
     if (!status.isOK()) {
       s_flywheelMotorConfigFailedAlert.set(true);
-      System.out.println("Could not configure device. Error: " + status.toString());
+      BotLog.Errorf("Failed to configure flywheel. Error: " + status.toString());
     }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   private void configureIndexer() {
+
+    ArrayList<ErrorCode> errors = new ArrayList<>();
 
     final int kTimeoutMs =
         30; // Time to wait for confirmation when configuring the motor controller
@@ -274,28 +286,49 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
     ///////////////////////////////////
     m_indexerMotor.configFactoryDefault();
 
-    // Set based on what direction you want forward/positive to be. This does not affect sensor
-    // phase.
-    // Choose based on what direction you want to be positive, this does not affect motor invert
-    final boolean kMotorInvert = false;
-    m_indexerMotor.setInverted(kMotorInvert);
+    // Implement motor direction invert
+    m_indexerMotor.setInverted(m_config.invertIndexerMotor);
 
     // Set motor to brake when not commanded
     m_indexerMotor.setNeutralMode(NeutralMode.Brake);
 
     // Set neutral deadband to super small 0.001 (0.1 %) because the default deadband is 0.04 (4 %)
-    m_indexerMotor.configNeutralDeadband(0.01, kTimeoutMs);
+    errors.add(m_indexerMotor.configNeutralDeadband(0.01, kTimeoutMs));
 
     /* Config the peak and nominal outputs, 12V means full */
-    m_indexerMotor.configNominalOutputForward(0, kTimeoutMs);
-    m_indexerMotor.configNominalOutputReverse(0, kTimeoutMs);
-    // m_indexerMotor.configPeakOutputForward(kMaxMotorOutputPercent, kTimeoutMs);
-    // m_indexerMotor.configPeakOutputReverse(-1.0 * kMaxMotorOutputPercent, kTimeoutMs);
+    errors.add(m_indexerMotor.configNominalOutputForward(0, kTimeoutMs));
+    errors.add(m_indexerMotor.configNominalOutputReverse(0, kTimeoutMs));
+    errors.add(m_indexerMotor.configPeakOutputForward(m_config.maxIndexerSpeed, kTimeoutMs));
+    errors.add(m_indexerMotor.configPeakOutputReverse(-1.0 * m_config.maxIndexerSpeed, kTimeoutMs));
 
-    // TODO: configure motor current limits and ramping
+    // Configure the motor to ramp speed up to avoid current spikes
+    errors.add(m_indexerMotor.configOpenloopRamp(0.25));
+
+    // Configure motor to limit current draw after 100 ms
+    // TODO: set indexer motor current limits using measured values
+    errors.add(m_indexerMotor.configPeakCurrentDuration(100));
+    errors.add(m_indexerMotor.configPeakCurrentLimit(20));
+    errors.add(m_indexerMotor.configContinuousCurrentLimit(20));
+
+    // Handle errors encountered during configuration
+    for (ErrorCode err : errors) {
+      if (err != ErrorCode.OK) {
+        s_indexerMotorConfigFailedAlert.set(true);
+        BotLog.Errorf("Could not configure indexer. Error: " + err.toString());
+      }
+    }
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Configure to use PID-based closed-loop control */
-  void configureClosedLoopControl() {}
+  /** Configure the LaserCAN gamepiece sensor */
+  private void configureLaserCAN() {
+    // Initialise the settings of the LaserCAN
+    try {
+      m_gamepieceSensor.setRangingMode(IntakeSubsystem.kLaserCANRangingMode);
+      m_gamepieceSensor.setRegionOfInterest(IntakeSubsystem.kLaserCANRegionOfInterest);
+      m_gamepieceSensor.setTimingBudget(IntakeSubsystem.kLaserCANTimingBudget);
+    } catch (ConfigurationFailedException e) {
+      s_laserCANConfigFailedAlert.set(true);
+      BotLog.Errorf("LaserCAN configuration failed. Error: " + e);
+    }
+  }
 }

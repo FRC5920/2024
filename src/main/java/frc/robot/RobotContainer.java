@@ -113,21 +113,11 @@ public class RobotContainer {
 
     switch (Constants.getMode()) {
       case REAL:
-        intakeIO =
-            new IntakeSubsystemIOReal(
-                RobotCANBus.Rio,
-                CANDevice.IntakeFlywheelMotor,
-                CANDevice.IntakeIndexerMotor,
-                CANDevice.IntakeGamepieceSensor);
+        intakeIO = new IntakeSubsystemIOReal(new IntakeSubsystemIO.Config());
         break;
 
       case SIM:
-        intakeIO =
-            new IntakeSubsystemIOSim(
-                RobotCANBus.Rio,
-                CANDevice.IntakeFlywheelMotor,
-                CANDevice.IntakeIndexerMotor,
-                CANDevice.IntakeGamepieceSensor);
+        intakeIO = new IntakeSubsystemIOSim(new IntakeSubsystemIO.Config());
         break;
 
       case REPLAY:

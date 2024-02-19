@@ -52,8 +52,6 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
 import frc.robot.sim.ctreSim.SimulatedDevice;
 import frc.robot.sim.ctreSim.TalonFXProfile;
 import frc.robot.sim.ctreSim.TalonSRXSimProfile;
@@ -75,15 +73,12 @@ public class IntakeSubsystemIOSim extends IntakeSubsystemIOReal {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Creates an instance of the simulated I/O implementation
+   * Creates an instance of the I/O implementation
    *
-   * @param flywheelMotorCANId CAN bus ID of the flywheel motor
-   * @param flywheelMotorCANBus CAN bus attached to the flywheel motor
-   * @param indexerMotorCANId CAN bus ID of the indexer motor
+   * @param config Configuration values for the I/O implementation
    */
-  public IntakeSubsystemIOSim(
-      RobotCANBus bus, CANDevice flywheelCAN, CANDevice indexerCAN, CANDevice gamepieceSensorCAN) {
-    super(bus, flywheelCAN, indexerCAN, gamepieceSensorCAN);
+  public IntakeSubsystemIOSim(IntakeSubsystemIO.Config config) {
+    super(config);
     m_simFlywheel = new SimulatedDevice(new TalonFXProfile(m_flywheelMotor, kFlywheelRotorInertia));
     m_simIndexer =
         new SimulatedDevice(

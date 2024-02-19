@@ -51,6 +51,9 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.intake;
 
+import frc.robot.Constants.CANDevice;
+import frc.robot.Constants.RobotCANBus;
+
 /** I/O abstraction for the IntakeSubsystem */
 public interface IntakeSubsystemIO {
 
@@ -96,5 +99,34 @@ public interface IntakeSubsystemIO {
    */
   default double getFlywheelVelocity() {
     return 0.0;
+  }
+
+  /** Parameters used to configure the subsystem I/O */
+  public static class Config {
+    public final RobotCANBus canBus;
+    public final CANDevice flywheelMotorDevice;
+    public final double flywheelGearRatio;
+    public final boolean invertFlywheelMotor;
+    public final double maxFlywheelVelocity;
+
+    public final CANDevice indexerMotorDevice;
+    public final double indexerGearRatio;
+    public final boolean invertIndexerMotor;
+    public final double maxIndexerSpeed;
+
+    public final CANDevice gamepieceSensorDevice;
+
+    public Config() {
+      this.canBus = IntakeSubsystem.kCANBus;
+      this.flywheelMotorDevice = IntakeSubsystem.kFlywheelMotorCANDevice;
+      this.flywheelGearRatio = IntakeSubsystem.kFlywheelMotorGearRatio;
+      this.invertFlywheelMotor = IntakeSubsystem.kFlywheelMotorInverted;
+      this.maxFlywheelVelocity = IntakeSubsystem.kMaxFlywheelMotorVelocity;
+      this.indexerMotorDevice = IntakeSubsystem.kIndexerMotorCANDevice;
+      this.indexerGearRatio = IntakeSubsystem.kIndexerMotorGearRatio;
+      this.invertIndexerMotor = IntakeSubsystem.kIndexerMotorInverted;
+      this.maxIndexerSpeed = IntakeSubsystem.kMaxIndexerSpeed;
+      this.gamepieceSensorDevice = IntakeSubsystem.kGamepieceSensorCANDevice;
+    }
   }
 }
