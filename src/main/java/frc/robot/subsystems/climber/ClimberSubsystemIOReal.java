@@ -51,17 +51,20 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.climber;
 
+import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.lib.logging.BotLog;
 import frc.lib.logging.LoggableMotorInputs;
 import frc.lib.utility.Alert;
 import frc.lib.utility.Phoenix5Util;
 import frc.lib.utility.Phoenix5Util.Sensor;
 import frc.lib.utility.Phoenix5Util.SensorMeasurement;
 import frc.robot.subsystems.climber.ClimberSubsystem.ClimberMotorID;
+import java.util.ArrayList;
 
 /** Implementation of the ClimberSubsystemIO interface using real hardware */
 public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
@@ -156,6 +159,7 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   private void configureMotors() {
+    ArrayList<ErrorCode> errors = new ArrayList<>();
 
     ///////////////////////////////////
     // Configure CTRE SRX controllers
@@ -172,13 +176,14 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
     m_climberLeader.setNeutralMode(NeutralMode.Brake);
 
     // Set neutral deadband to super small 0.001 (0.1 %) because the default deadband is 0.04 (4 %)
-    m_climberLeader.configNeutralDeadband(0.01, kTimeoutMs);
+    errors.add(m_climberLeader.configNeutralDeadband(0.01, kTimeoutMs));
 
     /* Config the peak and nominal outputs, 12V means full */
-    m_climberLeader.configNominalOutputForward(0, kTimeoutMs);
-    m_climberLeader.configNominalOutputReverse(0, kTimeoutMs);
-    m_climberLeader.configPeakOutputForward(m_config.maxMotorOutputPercent, kTimeoutMs);
-    m_climberLeader.configPeakOutputReverse(-1.0 * m_config.maxMotorOutputPercent, kTimeoutMs);
+    errors.add(m_climberLeader.configNominalOutputForward(0, kTimeoutMs));
+    errors.add(m_climberLeader.configNominalOutputReverse(0, kTimeoutMs));
+    errors.add(m_climberLeader.configPeakOutputForward(m_config.maxMotorOutputPercent, kTimeoutMs));
+    errors.add(
+        m_climberLeader.configPeakOutputReverse(-1.0 * m_config.maxMotorOutputPercent, kTimeoutMs));
 
     // Configure the SRX controller to use an attached CTRE magnetic encoder's absolute
     // position measurement
@@ -186,14 +191,15 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
         RobotBase.isReal()
             ? FeedbackDevice.CTRE_MagEncoder_Absolute
             : FeedbackDevice.PulseWidthEncodedPosition;
-    m_climberLeader.configSelectedFeedbackSensor(feedBackDevice, kPIDLoopIdx, kTimeoutMs);
+    errors.add(
+        m_climberLeader.configSelectedFeedbackSensor(feedBackDevice, kPIDLoopIdx, kTimeoutMs));
 
     // Ensure sensor is positive when output is positive
     // Choose so that Talon does not report sensor out of phase
     final boolean kSensorPhase = false;
     m_climberLeader.setSensorPhase(kSensorPhase);
 
-    configureClosedLoopControl();
+    errors.addAll(configureClosedLoopControl());
     // configureMotionMagicControl();
 
     /**
@@ -212,15 +218,26 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
     }
 
     /* Set the quadrature (absolute) sensor to match absolute */
-    m_climberLeader.setSelectedSensorPosition(absolutePosition, kPIDLoopIdx, kTimeoutMs);
+    errors.add(
+        m_climberLeader.setSelectedSensorPosition(absolutePosition, kPIDLoopIdx, kTimeoutMs));
 
     // Configure follower motor to follow leader motor
     m_climberFollower.follow(m_climberLeader);
+
+    // Handle errors encountered during configuration
+    for (ErrorCode err : errors) {
+      if (err != ErrorCode.OK) {
+        s_motorConfigFailedAlert.set(true);
+        BotLog.Errorf("Could not configure climber motors. Error: " + err.toString());
+      }
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Configure to use PID-based closed-loop control */
-  void configureClosedLoopControl() {
+  ArrayList<ErrorCode> configureClosedLoopControl() {
+    ArrayList<ErrorCode> errors = new ArrayList<>();
+
     // Configure the allowable closed-loop error, Closed-Loop output will be neutral within this
     // range.
     // See Table in Section 17.2.1 for native units per rotation.
@@ -235,6 +252,8 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
     m_climberLeader.config_kP(kPIDLoopIdx, 0.15, kTimeoutMs);
     m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs);
     m_climberLeader.config_kD(kPIDLoopIdx, 1.0, kTimeoutMs);
+
+    return errors;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
