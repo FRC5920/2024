@@ -72,10 +72,10 @@ public class PivotSubsystem extends SubsystemBase {
   ////////////////////////////////////
 
   /** CAN device ID of the pivot leader motor */
-  public static final CANDevice kLeaderMotorDevice = CANDevice.ClimberLeaderMotor;
+  public static final CANDevice kLeaderMotorDevice = CANDevice.PivotLeaderMotor;
 
   /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kFollowerMotorDevice = CANDevice.ClimberFollowerMotor;
+  public static final CANDevice kFollowerMotorDevice = CANDevice.PivotFollowerMotor;
 
   /** CAN device ID of the pivot follower motor */
   public static final CANDevice kCANcoderDevice = CANDevice.PivotCANcoder;
