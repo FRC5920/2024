@@ -51,67 +51,21 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.climber;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
-import org.littletonrobotics.junction.Logger;
+import frc.robot.subsystems.climber.ClimberSubsystem.ClimberMotorID;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 
-// Reference Phoenix6 example:
-
-/**
- * Subsystem for controlling the extension/retraction of climber mechanisms
- *
- * @remarks Motor config is based on the CTRE Phoenix 5 library PositionClosedLoop example
- *     https://github.com/CrossTheRoadElec/Phoenix5-Examples/blob/master/Java%20General/PositionClosedLoop/src/main/java/frc/robot/Robot.java
- */
-public class ClimberSubsystem extends SubsystemBase {
-
-  ////////////////////////////////////
-  // CONSTANTS
-  ////////////////////////////////////
-
-  /** CAN bus used to communicate with the subsystem */
-  public static final RobotCANBus kCANBus = RobotCANBus.Rio;
-
-  ////////////////////////////////////
-  // Flywheel Motor Configuration
-  ////////////////////////////////////
-
-  /** CAN device ID of the climber leader motor */
-  public static final CANDevice kLeaderMotorDevice = CANDevice.ClimberLeaderMotor;
-
-  /** CAN device ID of the climber follower motor */
-  public static final CANDevice kFollowerMotorDevice = CANDevice.ClimberFollowerMotor;
-
-  /** Gear ratio between climber motors and the climber mechanism */
-  public static final double kClimberMotorGearRatio = 100.0 / 1.0;
-
-  /** Set to true to reverse the direction of climber motors */
-  public static final boolean kInvertMotors = false;
-
-  /** Max number of rotations to achieve full extension */
-  public static final double kMaxRotations = 100.0; // TODO: set this value based on mechanisms
-
-  /** Maximum motor output allowed (0.0 to 1.0) */
-  public static final double kMaxMotorOutputPercent = 100.0;
-
-  ////////////////////////////////////
-  // Attributes
-  ////////////////////////////////////
-
-  /** I/O implementation used by the subsystem */
-  private final ClimberSubsystemIO m_io;
-
-  /** Measured input values for the subsystem */
-  private final ClimberSubsystemInputs m_inputs = new ClimberSubsystemInputs();
+/** Interface implemented by subsystem I/O */
+public interface ClimberSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Creates a new climber subsystem */
-  public ClimberSubsystem(ClimberSubsystemIO io) {
-    m_io = io;
-    m_io.initialize();
-  }
+  /** Initializes and configures the I/O implementation */
+  default void initialize() {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Update logged input quantities */
+  default void processInputs(ClimberSubsystemInputs inputs) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -119,16 +73,7 @@ public class ClimberSubsystem extends SubsystemBase {
    *
    * @param degrees Normalized percentage of full climber extension (0.0 to 1.0)
    */
-  public void setExtensionPercent(double percent) {
-    m_inputs.leader.targetPosition = percent;
-    m_inputs.follower.targetPosition = percent;
-    m_io.setExtensionPercent(percent);
-  }
-
-  public enum ClimberMotorID {
-    Leader,
-    Follower
-  };
+  default void setExtensionPercent(double percent) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -137,31 +82,28 @@ public class ClimberSubsystem extends SubsystemBase {
    * @motorID Climber motor whose extension is to be returned
    * @return normalized percentage of maximum climber extension (0.0 to 1.0)
    */
-  public double getExtensionPercent(ClimberMotorID motorID) {
-    return m_io.getExtensionPercent(motorID);
+  default double getExtensionPercent(ClimberMotorID motorID) {
+    return 0.0;
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current extension of the climber as a normalized percentage of maximum
-   *
-   * @return normalized percentage of maximum climber extension (0.0 to 1.0)
-   */
-  public double getExtensionPercent() {
-    return m_io.getExtensionPercent(ClimberMotorID.Leader);
-  }
+  /** Parameters used to configure the subsystem I/O */
+  public static class Config {
+    public final RobotCANBus canBus;
+    public final CANDevice leaderMotorDevice;
+    public final CANDevice followerMotorDevice;
+    public final double climberGearRatio;
+    public final boolean invertMotors;
+    public final double maxRotations;
+    public final double maxMotorOutputPercent;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  @Override
-  public void periodic() {
-    // Update measurements
-    m_io.processInputs(m_inputs);
-
-    // Send input data to the logging framework (or update from the log during replay)
-    Logger.processInputs("Climber", m_inputs);
-
-    // Display velocities on dashboard
-    SmartDashboard.putNumber("climber/targetPosition", m_inputs.leader.targetPosition);
-    SmartDashboard.putNumber("climber/position", m_inputs.leader.position);
+    public Config() {
+      this.canBus = IntakeSubsystem.kCANBus;
+      this.leaderMotorDevice = ClimberSubsystem.kLeaderMotorDevice;
+      this.followerMotorDevice = ClimberSubsystem.kFollowerMotorDevice;
+      this.climberGearRatio = ClimberSubsystem.kClimberMotorGearRatio;
+      this.invertMotors = ClimberSubsystem.kInvertMotors;
+      this.maxRotations = ClimberSubsystem.kMaxRotations;
+      this.maxMotorOutputPercent = ClimberSubsystem.kMaxMotorOutputPercent;
+    }
   }
 }

@@ -49,56 +49,98 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.lib.logging;
 
-import frc.lib.logging.LoggableLaserCANInputs;
-import frc.lib.logging.LoggableMotorInputs;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-/** Logged inputs for the IntakeSubsystem */
-public class IntakeSubsystemInputs implements LoggableInputs {
-  /** Flywheel motor inputs */
-  public LoggableMotorInputs flywheel;
-  /** Indexer motor inputs */
-  public LoggableMotorInputs indexer;
-  /** Gamepiece sensor inputs */
-  public LoggableLaserCANInputs laserCAN;
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/** Logged input measurements for a motor */
+public class LoggableMotorInputs implements LoggableInputs {
+  // Log keys for measurements
+  private String keyTargetPosition;
+  private String keyTargetVelocity;
+  private String keyPosition;
+  private String keyVelocity;
+  private String keyVoltage;
+  private String keyCurrent;
+  private String keyTempCelcius;
+
+  /** Target position in rotations */
+  public double targetPosition = 0.0;
+  /** Target velocity in rotations per second */
+  public double targetVelocity = 0.0;
+  /** Position of the mechanism in rotations */
+  public double position = 0.0;
+  /** Velocity of the mechanism in rotations per second */
+  public double velocity = 0.0;
+  /** Voltage applied to the motor in Volts */
+  public double voltage = 0.0;
+  /** Motor current in Amps */
+  public double current = 0.0;
+  /** Motor temperature in degrees Celcius */
+  public double tempCelsius = 0.0;
 
   /**
-   * Creates an instance of the inputs and sets the prefix to log them under
+   * Creates an instance of the inputs
    *
    * @param prefix Prefix the inputs will be logged under
    */
-  public IntakeSubsystemInputs(String prefix) {
-    flywheel = new LoggableMotorInputs("Flywheel");
-    indexer = new LoggableMotorInputs("Indexer");
-    laserCAN = new LoggableLaserCANInputs("LaserCAN");
+  public LoggableMotorInputs(String prefix) {
+    keyTargetPosition = prefix + "/targetPosition";
+    keyTargetVelocity = prefix + "/targetVelocity";
+    keyPosition = prefix + "/position";
+    keyVelocity = prefix + "/velocity";
+    keyVoltage = prefix + "/voltage";
+    keyCurrent = prefix + "/current";
+    keyTempCelcius = prefix + "/tempCelcius";
   }
 
   /** Creates an instance of the loggable object during clone() calls */
-  private IntakeSubsystemInputs() {}
+  private LoggableMotorInputs() {}
 
-  /** Write input values to log */
+  /** Write inputs to the log */
   public void toLog(LogTable table) {
-    flywheel.toLog(table);
-    indexer.toLog(table);
-    laserCAN.toLog(table);
+    table.put(keyTargetPosition, targetPosition);
+    table.put(keyTargetVelocity, targetVelocity);
+    table.put(keyPosition, position);
+    table.put(keyVelocity, velocity);
+    table.put(keyVoltage, voltage);
+    table.put(keyCurrent, current);
+    table.put(keyTempCelcius, tempCelsius);
   }
 
-  /** Read input values from log */
+  /** Read inputs from the log */
   public void fromLog(LogTable table) {
-    flywheel.fromLog(table);
-    indexer.fromLog(table);
-    laserCAN.fromLog(table);
+    targetPosition = table.get(keyTargetPosition, targetPosition);
+    targetVelocity = table.get(keyTargetVelocity, targetVelocity);
+    position = table.get(keyPosition, position);
+    velocity = table.get(keyVelocity, velocity);
+    voltage = table.get(keyVoltage, voltage);
+    current = table.get(keyCurrent, current);
+    tempCelsius = table.get(keyTempCelcius, tempCelsius);
   }
 
   /** Create a clone of input values */
-  public IntakeSubsystemInputs clone() {
-    IntakeSubsystemInputs copy = new IntakeSubsystemInputs();
-    copy.flywheel = this.flywheel;
-    copy.indexer = this.indexer;
-    copy.laserCAN = this.laserCAN;
+  public LoggableMotorInputs clone() {
+    LoggableMotorInputs copy = new LoggableMotorInputs();
+    // Copy keys
+    copy.keyTargetPosition = this.keyTargetPosition;
+    copy.keyTargetVelocity = this.keyTargetVelocity;
+    copy.keyPosition = this.keyPosition;
+    copy.keyVelocity = this.keyVelocity;
+    copy.keyVoltage = this.keyVoltage;
+    copy.keyCurrent = this.keyCurrent;
+    copy.keyTempCelcius = this.keyTempCelcius;
+
+    // Copy measurements
+    copy.targetPosition = this.targetPosition;
+    copy.targetVelocity = this.targetVelocity;
+    copy.position = this.position;
+    copy.velocity = this.velocity;
+    copy.voltage = this.voltage;
+    copy.current = this.current;
+    copy.tempCelsius = this.tempCelsius;
     return copy;
   }
 }

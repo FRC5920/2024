@@ -62,6 +62,9 @@ import frc.robot.commands.intakeCommands.TeleopIntakeTest;
 import frc.robot.subsystems.JoystickSubsystem;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
 import frc.robot.subsystems.climber.ClimberSubsystem;
+import frc.robot.subsystems.climber.ClimberSubsystemIO;
+import frc.robot.subsystems.climber.ClimberSubsystemIOReal;
+import frc.robot.subsystems.climber.ClimberSubsystemIOSim;
 import frc.robot.subsystems.dashboard.DashboardSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystemIO;
@@ -89,9 +92,7 @@ public class RobotContainer {
           CANDevice.PivotCANcoder);
 
   /** Climber subsystem */
-  public final ClimberSubsystem climberSubsystem =
-      new ClimberSubsystem(
-          RobotCANBus.Rio, CANDevice.ClimberLeaderMotor, CANDevice.ClimberFollowerMotor);
+  public final ClimberSubsystem climberSubsystem;
 
   /** Intake subsystem */
   public final IntakeSubsystem intakeSubsystem;
@@ -109,22 +110,29 @@ public class RobotContainer {
 
   /** Called to create the robot container */
   public RobotContainer() {
+    ClimberSubsystemIO climberIO = null;
     IntakeSubsystemIO intakeIO = null;
 
     switch (Constants.getMode()) {
       case REAL:
+        climberIO = new ClimberSubsystemIOReal(new ClimberSubsystemIO.Config());
         intakeIO = new IntakeSubsystemIOReal(new IntakeSubsystemIO.Config());
         break;
 
       case SIM:
+        climberIO = new ClimberSubsystemIOSim(new ClimberSubsystemIO.Config());
         intakeIO = new IntakeSubsystemIOSim(new IntakeSubsystemIO.Config());
         break;
 
       case REPLAY:
         // Create empty implementations for log replay
+        climberIO = new ClimberSubsystemIO() {};
         intakeIO = new IntakeSubsystemIO() {};
         break;
     }
+
+    // Set up the climber subsystem
+    climberSubsystem = new ClimberSubsystem(climberIO);
 
     // Set up intake subsystem
     intakeSubsystem = new IntakeSubsystem(intakeIO);

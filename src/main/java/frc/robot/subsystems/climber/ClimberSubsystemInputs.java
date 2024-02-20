@@ -49,56 +49,36 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.climber;
 
-import frc.lib.logging.LoggableLaserCANInputs;
 import frc.lib.logging.LoggableMotorInputs;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-/** Logged inputs for the IntakeSubsystem */
-public class IntakeSubsystemInputs implements LoggableInputs {
-  /** Flywheel motor inputs */
-  public LoggableMotorInputs flywheel;
-  /** Indexer motor inputs */
-  public LoggableMotorInputs indexer;
-  /** Gamepiece sensor inputs */
-  public LoggableLaserCANInputs laserCAN;
-
-  /**
-   * Creates an instance of the inputs and sets the prefix to log them under
-   *
-   * @param prefix Prefix the inputs will be logged under
-   */
-  public IntakeSubsystemInputs(String prefix) {
-    flywheel = new LoggableMotorInputs("Flywheel");
-    indexer = new LoggableMotorInputs("Indexer");
-    laserCAN = new LoggableLaserCANInputs("LaserCAN");
-  }
-
-  /** Creates an instance of the loggable object during clone() calls */
-  private IntakeSubsystemInputs() {}
+/** Logged inputs for the ClimberSubsystem */
+public class ClimberSubsystemInputs implements LoggableInputs {
+  /** Leader motor inputs */
+  public LoggableMotorInputs leader = new LoggableMotorInputs("leader");
+  /** Follower motor inputs */
+  public LoggableMotorInputs follower = new LoggableMotorInputs("follower");
 
   /** Write input values to log */
   public void toLog(LogTable table) {
-    flywheel.toLog(table);
-    indexer.toLog(table);
-    laserCAN.toLog(table);
+    leader.toLog(table);
+    follower.toLog(table);
   }
 
   /** Read input values from log */
   public void fromLog(LogTable table) {
-    flywheel.fromLog(table);
-    indexer.fromLog(table);
-    laserCAN.fromLog(table);
+    leader.fromLog(table);
+    follower.fromLog(table);
   }
 
   /** Create a clone of input values */
-  public IntakeSubsystemInputs clone() {
-    IntakeSubsystemInputs copy = new IntakeSubsystemInputs();
-    copy.flywheel = this.flywheel;
-    copy.indexer = this.indexer;
-    copy.laserCAN = this.laserCAN;
+  public ClimberSubsystemInputs clone() {
+    ClimberSubsystemInputs copy = new ClimberSubsystemInputs();
+    copy.leader = this.leader;
+    copy.follower = this.follower;
     return copy;
   }
 }
