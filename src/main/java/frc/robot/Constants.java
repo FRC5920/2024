@@ -113,7 +113,7 @@ public final class Constants {
 
   /** CAN Buses available on the robot */
   public enum RobotCANBus {
-    CANivore("canivore"),
+    CANivore("SwerveCAN"),
     Rio("rio");
 
     public final String name;
@@ -139,16 +139,16 @@ public final class Constants {
     SwerveBackRightEncoder(TunerConstants.kBackRightEncoderId),
     Pigeon(TunerConstants.kPigeonId),
 
-    ClimberLeaderMotor(40),
-    ClimberFollowerMotor(41),
+    ClimberLeaderMotor(11),
+    ClimberFollowerMotor(12),
 
-    IntakeFlywheelMotor(42),
-    IntakeIndexerMotor(43),
-    IntakeGamepieceSensor(44),
+    IntakeFlywheelMotor(25),
+    IntakeIndexerMotor(27),
+    IntakeGamepieceSensor(29),
 
-    PivotLeaderMotor(45),
-    PivotFollowerMotor(46),
-    PivotCANcoder(47);
+    PivotLeaderMotor(21),
+    PivotFollowerMotor(22),
+    PivotCANcoder(23);
 
     /** CAN bus ID */
     public final int id;
