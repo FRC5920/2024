@@ -54,8 +54,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.LED.ColorConstants;
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
 import frc.robot.autos.AutoDashboardTab;
 import frc.robot.commands.TeleopSwerveCTRE;
 import frc.robot.commands.intakeCommands.TeleopIntakeTest;
@@ -71,6 +69,9 @@ import frc.robot.subsystems.intake.IntakeSubsystemIO;
 import frc.robot.subsystems.intake.IntakeSubsystemIOReal;
 import frc.robot.subsystems.intake.IntakeSubsystemIOSim;
 import frc.robot.subsystems.pivot.PivotSubsystem;
+import frc.robot.subsystems.pivot.PivotSubsystemIO;
+import frc.robot.subsystems.pivot.PivotSubsystemIOReal;
+import frc.robot.subsystems.pivot.PivotSubsystemIOSim;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerveCTRE.Telemetry;
 import frc.robot.subsystems.swerveCTRE.TunerConstants;
@@ -84,12 +85,7 @@ public class RobotContainer {
   public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
 
   /** Pivot subsystem */
-  public final PivotSubsystem pivotSubsystem =
-      new PivotSubsystem(
-          RobotCANBus.Rio,
-          CANDevice.PivotLeaderMotor,
-          CANDevice.PivotFollowerMotor,
-          CANDevice.PivotCANcoder);
+  public final PivotSubsystem pivotSubsystem;
 
   /** Climber subsystem */
   public final ClimberSubsystem climberSubsystem;
@@ -112,16 +108,19 @@ public class RobotContainer {
   public RobotContainer() {
     ClimberSubsystemIO climberIO = null;
     IntakeSubsystemIO intakeIO = null;
+    PivotSubsystemIO pivotIO = null;
 
     switch (Constants.getMode()) {
       case REAL:
         climberIO = new ClimberSubsystemIOReal(new ClimberSubsystemIO.Config());
         intakeIO = new IntakeSubsystemIOReal(new IntakeSubsystemIO.Config());
+        pivotIO = new PivotSubsystemIOReal(new PivotSubsystemIO.Config());
         break;
 
       case SIM:
         climberIO = new ClimberSubsystemIOSim(new ClimberSubsystemIO.Config());
         intakeIO = new IntakeSubsystemIOSim(new IntakeSubsystemIO.Config());
+        pivotIO = new PivotSubsystemIOSim(new PivotSubsystemIO.Config());
         break;
 
       case REPLAY:
@@ -131,12 +130,15 @@ public class RobotContainer {
         break;
     }
 
-    // Set up the climber subsystem
+    // Create the climber subsystem
     climberSubsystem = new ClimberSubsystem(climberIO);
 
-    // Set up intake subsystem
+    // Create the intake subsystem
     intakeSubsystem = new IntakeSubsystem(intakeIO);
     intakeSubsystem.setDefaultCommand(new TeleopIntakeTest(intakeSubsystem, joystickSubsystem));
+
+    // Create the pivot subsystem
+    pivotSubsystem = new PivotSubsystem(pivotIO);
 
     joystickSubsystem.configureButtonBindings(this);
     // Set up a command to drive the swerve in Teleoperated mode

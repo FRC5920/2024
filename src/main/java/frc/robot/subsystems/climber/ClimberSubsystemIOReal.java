@@ -118,10 +118,10 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
 
     // Get input measurements for follower motor
     LoggableMotorInputs follower = inputs.follower;
-    follower.position = getExtensionPercent(ClimberMotorID.Leader);
-    follower.voltage = m_climberLeader.getMotorOutputVoltage();
-    follower.current = m_climberLeader.getStatorCurrent();
-    follower.tempCelsius = m_climberLeader.getTemperature();
+    follower.position = getExtensionPercent(ClimberMotorID.Follower);
+    follower.voltage = m_climberFollower.getMotorOutputVoltage();
+    follower.current = m_climberFollower.getStatorCurrent();
+    follower.tempCelsius = m_climberFollower.getTemperature();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

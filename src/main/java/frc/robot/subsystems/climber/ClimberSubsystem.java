@@ -75,7 +75,7 @@ public class ClimberSubsystem extends SubsystemBase {
   public static final RobotCANBus kCANBus = RobotCANBus.Rio;
 
   ////////////////////////////////////
-  // Flywheel Motor Configuration
+  // Climber Motor Configuration
   ////////////////////////////////////
 
   /** CAN device ID of the climber leader motor */
