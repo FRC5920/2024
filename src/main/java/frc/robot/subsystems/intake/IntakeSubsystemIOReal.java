@@ -53,6 +53,7 @@ package frc.robot.subsystems.intake;
 
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
+import au.grapplerobotics.LaserCan.Measurement;
 import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
@@ -221,6 +222,23 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the distance measured by the gamepiece sensor
+   *
+   * @return The distance measured by the gamepiece sensor in meters
+   */
+  public double getGamepieceDistance() {
+    double distance = -1.0;
+    Measurement measurement = m_gamepieceSensor.getMeasurement();
+    if ((measurement != null)
+        && (measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT)) {
+      distance = measurement.distance_mm * 0.001;
+    }
+
+    return distance;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   private void configureFlywheel() {
     TalonFXConfiguration configs = new TalonFXConfiguration();
 
@@ -319,6 +337,7 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
     }
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Configure the LaserCAN gamepiece sensor */
   private void configureLaserCAN() {
     // Initialise the settings of the LaserCAN

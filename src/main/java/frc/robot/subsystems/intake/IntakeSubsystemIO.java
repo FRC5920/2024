@@ -101,6 +101,16 @@ public interface IntakeSubsystemIO {
     return 0.0;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the distance measured by the gamepiece sensor
+   *
+   * @return The distance measured by the gamepiece sensor in meters
+   */
+  default double getGamepieceDistance() {
+    return 0.0;
+  }
+
   /** Parameters used to configure the subsystem I/O */
   public static class Config {
     public final RobotCANBus canBus;

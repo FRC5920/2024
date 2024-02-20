@@ -188,6 +188,16 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the distance measured by the gamepiece sensor
+   *
+   * @return The distance measured by the gamepiece sensor in meters
+   */
+  public double getGamepieceDistance() {
+    return m_io.getGamepieceDistance();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   @Override
   public void periodic() {
     // Update measurements
@@ -201,5 +211,7 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("intake/flywheel/velocity", m_inputs.flywheel.velocity);
     SmartDashboard.putNumber("intake/indexer/setSpeed", m_inputs.indexer.targetVelocity);
     SmartDashboard.putNumber("intake/indexer/speed", m_inputs.indexer.velocity);
+    SmartDashboard.putNumber("intake/laserCAN/distance", m_inputs.laserCAN.distanceMeters);
+    SmartDashboard.putString("intake/laserCAN/status", m_inputs.laserCAN.status);
   }
 }
