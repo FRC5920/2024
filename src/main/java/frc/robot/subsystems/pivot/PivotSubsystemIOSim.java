@@ -49,55 +49,52 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.commands.intakeCommands;
+package frc.robot.subsystems.pivot;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.joystick.ProcessedXboxController;
-import frc.robot.subsystems.JoystickSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.sim.ctreSim.SimulatedDevice;
+import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
+import frc.robot.sim.ctreSim.TalonFXProfile;
 
-public class TeleopIntakeTest extends Command {
-  /** Maximum flywheel velocity in rotations per second */
-  private static final double kMaxFlywheelVelocity = 4000.0;
+/** Implementation of the PivotSubsystemIO interface using simulated motors */
+public class PivotSubsystemIOSim extends PivotSubsystemIOReal {
 
-  /** Intake subsystem to operate on */
-  private final IntakeSubsystem m_intakeSubsystem;
+  /** Simulated rotor inertia used for the indexer motor */
+  private static final double kRotorInertia = 0.001;
 
-  /** Controller used to operate the intake */
-  private final ProcessedXboxController m_controller;
+  /** Simulated leader motor */
+  private final SimulatedDevice m_simLeader;
 
+  /** Simulated follower motor */
+  private final SimulatedDevice m_simFollower;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Creates an instance of the comman
+   * Creates an instance of the I/O implementation
    *
-   * @param intakeSubsystem Intake subsystem to operate on
-   * @param joystickSubsystem Joystick subsystem used to control the intake
+   * @param config Configuration values for the I/O implementation
    */
-  public TeleopIntakeTest(IntakeSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
-    addRequirements(intakeSubsystem);
-    m_intakeSubsystem = intakeSubsystem;
-    m_controller = joystickSubsystem.getOperatorController();
+  public PivotSubsystemIOSim(PivotSubsystemIO.Config config) {
+    super(config);
+    m_simLeader =
+        new SimulatedDevice(
+            new TalonFXFusedCANcoderProfile(
+                m_pivotLeader, m_canCoder, (1.0 / config.pivotGearRatio), kRotorInertia));
+
+    m_simFollower = new SimulatedDevice(new TalonFXProfile(m_pivotFollower, kRotorInertia));
   }
 
-  // Called when the command is initially scheduled.
-  @Override
-  public void initialize() {}
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * This method is called each robot cycle to process inputs to the subsystem
+   *
+   * @param inputs Object to populate with subsystem input values to be logged
+   */
+  public void processInputs(PivotSubsystemInputs inputs) {
+    // Update device simulations
+    m_simLeader.calculate();
+    m_simFollower.calculate();
 
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    double indexerSpeed = -1.0 * m_controller.getRightY();
-    double flywheelVelocity = -1.0 * m_controller.getLeftY() * kMaxFlywheelVelocity;
-    m_intakeSubsystem.setIndexerSpeed(indexerSpeed);
-    m_intakeSubsystem.setFlywheelVelocity(flywheelVelocity);
-  }
-
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {}
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return false;
+    // Process inputs
+    super.processInputs(inputs);
   }
 }

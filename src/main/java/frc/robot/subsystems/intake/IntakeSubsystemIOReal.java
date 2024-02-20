@@ -65,8 +65,8 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import frc.lib.logging.BotLog;
 import frc.lib.utility.Alert;
-import frc.lib.utility.BotLog;
 import java.util.ArrayList;
 
 /** Implementation of the IntakeSubsystemIO interface using real hardware */

@@ -49,97 +49,98 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.pivot;
+package frc.lib.logging;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
-import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.LogTable;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-/** Subsystem for controlling the pivot mechanism on the robot arm */
-public class PivotSubsystem extends SubsystemBase {
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/** Logged input measurements for a motor */
+public class LoggableMotorInputs implements LoggableInputs {
+  // Log keys for measurements
+  private String keyTargetPosition;
+  private String keyTargetVelocity;
+  private String keyPosition;
+  private String keyVelocity;
+  private String keyVoltage;
+  private String keyCurrent;
+  private String keyTempCelcius;
 
-  ////////////////////////////////////
-  // CONSTANTS
-  ////////////////////////////////////
+  /** Target position in rotations */
+  public double targetPosition = 0.0;
+  /** Target velocity in rotations per second */
+  public double targetVelocity = 0.0;
+  /** Position of the mechanism in rotations */
+  public double position = 0.0;
+  /** Velocity of the mechanism in rotations per second */
+  public double velocity = 0.0;
+  /** Voltage applied to the motor in Volts */
+  public double voltage = 0.0;
+  /** Motor current in Amps */
+  public double current = 0.0;
+  /** Motor temperature in degrees Celcius */
+  public double tempCelsius = 0.0;
 
-  /** CAN bus used to communicate with the subsystem */
-  public static final RobotCANBus kCANBus = RobotCANBus.Rio;
-
-  ////////////////////////////////////
-  // Pivot Motor Configuration
-  ////////////////////////////////////
-
-  /** CAN device ID of the pivot leader motor */
-  public static final CANDevice kLeaderMotorDevice = CANDevice.ClimberLeaderMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kFollowerMotorDevice = CANDevice.ClimberFollowerMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kCANcoderDevice = CANDevice.PivotCANcoder;
-
-  /** Gear ratio between the Falcon motors and the pivot axle */
-  public static final double kFalconToPivotGearRatio = 40.0 / 1.0;
-
-  /** Set to true to reverse the direction of pivot motors */
-  public static final boolean kInvertMotors = false;
-
-  /** Offset of the CANcoder magnet in rotations */
-  public static final double kCANcoderMagnetOffsetRot = 0.0;
-
-  ////////////////////////////////////
-  // Attributes
-  ////////////////////////////////////
-
-  /** I/O used by the subsystem */
-  private final PivotSubsystemIO m_io;
-
-  /** Measured subsystem inputs */
-  private final PivotSubsystemInputs m_inputs = new PivotSubsystemInputs();
-
-  /** Creates a new PivotSubsystem. */
-  public PivotSubsystem(PivotSubsystemIO io) {
-    m_io = io;
-    m_io.initialize();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired pivot angle in degrees
+   * Creates an instance of the inputs
    *
-   * @param degrees The desired pivot angle in degrees
+   * @param prefix Prefix the inputs will be logged under
    */
-  public void setAngleDeg(double degrees) {
-    m_inputs.leader.targetPosition = degrees;
-    m_inputs.follower.targetPosition = degrees;
-    m_io.setAngleDeg(degrees);
+  public LoggableMotorInputs(String prefix) {
+    keyTargetPosition = prefix + "/targetPosition";
+    keyTargetVelocity = prefix + "/targetVelocity";
+    keyPosition = prefix + "/position";
+    keyVelocity = prefix + "/velocity";
+    keyVoltage = prefix + "/voltage";
+    keyCurrent = prefix + "/current";
+    keyTempCelcius = prefix + "/tempCelcius";
   }
 
-  public enum PivotMotorID {
-    Leader,
-    Follower
-  };
+  /** Creates an instance of the loggable object during clone() calls */
+  private LoggableMotorInputs() {}
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the current pivot angle in degrees */
-  public double getAngleDeg() {
-    return m_io.getMotorAngleDeg(PivotMotorID.Leader);
+  /** Write inputs to the log */
+  public void toLog(LogTable table) {
+    table.put(keyTargetPosition, targetPosition);
+    table.put(keyTargetVelocity, targetVelocity);
+    table.put(keyPosition, position);
+    table.put(keyVelocity, velocity);
+    table.put(keyVoltage, voltage);
+    table.put(keyCurrent, current);
+    table.put(keyTempCelcius, tempCelsius);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  @Override
-  public void periodic() {
-    // Update measurements
-    m_io.processInputs(m_inputs);
+  /** Read inputs from the log */
+  public void fromLog(LogTable table) {
+    targetPosition = table.get(keyTargetPosition, targetPosition);
+    targetVelocity = table.get(keyTargetVelocity, targetVelocity);
+    position = table.get(keyPosition, position);
+    velocity = table.get(keyVelocity, velocity);
+    voltage = table.get(keyVoltage, voltage);
+    current = table.get(keyCurrent, current);
+    tempCelsius = table.get(keyTempCelcius, tempCelsius);
+  }
 
-    // Send input data to the logging framework (or update from the log during replay)
-    Logger.processInputs("Pivot", m_inputs);
+  /** Create a clone of input values */
+  public LoggableMotorInputs clone() {
+    LoggableMotorInputs copy = new LoggableMotorInputs();
+    // Copy keys
+    copy.keyTargetPosition = this.keyTargetPosition;
+    copy.keyTargetVelocity = this.keyTargetVelocity;
+    copy.keyPosition = this.keyPosition;
+    copy.keyVelocity = this.keyVelocity;
+    copy.keyVoltage = this.keyVoltage;
+    copy.keyCurrent = this.keyCurrent;
+    copy.keyTempCelcius = this.keyTempCelcius;
 
-    // Display velocities on dashboard
-    SmartDashboard.putNumber("pivot/targetAngleDeg", m_inputs.leader.targetPosition);
-    SmartDashboard.putNumber("pivot/angleDeg", m_inputs.leader.position);
-    SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
+    // Copy measurements
+    copy.targetPosition = this.targetPosition;
+    copy.targetVelocity = this.targetVelocity;
+    copy.position = this.position;
+    copy.velocity = this.velocity;
+    copy.voltage = this.voltage;
+    copy.current = this.current;
+    copy.tempCelsius = this.tempCelsius;
+    return copy;
   }
 }

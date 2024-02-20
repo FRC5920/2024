@@ -49,97 +49,61 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.pivot;
+package frc.robot.subsystems.climber;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
-import org.littletonrobotics.junction.Logger;
+import frc.robot.subsystems.climber.ClimberSubsystem.ClimberMotorID;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 
-/** Subsystem for controlling the pivot mechanism on the robot arm */
-public class PivotSubsystem extends SubsystemBase {
+/** Interface implemented by subsystem I/O */
+public interface ClimberSubsystemIO {
 
-  ////////////////////////////////////
-  // CONSTANTS
-  ////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Initializes and configures the I/O implementation */
+  default void initialize() {}
 
-  /** CAN bus used to communicate with the subsystem */
-  public static final RobotCANBus kCANBus = RobotCANBus.Rio;
-
-  ////////////////////////////////////
-  // Pivot Motor Configuration
-  ////////////////////////////////////
-
-  /** CAN device ID of the pivot leader motor */
-  public static final CANDevice kLeaderMotorDevice = CANDevice.ClimberLeaderMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kFollowerMotorDevice = CANDevice.ClimberFollowerMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kCANcoderDevice = CANDevice.PivotCANcoder;
-
-  /** Gear ratio between the Falcon motors and the pivot axle */
-  public static final double kFalconToPivotGearRatio = 40.0 / 1.0;
-
-  /** Set to true to reverse the direction of pivot motors */
-  public static final boolean kInvertMotors = false;
-
-  /** Offset of the CANcoder magnet in rotations */
-  public static final double kCANcoderMagnetOffsetRot = 0.0;
-
-  ////////////////////////////////////
-  // Attributes
-  ////////////////////////////////////
-
-  /** I/O used by the subsystem */
-  private final PivotSubsystemIO m_io;
-
-  /** Measured subsystem inputs */
-  private final PivotSubsystemInputs m_inputs = new PivotSubsystemInputs();
-
-  /** Creates a new PivotSubsystem. */
-  public PivotSubsystem(PivotSubsystemIO io) {
-    m_io = io;
-    m_io.initialize();
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Update logged input quantities */
+  default void processInputs(ClimberSubsystemInputs inputs) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired pivot angle in degrees
+   * Sets the desired climber position as a normalized percentage of maximum extension
    *
-   * @param degrees The desired pivot angle in degrees
+   * @param degrees Normalized percentage of full climber extension (0.0 to 1.0)
    */
-  public void setAngleDeg(double degrees) {
-    m_inputs.leader.targetPosition = degrees;
-    m_inputs.follower.targetPosition = degrees;
-    m_io.setAngleDeg(degrees);
-  }
-
-  public enum PivotMotorID {
-    Leader,
-    Follower
-  };
+  default void setExtensionPercent(double percent) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the current pivot angle in degrees */
-  public double getAngleDeg() {
-    return m_io.getMotorAngleDeg(PivotMotorID.Leader);
+  /**
+   * Returns the current extension of a climber motor as a normalized percentage of maximum
+   *
+   * @motorID Climber motor whose extension is to be returned
+   * @return normalized percentage of maximum climber extension (0.0 to 1.0)
+   */
+  default double getExtensionPercent(ClimberMotorID motorID) {
+    return 0.0;
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  @Override
-  public void periodic() {
-    // Update measurements
-    m_io.processInputs(m_inputs);
+  /** Parameters used to configure the subsystem I/O */
+  public static class Config {
+    public final RobotCANBus canBus;
+    public final CANDevice leaderMotorDevice;
+    public final CANDevice followerMotorDevice;
+    public final double climberGearRatio;
+    public final boolean invertMotors;
+    public final double maxRotations;
+    public final double maxMotorOutputPercent;
 
-    // Send input data to the logging framework (or update from the log during replay)
-    Logger.processInputs("Pivot", m_inputs);
-
-    // Display velocities on dashboard
-    SmartDashboard.putNumber("pivot/targetAngleDeg", m_inputs.leader.targetPosition);
-    SmartDashboard.putNumber("pivot/angleDeg", m_inputs.leader.position);
-    SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
+    public Config() {
+      this.canBus = IntakeSubsystem.kCANBus;
+      this.leaderMotorDevice = ClimberSubsystem.kLeaderMotorDevice;
+      this.followerMotorDevice = ClimberSubsystem.kFollowerMotorDevice;
+      this.climberGearRatio = ClimberSubsystem.kClimberMotorGearRatio;
+      this.invertMotors = ClimberSubsystem.kInvertMotors;
+      this.maxRotations = ClimberSubsystem.kMaxRotations;
+      this.maxMotorOutputPercent = ClimberSubsystem.kMaxMotorOutputPercent;
+    }
   }
 }

@@ -51,59 +51,21 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.pivot;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
-import org.littletonrobotics.junction.Logger;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
 
-/** Subsystem for controlling the pivot mechanism on the robot arm */
-public class PivotSubsystem extends SubsystemBase {
+/** Interface implemented by subsystem I/O */
+public interface PivotSubsystemIO {
 
-  ////////////////////////////////////
-  // CONSTANTS
-  ////////////////////////////////////
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Initializes and configures the I/O implementation */
+  default void initialize() {}
 
-  /** CAN bus used to communicate with the subsystem */
-  public static final RobotCANBus kCANBus = RobotCANBus.Rio;
-
-  ////////////////////////////////////
-  // Pivot Motor Configuration
-  ////////////////////////////////////
-
-  /** CAN device ID of the pivot leader motor */
-  public static final CANDevice kLeaderMotorDevice = CANDevice.ClimberLeaderMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kFollowerMotorDevice = CANDevice.ClimberFollowerMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kCANcoderDevice = CANDevice.PivotCANcoder;
-
-  /** Gear ratio between the Falcon motors and the pivot axle */
-  public static final double kFalconToPivotGearRatio = 40.0 / 1.0;
-
-  /** Set to true to reverse the direction of pivot motors */
-  public static final boolean kInvertMotors = false;
-
-  /** Offset of the CANcoder magnet in rotations */
-  public static final double kCANcoderMagnetOffsetRot = 0.0;
-
-  ////////////////////////////////////
-  // Attributes
-  ////////////////////////////////////
-
-  /** I/O used by the subsystem */
-  private final PivotSubsystemIO m_io;
-
-  /** Measured subsystem inputs */
-  private final PivotSubsystemInputs m_inputs = new PivotSubsystemInputs();
-
-  /** Creates a new PivotSubsystem. */
-  public PivotSubsystem(PivotSubsystemIO io) {
-    m_io = io;
-    m_io.initialize();
-  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Update logged input quantities */
+  default void processInputs(PivotSubsystemInputs inputs) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -111,35 +73,36 @@ public class PivotSubsystem extends SubsystemBase {
    *
    * @param degrees The desired pivot angle in degrees
    */
-  public void setAngleDeg(double degrees) {
-    m_inputs.leader.targetPosition = degrees;
-    m_inputs.follower.targetPosition = degrees;
-    m_io.setAngleDeg(degrees);
-  }
-
-  public enum PivotMotorID {
-    Leader,
-    Follower
-  };
+  default void setAngleDeg(double degrees) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the current pivot angle in degrees */
-  public double getAngleDeg() {
-    return m_io.getMotorAngleDeg(PivotMotorID.Leader);
+  /**
+   * Returns the current angle of a pivot motor in degrees
+   *
+   * @motorID Pivot motor whose angle is to be returned
+   */
+  default double getMotorAngleDeg(PivotMotorID motorID) {
+    return 0.0;
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  @Override
-  public void periodic() {
-    // Update measurements
-    m_io.processInputs(m_inputs);
+  /** Parameters used to configure the subsystem I/O */
+  public static class Config {
+    public final RobotCANBus canBus;
+    public final CANDevice leaderMotorDevice;
+    public final CANDevice followerMotorDevice;
+    public final CANDevice cancoderDevice;
+    public final double pivotGearRatio;
+    public final boolean invertMotors;
+    public final double cancoderOffsetRot;
 
-    // Send input data to the logging framework (or update from the log during replay)
-    Logger.processInputs("Pivot", m_inputs);
-
-    // Display velocities on dashboard
-    SmartDashboard.putNumber("pivot/targetAngleDeg", m_inputs.leader.targetPosition);
-    SmartDashboard.putNumber("pivot/angleDeg", m_inputs.leader.position);
-    SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
+    public Config() {
+      this.canBus = IntakeSubsystem.kCANBus;
+      this.leaderMotorDevice = PivotSubsystem.kLeaderMotorDevice;
+      this.followerMotorDevice = PivotSubsystem.kFollowerMotorDevice;
+      this.cancoderDevice = PivotSubsystem.kCANcoderDevice;
+      this.pivotGearRatio = PivotSubsystem.kFalconToPivotGearRatio;
+      this.invertMotors = PivotSubsystem.kInvertMotors;
+      this.cancoderOffsetRot = PivotSubsystem.kCANcoderMagnetOffsetRot;
+    }
   }
 }

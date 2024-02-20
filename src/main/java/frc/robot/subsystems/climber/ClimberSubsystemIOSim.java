@@ -49,97 +49,52 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.pivot;
+package frc.robot.subsystems.climber;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
-import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.system.plant.DCMotor;
+import frc.robot.sim.ctreSim.SimulatedDevice;
+import frc.robot.sim.ctreSim.TalonSRXSimProfile;
 
-/** Subsystem for controlling the pivot mechanism on the robot arm */
-public class PivotSubsystem extends SubsystemBase {
+/** Implementation of the ClimberSubsystemIO interface using simulated motors */
+public class ClimberSubsystemIOSim extends ClimberSubsystemIOReal {
 
-  ////////////////////////////////////
-  // CONSTANTS
-  ////////////////////////////////////
+  /** Simulated rotor inertia used for the indexer motor */
+  private static final double kRotorInertia = 0.001;
 
-  /** CAN bus used to communicate with the subsystem */
-  public static final RobotCANBus kCANBus = RobotCANBus.Rio;
+  /** Simulated leader motor */
+  private final SimulatedDevice m_simLeader;
 
-  ////////////////////////////////////
-  // Pivot Motor Configuration
-  ////////////////////////////////////
+  /** Simulated follower motor */
+  private final SimulatedDevice m_simFollower;
 
-  /** CAN device ID of the pivot leader motor */
-  public static final CANDevice kLeaderMotorDevice = CANDevice.ClimberLeaderMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kFollowerMotorDevice = CANDevice.ClimberFollowerMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kCANcoderDevice = CANDevice.PivotCANcoder;
-
-  /** Gear ratio between the Falcon motors and the pivot axle */
-  public static final double kFalconToPivotGearRatio = 40.0 / 1.0;
-
-  /** Set to true to reverse the direction of pivot motors */
-  public static final boolean kInvertMotors = false;
-
-  /** Offset of the CANcoder magnet in rotations */
-  public static final double kCANcoderMagnetOffsetRot = 0.0;
-
-  ////////////////////////////////////
-  // Attributes
-  ////////////////////////////////////
-
-  /** I/O used by the subsystem */
-  private final PivotSubsystemIO m_io;
-
-  /** Measured subsystem inputs */
-  private final PivotSubsystemInputs m_inputs = new PivotSubsystemInputs();
-
-  /** Creates a new PivotSubsystem. */
-  public PivotSubsystem(PivotSubsystemIO io) {
-    m_io = io;
-    m_io.initialize();
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Creates an instance of the I/O implementation
+   *
+   * @param config Configuration values for the I/O implementation
+   */
+  public ClimberSubsystemIOSim(ClimberSubsystemIO.Config config) {
+    super(config);
+    m_simLeader =
+        new SimulatedDevice(
+            new TalonSRXSimProfile(m_climberLeader, DCMotor.getCIM(1), kRotorInertia));
+    m_simFollower =
+        new SimulatedDevice(
+            new TalonSRXSimProfile(m_climberFollower, DCMotor.getCIM(1), kRotorInertia));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired pivot angle in degrees
+   * This method is called each robot cycle to process inputs to the subsystem
    *
-   * @param degrees The desired pivot angle in degrees
+   * @param inputs Object to populate with subsystem input values to be logged
    */
-  public void setAngleDeg(double degrees) {
-    m_inputs.leader.targetPosition = degrees;
-    m_inputs.follower.targetPosition = degrees;
-    m_io.setAngleDeg(degrees);
-  }
+  public void processInputs(ClimberSubsystemInputs inputs) {
+    // Update device simulations
+    m_simLeader.calculate();
+    m_simFollower.calculate();
 
-  public enum PivotMotorID {
-    Leader,
-    Follower
-  };
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the current pivot angle in degrees */
-  public double getAngleDeg() {
-    return m_io.getMotorAngleDeg(PivotMotorID.Leader);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  @Override
-  public void periodic() {
-    // Update measurements
-    m_io.processInputs(m_inputs);
-
-    // Send input data to the logging framework (or update from the log during replay)
-    Logger.processInputs("Pivot", m_inputs);
-
-    // Display velocities on dashboard
-    SmartDashboard.putNumber("pivot/targetAngleDeg", m_inputs.leader.targetPosition);
-    SmartDashboard.putNumber("pivot/angleDeg", m_inputs.leader.position);
-    SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
+    // Process inputs
+    super.processInputs(inputs);
   }
 }

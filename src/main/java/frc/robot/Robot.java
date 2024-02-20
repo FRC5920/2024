@@ -61,7 +61,6 @@ import frc.lib.utility.Alert.AlertType;
 import frc.lib.utility.CanBusErrorAlert;
 import frc.robot.commands.LEDCommands.LEDsToPattern;
 import frc.robot.commands.LEDCommands.LEDsToSolidColor;
-import frc.robot.sim.SimDeviceManager;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -82,9 +81,6 @@ public class Robot extends LoggedRobot {
 
   /** Container of subsystems and other components that make up the robot */
   private final RobotContainer m_robotContainer = new RobotContainer();
-
-  /** Simulated devices - used only during simulation mode */
-  private SimDeviceManager m_simDeviceManager;
 
   /** Mechanism2D for displaying arm components on the dashboard */
   public final Mechanisms m_botMechanisms = new Mechanisms();
@@ -153,7 +149,6 @@ public class Robot extends LoggedRobot {
     // TODO: low battery alert
 
     // Update display of robot mechanisms
-
     m_botMechanisms.updatePivotAngle(m_robotContainer.pivotSubsystem.getAngleDeg());
     m_botMechanisms.updateClimberExtension(m_robotContainer.climberSubsystem.getExtensionPercent());
     m_botMechanisms.sendToDashboard();
@@ -165,17 +160,11 @@ public class Robot extends LoggedRobot {
 
   /** This function is run once when the robot is first started in simulation mode */
   @Override
-  public void simulationInit() {
-    m_simDeviceManager = new SimDeviceManager();
-    m_robotContainer.pivotSubsystem.simulationInit(m_simDeviceManager);
-    m_robotContainer.climberSubsystem.simulationInit(m_simDeviceManager);
-  }
+  public void simulationInit() {}
 
   /** This function is called every 20 ms when the robot is running in simulation mode */
   @Override
-  public void simulationPeriodic() {
-    m_simDeviceManager.calculateSimStates();
-  }
+  public void simulationPeriodic() {}
 
   //////////////////////////////////////
   // DISABLED MODE
