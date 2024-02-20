@@ -49,12 +49,11 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.commands.intakeCommands;
+package frc.robot.subsystems.intake;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.subsystems.JoystickSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsystem;
 
 public class TeleopIntakeTest extends Command {
   /** Maximum flywheel velocity in rotations per second */
