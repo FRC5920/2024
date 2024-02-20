@@ -49,74 +49,34 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.sim;
+package frc.lib.LED;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
-import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
-import java.util.ArrayList;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.util.Color;
+import java.util.Optional;
 
-/** An object that tracks and manages recalculation of a collection of simulated devices */
-public class SimDeviceManager {
+/** Add your docs here. */
+public class ColorConstants {
 
-  /** Profiles of devices to be simulated */
-  private final ArrayList<SimulatedDevice> m_devices = new ArrayList<>();
+  public static final Color kOff = new Color(0, 0, 0);
+  public static final Color kWhite = new Color(255, 255, 255);
+  public static final Color kVikoticsYellow = new Color(255, 120, 0);
 
-  /** Recalculates the state of all simulated devices */
-  public void calculateSimStates() {
-    for (SimulatedDevice device : m_devices) {
-      device.calculate();
-    }
-  }
+  /** Official FIRST Blue for blue alliance */
+  public static final Color kAllianceBlue = Color.kFirstBlue;
 
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFX(TalonFX falcon, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(new SimulatedDevice(new TalonFXProfile(falcon, rotorInertia)));
-    }
-  }
+  /** Official FIRST Red for red alliance */
+  public static final Color kAllianceRed = Color.kFirstRed;
 
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFXWithFusedCANcoder(
-      TalonFX falcon, CANcoder can, double gearRatio, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(
-          new SimulatedDevice(
-              new TalonFXFusedCANcoderProfile(falcon, can, gearRatio, rotorInertia)));
-    }
-  }
+  /** Returns the Color of the active alliance */
+  public static Color getAllianceColor() {
+    Optional<Alliance> alliance = DriverStation.getAlliance();
 
-  /**
-   * Adds a simulated TalonSRX controller
-   *
-   * @param talon The TalonSRX device
-   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
-   * @param fullVel The maximum motor velocity, in ticks per 100ms
-   * @param sensorPhase The phase of the TalonSRX sensors
-   */
-  public void addTalonSRX(TalonSRX talon, double rotorInertia) {
-    if (talon != null) {
-      m_devices.add(
-          new SimulatedDevice(new TalonSRXSimProfile(talon, DCMotor.getCIM(1), rotorInertia)));
+    if (alliance.isPresent()) {
+      return (alliance.get() == Alliance.Blue) ? kAllianceBlue : kAllianceRed;
+    } else {
+      return kOff;
     }
   }
 }

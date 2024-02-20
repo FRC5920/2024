@@ -49,74 +49,54 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.sim;
+package frc.robot.subsystems.intake;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
-import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
-import java.util.ArrayList;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.joystick.ProcessedXboxController;
+import frc.robot.subsystems.JoystickSubsystem;
 
-/** An object that tracks and manages recalculation of a collection of simulated devices */
-public class SimDeviceManager {
+public class TeleopIntakeTest extends Command {
+  /** Maximum flywheel velocity in rotations per second */
+  private static final double kMaxFlywheelVelocity = 4000.0;
 
-  /** Profiles of devices to be simulated */
-  private final ArrayList<SimulatedDevice> m_devices = new ArrayList<>();
+  /** Intake subsystem to operate on */
+  private final IntakeSubsystem m_intakeSubsystem;
 
-  /** Recalculates the state of all simulated devices */
-  public void calculateSimStates() {
-    for (SimulatedDevice device : m_devices) {
-      device.calculate();
-    }
-  }
+  /** Controller used to operate the intake */
+  private final ProcessedXboxController m_controller;
 
   /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
+   * Creates an instance of the comman
    *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
+   * @param intakeSubsystem Intake subsystem to operate on
+   * @param joystickSubsystem Joystick subsystem used to control the intake
    */
-  public void addTalonFX(TalonFX falcon, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(new SimulatedDevice(new TalonFXProfile(falcon, rotorInertia)));
-    }
+  public TeleopIntakeTest(IntakeSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
+    addRequirements(intakeSubsystem);
+    m_intakeSubsystem = intakeSubsystem;
+    m_controller = joystickSubsystem.getOperatorController();
   }
 
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFXWithFusedCANcoder(
-      TalonFX falcon, CANcoder can, double gearRatio, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(
-          new SimulatedDevice(
-              new TalonFXFusedCANcoderProfile(falcon, can, gearRatio, rotorInertia)));
-    }
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {}
+
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+    double indexerSpeed = -1.0 * m_controller.getRightY();
+    double flywheelVelocity = -1.0 * m_controller.getLeftY() * kMaxFlywheelVelocity;
+    m_intakeSubsystem.setIndexerSpeed(indexerSpeed);
+    m_intakeSubsystem.setFlywheelVelocity(flywheelVelocity);
   }
 
-  /**
-   * Adds a simulated TalonSRX controller
-   *
-   * @param talon The TalonSRX device
-   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
-   * @param fullVel The maximum motor velocity, in ticks per 100ms
-   * @param sensorPhase The phase of the TalonSRX sensors
-   */
-  public void addTalonSRX(TalonSRX talon, double rotorInertia) {
-    if (talon != null) {
-      m_devices.add(
-          new SimulatedDevice(new TalonSRXSimProfile(talon, DCMotor.getCIM(1), rotorInertia)));
-    }
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {}
+
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
   }
 }

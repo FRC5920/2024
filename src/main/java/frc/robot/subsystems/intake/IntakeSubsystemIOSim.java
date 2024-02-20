@@ -49,34 +49,55 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.lib.LED;
+package frc.robot.subsystems.intake;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
-import edu.wpi.first.wpilibj.util.Color;
-import java.util.Optional;
+import edu.wpi.first.math.system.plant.DCMotor;
+import frc.robot.sim.ctreSim.SimulatedDevice;
+import frc.robot.sim.ctreSim.TalonFXProfile;
+import frc.robot.sim.ctreSim.TalonSRXSimProfile;
 
 /** Add your docs here. */
-public class LEDConstants {
+public class IntakeSubsystemIOSim extends IntakeSubsystemIOReal {
 
-  public static final Color kOff = new Color(0, 0, 0);
-  public static final Color kWhite = new Color(255, 255, 255);
-  public static final Color kVikoticsYellow = new Color(255, 120, 0);
+  /** Simulated rotor inertia used for the indexer motor */
+  private static final double kIndexerRotorInertia = 0.001;
 
-  /** Official FIRST Blue for blue alliance */
-  public static final Color kAllianceBlue = Color.kFirstBlue;
+  /** Simulated rotor inertia used for the flywheel motor */
+  private static final double kFlywheelRotorInertia = 0.001;
 
-  /** Official FIRST Red for red alliance */
-  public static final Color kAllianceRed = Color.kFirstRed;
+  /** Simulated indexer motor */
+  private final SimulatedDevice m_simIndexer;
 
-  /** Returns the Color of the active alliance */
-  public static Color getAllianceColor() {
-    Optional<Alliance> alliance = DriverStation.getAlliance();
+  /** Simulated flywheel motor */
+  private final SimulatedDevice m_simFlywheel;
 
-    if (alliance.isPresent()) {
-      return (alliance.get() == Alliance.Blue) ? kAllianceBlue : kAllianceRed;
-    } else {
-      return kOff;
-    }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Creates an instance of the I/O implementation
+   *
+   * @param config Configuration values for the I/O implementation
+   */
+  public IntakeSubsystemIOSim(IntakeSubsystemIO.Config config) {
+    super(config);
+    m_simFlywheel = new SimulatedDevice(new TalonFXProfile(m_flywheelMotor, kFlywheelRotorInertia));
+    m_simIndexer =
+        new SimulatedDevice(
+            new TalonSRXSimProfile(
+                m_indexerMotor, DCMotor.getAndymarkRs775_125(1), kIndexerRotorInertia));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * This method is called each robot cycle to process inputs to the subsystem
+   *
+   * @param inputs Object to populate with subsystem input values to be logged
+   */
+  public void processInputs(IntakeSubsystemInputs inputs) {
+    // Update device simulations
+    m_simFlywheel.calculate();
+    m_simIndexer.calculate();
+
+    // Process inputs
+    super.processInputs(inputs);
   }
 }

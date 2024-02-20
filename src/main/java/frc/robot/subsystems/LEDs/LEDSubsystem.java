@@ -57,7 +57,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.lib.LED.LEDConstants;
+import frc.lib.LED.ColorConstants;
 import frc.lib.LED.LEDPattern;
 import frc.lib.LED.LEDStrip;
 import frc.lib.LED.Patterns.CandyCanePattern;
@@ -109,7 +109,7 @@ public class LEDSubsystem extends SubsystemBase {
     m_disconnectedPattern =
         new CandyCanePattern(
             new LEDStrip(0, kNumAddressableLEDs, m_ledStripBuffer),
-            LEDConstants.kOff,
+            ColorConstants.kOff,
             Color.kYellow);
 
     // Set up a "Hazard" pattern in disabled mode

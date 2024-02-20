@@ -49,74 +49,56 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.sim;
+package frc.robot.subsystems.intake;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
-import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
-import java.util.ArrayList;
+import frc.lib.logging.LoggableLaserCANInputs;
+import frc.lib.logging.LoggableMotorInputs;
+import org.littletonrobotics.junction.LogTable;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-/** An object that tracks and manages recalculation of a collection of simulated devices */
-public class SimDeviceManager {
-
-  /** Profiles of devices to be simulated */
-  private final ArrayList<SimulatedDevice> m_devices = new ArrayList<>();
-
-  /** Recalculates the state of all simulated devices */
-  public void calculateSimStates() {
-    for (SimulatedDevice device : m_devices) {
-      device.calculate();
-    }
-  }
+/** Logged inputs for the IntakeSubsystem */
+public class IntakeSubsystemInputs implements LoggableInputs {
+  /** Flywheel motor inputs */
+  public LoggableMotorInputs flywheel;
+  /** Indexer motor inputs */
+  public LoggableMotorInputs indexer;
+  /** Gamepiece sensor inputs */
+  public LoggableLaserCANInputs laserCAN;
 
   /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
+   * Creates an instance of the inputs and sets the prefix to log them under
    *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
+   * @param prefix Prefix the inputs will be logged under
    */
-  public void addTalonFX(TalonFX falcon, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(new SimulatedDevice(new TalonFXProfile(falcon, rotorInertia)));
-    }
+  public IntakeSubsystemInputs(String prefix) {
+    flywheel = new LoggableMotorInputs("Flywheel");
+    indexer = new LoggableMotorInputs("Indexer");
+    laserCAN = new LoggableLaserCANInputs("LaserCAN");
   }
 
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFXWithFusedCANcoder(
-      TalonFX falcon, CANcoder can, double gearRatio, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(
-          new SimulatedDevice(
-              new TalonFXFusedCANcoderProfile(falcon, can, gearRatio, rotorInertia)));
-    }
+  /** Creates an instance of the loggable object during clone() calls */
+  private IntakeSubsystemInputs() {}
+
+  /** Write input values to log */
+  public void toLog(LogTable table) {
+    flywheel.toLog(table);
+    indexer.toLog(table);
+    laserCAN.toLog(table);
   }
 
-  /**
-   * Adds a simulated TalonSRX controller
-   *
-   * @param talon The TalonSRX device
-   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
-   * @param fullVel The maximum motor velocity, in ticks per 100ms
-   * @param sensorPhase The phase of the TalonSRX sensors
-   */
-  public void addTalonSRX(TalonSRX talon, double rotorInertia) {
-    if (talon != null) {
-      m_devices.add(
-          new SimulatedDevice(new TalonSRXSimProfile(talon, DCMotor.getCIM(1), rotorInertia)));
-    }
+  /** Read input values from log */
+  public void fromLog(LogTable table) {
+    flywheel.fromLog(table);
+    indexer.fromLog(table);
+    laserCAN.fromLog(table);
+  }
+
+  /** Create a clone of input values */
+  public IntakeSubsystemInputs clone() {
+    IntakeSubsystemInputs copy = new IntakeSubsystemInputs();
+    copy.flywheel = this.flywheel;
+    copy.indexer = this.indexer;
+    copy.laserCAN = this.laserCAN;
+    return copy;
   }
 }

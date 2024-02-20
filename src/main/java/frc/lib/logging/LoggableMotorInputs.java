@@ -49,74 +49,98 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.sim;
+package frc.lib.logging;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
-import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
-import java.util.ArrayList;
+import org.littletonrobotics.junction.LogTable;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-/** An object that tracks and manages recalculation of a collection of simulated devices */
-public class SimDeviceManager {
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/** Logged input measurements for a motor */
+public class LoggableMotorInputs implements LoggableInputs {
+  // Log keys for measurements
+  private String keyTargetPosition;
+  private String keyTargetVelocity;
+  private String keyPosition;
+  private String keyVelocity;
+  private String keyVoltage;
+  private String keyCurrent;
+  private String keyTempCelcius;
 
-  /** Profiles of devices to be simulated */
-  private final ArrayList<SimulatedDevice> m_devices = new ArrayList<>();
-
-  /** Recalculates the state of all simulated devices */
-  public void calculateSimStates() {
-    for (SimulatedDevice device : m_devices) {
-      device.calculate();
-    }
-  }
-
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFX(TalonFX falcon, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(new SimulatedDevice(new TalonFXProfile(falcon, rotorInertia)));
-    }
-  }
+  /** Target position in rotations */
+  public double targetPosition = 0.0;
+  /** Target velocity in rotations per second */
+  public double targetVelocity = 0.0;
+  /** Position of the mechanism in rotations */
+  public double position = 0.0;
+  /** Velocity of the mechanism in rotations per second */
+  public double velocity = 0.0;
+  /** Voltage applied to the motor in Volts */
+  public double voltage = 0.0;
+  /** Motor current in Amps */
+  public double current = 0.0;
+  /** Motor temperature in degrees Celcius */
+  public double tempCelsius = 0.0;
 
   /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
+   * Creates an instance of the inputs
    *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
+   * @param prefix Prefix the inputs will be logged under
    */
-  public void addTalonFXWithFusedCANcoder(
-      TalonFX falcon, CANcoder can, double gearRatio, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(
-          new SimulatedDevice(
-              new TalonFXFusedCANcoderProfile(falcon, can, gearRatio, rotorInertia)));
-    }
+  public LoggableMotorInputs(String prefix) {
+    keyTargetPosition = prefix + "/targetPosition";
+    keyTargetVelocity = prefix + "/targetVelocity";
+    keyPosition = prefix + "/position";
+    keyVelocity = prefix + "/velocity";
+    keyVoltage = prefix + "/voltage";
+    keyCurrent = prefix + "/current";
+    keyTempCelcius = prefix + "/tempCelcius";
   }
 
-  /**
-   * Adds a simulated TalonSRX controller
-   *
-   * @param talon The TalonSRX device
-   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
-   * @param fullVel The maximum motor velocity, in ticks per 100ms
-   * @param sensorPhase The phase of the TalonSRX sensors
-   */
-  public void addTalonSRX(TalonSRX talon, double rotorInertia) {
-    if (talon != null) {
-      m_devices.add(
-          new SimulatedDevice(new TalonSRXSimProfile(talon, DCMotor.getCIM(1), rotorInertia)));
-    }
+  /** Creates an instance of the loggable object during clone() calls */
+  private LoggableMotorInputs() {}
+
+  /** Write inputs to the log */
+  public void toLog(LogTable table) {
+    table.put(keyTargetPosition, targetPosition);
+    table.put(keyTargetVelocity, targetVelocity);
+    table.put(keyPosition, position);
+    table.put(keyVelocity, velocity);
+    table.put(keyVoltage, voltage);
+    table.put(keyCurrent, current);
+    table.put(keyTempCelcius, tempCelsius);
+  }
+
+  /** Read inputs from the log */
+  public void fromLog(LogTable table) {
+    targetPosition = table.get(keyTargetPosition, targetPosition);
+    targetVelocity = table.get(keyTargetVelocity, targetVelocity);
+    position = table.get(keyPosition, position);
+    velocity = table.get(keyVelocity, velocity);
+    voltage = table.get(keyVoltage, voltage);
+    current = table.get(keyCurrent, current);
+    tempCelsius = table.get(keyTempCelcius, tempCelsius);
+  }
+
+  /** Create a clone of input values */
+  public LoggableMotorInputs clone() {
+    LoggableMotorInputs copy = new LoggableMotorInputs();
+    // Copy keys
+    copy.keyTargetPosition = this.keyTargetPosition;
+    copy.keyTargetVelocity = this.keyTargetVelocity;
+    copy.keyPosition = this.keyPosition;
+    copy.keyVelocity = this.keyVelocity;
+    copy.keyVoltage = this.keyVoltage;
+    copy.keyCurrent = this.keyCurrent;
+    copy.keyTempCelcius = this.keyTempCelcius;
+
+    // Copy measurements
+    copy.targetPosition = this.targetPosition;
+    copy.targetVelocity = this.targetVelocity;
+    copy.position = this.position;
+    copy.velocity = this.velocity;
+    copy.voltage = this.voltage;
+    copy.current = this.current;
+    copy.tempCelsius = this.tempCelsius;
+    return copy;
   }
 }

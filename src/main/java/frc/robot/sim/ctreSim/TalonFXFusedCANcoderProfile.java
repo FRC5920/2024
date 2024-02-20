@@ -56,7 +56,7 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
-import frc.robot.sim.SimDeviceManager.SimProfile;
+import frc.robot.sim.ctreSim.SimulatedDevice.SimProfile;
 
 /**
  * Simulated device profile for a CTRE TalonFX motor controller configured for FusedCANcoder

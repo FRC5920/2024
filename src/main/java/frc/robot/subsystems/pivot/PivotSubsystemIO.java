@@ -49,74 +49,60 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.sim;
+package frc.robot.subsystems.pivot;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
-import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
-import java.util.ArrayList;
+import frc.robot.Constants.CANDevice;
+import frc.robot.Constants.RobotCANBus;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
 
-/** An object that tracks and manages recalculation of a collection of simulated devices */
-public class SimDeviceManager {
+/** Interface implemented by subsystem I/O */
+public interface PivotSubsystemIO {
 
-  /** Profiles of devices to be simulated */
-  private final ArrayList<SimulatedDevice> m_devices = new ArrayList<>();
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Initializes and configures the I/O implementation */
+  default void initialize() {}
 
-  /** Recalculates the state of all simulated devices */
-  public void calculateSimStates() {
-    for (SimulatedDevice device : m_devices) {
-      device.calculate();
-    }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Update logged input quantities */
+  default void processInputs(PivotSubsystemInputs inputs) {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Sets the desired pivot angle in degrees
+   *
+   * @param degrees The desired pivot angle in degrees
+   */
+  default void setAngleDeg(double degrees) {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the current angle of a pivot motor in degrees
+   *
+   * @motorID Pivot motor whose angle is to be returned
+   */
+  default double getMotorAngleDeg(PivotMotorID motorID) {
+    return 0.0;
   }
 
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFX(TalonFX falcon, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(new SimulatedDevice(new TalonFXProfile(falcon, rotorInertia)));
-    }
-  }
+  /** Parameters used to configure the subsystem I/O */
+  public static class Config {
+    public final RobotCANBus canBus;
+    public final CANDevice leaderMotorDevice;
+    public final CANDevice followerMotorDevice;
+    public final CANDevice cancoderDevice;
+    public final double pivotGearRatio;
+    public final boolean invertMotors;
+    public final double cancoderOffsetRot;
 
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFXWithFusedCANcoder(
-      TalonFX falcon, CANcoder can, double gearRatio, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(
-          new SimulatedDevice(
-              new TalonFXFusedCANcoderProfile(falcon, can, gearRatio, rotorInertia)));
-    }
-  }
-
-  /**
-   * Adds a simulated TalonSRX controller
-   *
-   * @param talon The TalonSRX device
-   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
-   * @param fullVel The maximum motor velocity, in ticks per 100ms
-   * @param sensorPhase The phase of the TalonSRX sensors
-   */
-  public void addTalonSRX(TalonSRX talon, double rotorInertia) {
-    if (talon != null) {
-      m_devices.add(
-          new SimulatedDevice(new TalonSRXSimProfile(talon, DCMotor.getCIM(1), rotorInertia)));
+    public Config() {
+      this.canBus = IntakeSubsystem.kCANBus;
+      this.leaderMotorDevice = PivotSubsystem.kLeaderMotorDevice;
+      this.followerMotorDevice = PivotSubsystem.kFollowerMotorDevice;
+      this.cancoderDevice = PivotSubsystem.kCANcoderDevice;
+      this.pivotGearRatio = PivotSubsystem.kFalconToPivotGearRatio;
+      this.invertMotors = PivotSubsystem.kInvertMotors;
+      this.cancoderOffsetRot = PivotSubsystem.kCANcoderMagnetOffsetRot;
     }
   }
 }

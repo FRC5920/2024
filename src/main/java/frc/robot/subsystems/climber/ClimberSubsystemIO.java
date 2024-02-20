@@ -49,74 +49,61 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.sim;
+package frc.robot.subsystems.climber;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
-import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
-import java.util.ArrayList;
+import frc.robot.Constants.CANDevice;
+import frc.robot.Constants.RobotCANBus;
+import frc.robot.subsystems.climber.ClimberSubsystem.ClimberMotorID;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 
-/** An object that tracks and manages recalculation of a collection of simulated devices */
-public class SimDeviceManager {
+/** Interface implemented by subsystem I/O */
+public interface ClimberSubsystemIO {
 
-  /** Profiles of devices to be simulated */
-  private final ArrayList<SimulatedDevice> m_devices = new ArrayList<>();
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Initializes and configures the I/O implementation */
+  default void initialize() {}
 
-  /** Recalculates the state of all simulated devices */
-  public void calculateSimStates() {
-    for (SimulatedDevice device : m_devices) {
-      device.calculate();
-    }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Update logged input quantities */
+  default void processInputs(ClimberSubsystemInputs inputs) {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Sets the desired climber position as a normalized percentage of maximum extension
+   *
+   * @param degrees Normalized percentage of full climber extension (0.0 to 1.0)
+   */
+  default void setExtensionPercent(double percent) {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the current extension of a climber motor as a normalized percentage of maximum
+   *
+   * @motorID Climber motor whose extension is to be returned
+   * @return normalized percentage of maximum climber extension (0.0 to 1.0)
+   */
+  default double getExtensionPercent(ClimberMotorID motorID) {
+    return 0.0;
   }
 
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFX(TalonFX falcon, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(new SimulatedDevice(new TalonFXProfile(falcon, rotorInertia)));
-    }
-  }
+  /** Parameters used to configure the subsystem I/O */
+  public static class Config {
+    public final RobotCANBus canBus;
+    public final CANDevice leaderMotorDevice;
+    public final CANDevice followerMotorDevice;
+    public final double climberGearRatio;
+    public final boolean invertMotors;
+    public final double maxRotations;
+    public final double maxMotorOutputPercent;
 
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFXWithFusedCANcoder(
-      TalonFX falcon, CANcoder can, double gearRatio, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(
-          new SimulatedDevice(
-              new TalonFXFusedCANcoderProfile(falcon, can, gearRatio, rotorInertia)));
-    }
-  }
-
-  /**
-   * Adds a simulated TalonSRX controller
-   *
-   * @param talon The TalonSRX device
-   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
-   * @param fullVel The maximum motor velocity, in ticks per 100ms
-   * @param sensorPhase The phase of the TalonSRX sensors
-   */
-  public void addTalonSRX(TalonSRX talon, double rotorInertia) {
-    if (talon != null) {
-      m_devices.add(
-          new SimulatedDevice(new TalonSRXSimProfile(talon, DCMotor.getCIM(1), rotorInertia)));
+    public Config() {
+      this.canBus = IntakeSubsystem.kCANBus;
+      this.leaderMotorDevice = ClimberSubsystem.kLeaderMotorDevice;
+      this.followerMotorDevice = ClimberSubsystem.kFollowerMotorDevice;
+      this.climberGearRatio = ClimberSubsystem.kClimberMotorGearRatio;
+      this.invertMotors = ClimberSubsystem.kInvertMotors;
+      this.maxRotations = ClimberSubsystem.kMaxRotations;
+      this.maxMotorOutputPercent = ClimberSubsystem.kMaxMotorOutputPercent;
     }
   }
 }

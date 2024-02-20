@@ -49,74 +49,52 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.sim;
+package frc.robot.subsystems.climber;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.math.system.plant.DCMotor;
 import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
-import frc.robot.sim.ctreSim.TalonFXProfile;
 import frc.robot.sim.ctreSim.TalonSRXSimProfile;
-import java.util.ArrayList;
 
-/** An object that tracks and manages recalculation of a collection of simulated devices */
-public class SimDeviceManager {
+/** Implementation of the ClimberSubsystemIO interface using simulated motors */
+public class ClimberSubsystemIOSim extends ClimberSubsystemIOReal {
 
-  /** Profiles of devices to be simulated */
-  private final ArrayList<SimulatedDevice> m_devices = new ArrayList<>();
+  /** Simulated rotor inertia used for the indexer motor */
+  private static final double kRotorInertia = 0.001;
 
-  /** Recalculates the state of all simulated devices */
-  public void calculateSimStates() {
-    for (SimulatedDevice device : m_devices) {
-      device.calculate();
-    }
+  /** Simulated leader motor */
+  private final SimulatedDevice m_simLeader;
+
+  /** Simulated follower motor */
+  private final SimulatedDevice m_simFollower;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Creates an instance of the I/O implementation
+   *
+   * @param config Configuration values for the I/O implementation
+   */
+  public ClimberSubsystemIOSim(ClimberSubsystemIO.Config config) {
+    super(config);
+    m_simLeader =
+        new SimulatedDevice(
+            new TalonSRXSimProfile(m_climberLeader, DCMotor.getCIM(1), kRotorInertia));
+    m_simFollower =
+        new SimulatedDevice(
+            new TalonSRXSimProfile(m_climberFollower, DCMotor.getCIM(1), kRotorInertia));
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
+   * This method is called each robot cycle to process inputs to the subsystem
    *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
+   * @param inputs Object to populate with subsystem input values to be logged
    */
-  public void addTalonFX(TalonFX falcon, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(new SimulatedDevice(new TalonFXProfile(falcon, rotorInertia)));
-    }
-  }
+  public void processInputs(ClimberSubsystemInputs inputs) {
+    // Update device simulations
+    m_simLeader.calculate();
+    m_simFollower.calculate();
 
-  /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
-   *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
-   */
-  public void addTalonFXWithFusedCANcoder(
-      TalonFX falcon, CANcoder can, double gearRatio, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(
-          new SimulatedDevice(
-              new TalonFXFusedCANcoderProfile(falcon, can, gearRatio, rotorInertia)));
-    }
-  }
-
-  /**
-   * Adds a simulated TalonSRX controller
-   *
-   * @param talon The TalonSRX device
-   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
-   * @param fullVel The maximum motor velocity, in ticks per 100ms
-   * @param sensorPhase The phase of the TalonSRX sensors
-   */
-  public void addTalonSRX(TalonSRX talon, double rotorInertia) {
-    if (talon != null) {
-      m_devices.add(
-          new SimulatedDevice(new TalonSRXSimProfile(talon, DCMotor.getCIM(1), rotorInertia)));
-    }
+    // Process inputs
+    super.processInputs(inputs);
   }
 }

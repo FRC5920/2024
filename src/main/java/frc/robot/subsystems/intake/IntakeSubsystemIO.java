@@ -49,74 +49,94 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.sim;
+package frc.robot.subsystems.intake;
 
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
-import com.ctre.phoenix6.hardware.CANcoder;
-import com.ctre.phoenix6.hardware.TalonFX;
-import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXFusedCANcoderProfile;
-import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
-import java.util.ArrayList;
+import frc.robot.Constants.CANDevice;
+import frc.robot.Constants.RobotCANBus;
 
-/** An object that tracks and manages recalculation of a collection of simulated devices */
-public class SimDeviceManager {
+/** I/O abstraction for the IntakeSubsystem */
+public interface IntakeSubsystemIO {
 
-  /** Profiles of devices to be simulated */
-  private final ArrayList<SimulatedDevice> m_devices = new ArrayList<>();
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Initializes and configures the I/O implementation */
+  default void initialize() {}
 
-  /** Recalculates the state of all simulated devices */
-  public void calculateSimStates() {
-    for (SimulatedDevice device : m_devices) {
-      device.calculate();
-    }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Update logged input quantities */
+  default void processInputs(IntakeSubsystemInputs inputs) {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Sets the desired speed of the indexer mechanism as a normalized percentage of full scale
+   *
+   * @param percent Normalized percentage of full speed (0.0 to 1.0)
+   */
+  default void setIndexerSpeed(double percent) {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Sets the desired velocity of the flywheel mechanism
+   *
+   * @param rotPerSec Desired velocity in rotations per second
+   */
+  default void setFlywheelVelocity(double rotPerSec) {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the current speed of the indexer mechanism as a percentage of full speed
+   *
+   * @return Normalized percentage of full speed (0.0 to 1.0)
+   */
+  default double getIndexerSpeed() {
+    return 0.0;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
+   * Returns the current velocity of the flywheel mechanism
    *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
+   * @return The velocity of the flywheel mechanism in rotations per second
    */
-  public void addTalonFX(TalonFX falcon, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(new SimulatedDevice(new TalonFXProfile(falcon, rotorInertia)));
-    }
+  default double getFlywheelVelocity() {
+    return 0.0;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Adds a TalonFX controller that is configured to track a CANcoder
+   * Returns the distance measured by the gamepiece sensor
    *
-   * @param falcon The TalonFX device
-   * @param can The CANcoder device
-   * @param gearRatio The gear reduction of the TalonFX
-   * @param rotorInertia Rotational Inertia of the mechanism at the rotor
+   * @return The distance measured by the gamepiece sensor in meters
    */
-  public void addTalonFXWithFusedCANcoder(
-      TalonFX falcon, CANcoder can, double gearRatio, final double rotorInertia) {
-    if (falcon != null) {
-      m_devices.add(
-          new SimulatedDevice(
-              new TalonFXFusedCANcoderProfile(falcon, can, gearRatio, rotorInertia)));
-    }
+  default double getGamepieceDistance() {
+    return 0.0;
   }
 
-  /**
-   * Adds a simulated TalonSRX controller
-   *
-   * @param talon The TalonSRX device
-   * @param accelToFullTime The time the motor takes to accelerate from 0 to full, in seconds
-   * @param fullVel The maximum motor velocity, in ticks per 100ms
-   * @param sensorPhase The phase of the TalonSRX sensors
-   */
-  public void addTalonSRX(TalonSRX talon, double rotorInertia) {
-    if (talon != null) {
-      m_devices.add(
-          new SimulatedDevice(new TalonSRXSimProfile(talon, DCMotor.getCIM(1), rotorInertia)));
+  /** Parameters used to configure the subsystem I/O */
+  public static class Config {
+    public final RobotCANBus canBus;
+    public final CANDevice flywheelMotorDevice;
+    public final double flywheelGearRatio;
+    public final boolean invertFlywheelMotor;
+    public final double maxFlywheelVelocity;
+
+    public final CANDevice indexerMotorDevice;
+    public final double indexerGearRatio;
+    public final boolean invertIndexerMotor;
+    public final double maxIndexerSpeed;
+
+    public final CANDevice gamepieceSensorDevice;
+
+    public Config() {
+      this.canBus = IntakeSubsystem.kCANBus;
+      this.flywheelMotorDevice = IntakeSubsystem.kFlywheelMotorCANDevice;
+      this.flywheelGearRatio = IntakeSubsystem.kFlywheelMotorGearRatio;
+      this.invertFlywheelMotor = IntakeSubsystem.kFlywheelMotorInverted;
+      this.maxFlywheelVelocity = IntakeSubsystem.kMaxFlywheelMotorVelocity;
+      this.indexerMotorDevice = IntakeSubsystem.kIndexerMotorCANDevice;
+      this.indexerGearRatio = IntakeSubsystem.kIndexerMotorGearRatio;
+      this.invertIndexerMotor = IntakeSubsystem.kIndexerMotorInverted;
+      this.maxIndexerSpeed = IntakeSubsystem.kMaxIndexerSpeed;
+      this.gamepieceSensorDevice = IntakeSubsystem.kGamepieceSensorCANDevice;
     }
   }
 }
