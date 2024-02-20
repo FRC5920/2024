@@ -68,7 +68,7 @@ public class PivotSubsystem extends SubsystemBase {
   public static final RobotCANBus kCANBus = RobotCANBus.Rio;
 
   ////////////////////////////////////
-  // Climber Motor Configuration
+  // Pivot Motor Configuration
   ////////////////////////////////////
 
   /** CAN device ID of the pivot leader motor */
