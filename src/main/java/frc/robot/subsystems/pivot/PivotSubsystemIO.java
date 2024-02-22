@@ -85,6 +85,12 @@ public interface PivotSubsystemIO {
     return 0.0;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns true if the pivot has reached the commanded target angle */
+  default boolean hasReachedTargetAngle() {
+    return true;
+  }
+
   /** Parameters used to configure the subsystem I/O */
   public static class Config {
     public final RobotCANBus canBus;

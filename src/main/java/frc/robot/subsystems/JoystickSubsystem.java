@@ -60,10 +60,10 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.lib.joystick.JoystickSubsystemBase;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.RobotContainer;
-import frc.robot.commands.ArmCommands.ClimberCommand;
-import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
-import frc.robot.commands.ArmCommands.PivotCommand;
-import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.commands.SubsystemCommands.ClimberCommand;
+import frc.robot.commands.SubsystemCommands.ClimberCommand.ClimberPreset;
+import frc.robot.commands.SubsystemCommands.PivotCommand;
+import frc.robot.commands.SubsystemCommands.PivotCommand.AnglePreset;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 
 /** A subsystem providing Xbox controllers for driving the robot manually */

@@ -49,6 +49,80 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.commands.ArmCommands;
+package frc.robot.commands.SubsystemCommands;
 
-public class ArmCommands {}
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+
+/**
+ * This command uses the IntakeSubsystem to pull a note (ring) into the intake assembly
+ *
+ * @see IntakeSubsystem
+ */
+public class GetNote extends Command {
+
+  ///////////////////////////////////////
+  // CONSTANTS
+  ///////////////////////////////////////
+
+  /**
+   * Use this value to set the velocity of the flywheel in rotations per second while pulling in the
+   * note
+   */
+  private static final double kFlywheelVelocity = 100.0;
+
+  /** Use this value to set the speed of the indexer as a normalized percentage (0.0 to 1.0) */
+  private static final double kIndexerSpeed = 0.5;
+
+  /**
+   * Use this value to determine how close the ring should be to the gamepiece sensor for the
+   * command to be finished
+   */
+  private static final double kGamepieceSensorDistanceMeters = 0.05; // 5 cm or less
+
+  ///////////////////////////////////////
+  // VARIABLES
+  ///////////////////////////////////////
+
+  /**
+   * Variable containing the subsystem this command operates on to access motors and sensors in the
+   * bot's intake assembly
+   */
+  private final IntakeSubsystem m_intake;
+
+  /**
+   * Creates a new IntakeRing command
+   *
+   * @param intakeSubsystem Subsystem this command operates on.
+   */
+  public GetNote(IntakeSubsystem intakeSubsystem) {
+    m_intake = intakeSubsystem;
+
+    // Call addRequirements() to let the robot know that this command is using the IntakeSubsystem
+    addRequirements(intakeSubsystem);
+  }
+
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {
+    // TODO: turn on the flywheel and indexer motors
+  }
+
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+    // TODO: do we need to do anything here while the intake is running?
+  }
+
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {
+    // TODO: turn off the flywheel and indexer motors
+  }
+
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
+  }
+}

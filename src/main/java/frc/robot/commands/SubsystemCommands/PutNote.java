@@ -49,61 +49,78 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.commands.ArmCommands;
+package frc.robot.commands.SubsystemCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.pivot.PivotSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystem;
 
-public class PivotCommand extends Command {
-  /** The PivotSubsystem operated on by the command */
-  private final PivotSubsystem m_pivotSubsystem;
+/**
+ * This command uses the IntakeSubsystem to spit out a note (ring) from the intake assembly
+ *
+ * @see IntakeSubsystem
+ */
+public class PutNote extends Command {
 
-  /** The desired pivot angle */
-  private final double m_angleDegrees;
+  ///////////////////////////////////////
+  // CONSTANTS
+  ///////////////////////////////////////
 
   /**
-   * Creates a command that will move the pivot to a specified preset angle
-   *
-   * @param pivotSubsystem The PivotSubsystem to operate on
-   * @param angle Angle preset the pivot should be moved to
+   * Use this value to set the velocity of the flywheel in rotations per second that is used to
+   * throw the note
    */
-  public PivotCommand(PivotSubsystem pivotSubsystem, AnglePreset angle) {
-    m_pivotSubsystem = pivotSubsystem;
-    m_angleDegrees = angle.angleDeg;
-    addRequirements(pivotSubsystem);
+  private static final double kFlywheelVelocity = 2000.0;
+
+  /**
+   * Use this value to set the speed of the indexer as a normalized percentage (0.0 to 1.0) used
+   * when advancing the note into the flywheel
+   */
+  private static final double kIndexerSpeed = 0.1;
+
+  ///////////////////////////////////////
+  // VARIABLES
+  ///////////////////////////////////////
+
+  /**
+   * Variable containing the subsystem this command operates on to access motors and sensors in the
+   * bot's intake assembly
+   */
+  private final IntakeSubsystem m_intake;
+
+  /**
+   * Creates a new IntakeRing command
+   *
+   * @param intakeSubsystem Subsystem this command operates on.
+   */
+  public PutNote(IntakeSubsystem intakeSubsystem) {
+    m_intake = intakeSubsystem;
+
+    // Call addRequirements() to let the robot know that this command is using the IntakeSubsystem
+    addRequirements(intakeSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_pivotSubsystem.setAngleDeg(m_angleDegrees);
+    // TODO: start the flywheel motor
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {}
+  public void execute() {
+    // Wait for the flywheel motor to reach the target speed.
+    // Then turn on the indexer to feed the note into the flywheel.
+  }
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
-
-  // Returns true to end the command when the pivot reaches the target angle within one degree
-  @Override
-  public boolean isFinished() {
-    return Math.abs(m_pivotSubsystem.getAngleDeg() - m_angleDegrees) < 1.0;
+  public void end(boolean interrupted) {
+    // TODO: the command is finished when the note moves past the end of the intake
   }
 
-  public enum AnglePreset {
-    ShootForward(120.0),
-    ShootBackward(60.0),
-    Intake(195.0),
-    Climb(90.0);
-
-    /** Pivot angle in degrees */
-    public final double angleDeg;
-
-    private AnglePreset(double deg) {
-      angleDeg = deg;
-    }
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
   }
 }

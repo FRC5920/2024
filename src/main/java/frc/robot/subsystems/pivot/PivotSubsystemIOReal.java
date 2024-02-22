@@ -205,6 +205,13 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns true if the pivot has reached the commanded target angle */
+  public boolean hasReachedTargetAngle() {
+    double error = m_pivotLeader.getClosedLoopError().refresh().getValueAsDouble();
+    return Math.abs(error) < PivotSubsystem.kAngleErrorDeadband;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Configures motors used to control the pivot angle */
   private void configureCANcoder() {
     ////////////////////////////////

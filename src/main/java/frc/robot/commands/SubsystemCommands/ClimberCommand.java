@@ -49,109 +49,62 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.pivot;
+package frc.robot.commands.SubsystemCommands;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
-import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.subsystems.climber.ClimberSubsystem;
 
-/** Subsystem for controlling the pivot mechanism on the robot arm */
-public class PivotSubsystem extends SubsystemBase {
+public class ClimberCommand extends Command {
+  /** The ClimberSubsystem operated on by the command */
+  private final ClimberSubsystem m_climberSubsystem;
 
-  ////////////////////////////////////
-  // CONSTANTS
-  ////////////////////////////////////
-
-  /** CAN bus used to communicate with the subsystem */
-  public static final RobotCANBus kCANBus = RobotCANBus.Rio;
-
-  ////////////////////////////////////
-  // Pivot Motor Configuration
-  ////////////////////////////////////
-
-  /** CAN device ID of the pivot leader motor */
-  public static final CANDevice kLeaderMotorDevice = CANDevice.PivotLeaderMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kFollowerMotorDevice = CANDevice.PivotFollowerMotor;
-
-  /** CAN device ID of the pivot follower motor */
-  public static final CANDevice kCANcoderDevice = CANDevice.PivotCANcoder;
-
-  /** Gear ratio between the Falcon motors and the pivot axle */
-  public static final double kFalconToPivotGearRatio = 40.0 / 1.0;
-
-  /** Set to true to reverse the direction of pivot motors */
-  public static final boolean kInvertMotors = false;
-
-  /** Offset of the CANcoder magnet in rotations */
-  public static final double kCANcoderMagnetOffsetRot = 0.0;
+  /** The desired normalized percentage of full climber extension (0.0 to 1.0) */
+  private final double m_targetExtensionPercent;
 
   /**
-   * Minimum position error that must be reached for the pivot to be considered to have reached its
-   * commanded angle
-   */
-  public static final double kAngleErrorDeadband = 1.0;
-
-  ////////////////////////////////////
-  // Attributes
-  ////////////////////////////////////
-
-  /** I/O used by the subsystem */
-  private final PivotSubsystemIO m_io;
-
-  /** Measured subsystem inputs */
-  private final PivotSubsystemInputs m_inputs = new PivotSubsystemInputs();
-
-  /** Creates a new PivotSubsystem. */
-  public PivotSubsystem(PivotSubsystemIO io) {
-    m_io = io;
-    m_io.initialize();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Sets the desired pivot angle in degrees
+   * Creates a command that will move the pivot to a specified preset angle
    *
-   * @param degrees The desired pivot angle in degrees
+   * @param pivotSubsystem The PivotSubsystem to operate on
+   * @param angle Angle preset the pivot should be moved to
    */
-  public void setAngleDeg(double degrees) {
-    m_inputs.leader.targetPosition = degrees;
-    m_inputs.follower.targetPosition = degrees;
-    m_io.setAngleDeg(degrees);
+  public ClimberCommand(ClimberSubsystem climberSubystem, ClimberPreset preset) {
+    m_climberSubsystem = climberSubystem;
+    m_targetExtensionPercent = preset.percent;
+    addRequirements(climberSubystem);
   }
 
-  public enum PivotMotorID {
-    Leader,
-    Follower
-  };
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the current pivot angle in degrees */
-  public double getAngleDeg() {
-    return m_io.getMotorAngleDeg(PivotMotorID.Leader);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns true if the pivot has reached the commanded target angle */
-  public boolean hasReachedTargetAngle() {
-    return m_io.hasReachedTargetAngle();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
+  // Called when the command is initially scheduled.
   @Override
-  public void periodic() {
-    // Update measurements
-    m_io.processInputs(m_inputs);
+  public void initialize() {
+    m_climberSubsystem.setExtensionPercent(m_targetExtensionPercent);
+  }
 
-    // Send input data to the logging framework (or update from the log during replay)
-    Logger.processInputs("Pivot", m_inputs);
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {}
 
-    // Display velocities on dashboard
-    SmartDashboard.putNumber("pivot/targetAngleDeg", m_inputs.leader.targetPosition);
-    SmartDashboard.putNumber("pivot/angleDeg", m_inputs.leader.position);
-    SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {}
+
+  // Returns true to end the command when the pivot reaches the target angle within one degree
+  @Override
+  public boolean isFinished() {
+    return Math.abs(m_climberSubsystem.getExtensionPercent() - m_targetExtensionPercent) < 0.02;
+  }
+
+  public enum ClimberPreset {
+    MaxExtension(1.0),
+    MinExtension(0.0),
+    Intake(1.0),
+    CaptureChain(0.8),
+    Climb(0.0);
+
+    /** Normalized percentage of full climber extension */
+    public final double percent;
+
+    private ClimberPreset(double percent) {
+      this.percent = percent;
+    }
   }
 }

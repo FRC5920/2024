@@ -49,17 +49,17 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.commands.ArmCommands;
+package frc.robot.commands.SubsystemCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.subsystems.climber.ClimberSubsystem;
+import frc.robot.subsystems.pivot.PivotSubsystem;
 
-public class ClimberCommand extends Command {
-  /** The ClimberSubsystem operated on by the command */
-  private final ClimberSubsystem m_climberSubsystem;
+public class PivotCommand extends Command {
+  /** The PivotSubsystem operated on by the command */
+  private final PivotSubsystem m_pivotSubsystem;
 
-  /** The desired normalized percentage of full climber extension (0.0 to 1.0) */
-  private final double m_targetExtensionPercent;
+  /** The desired pivot angle */
+  private final double m_angleDegrees;
 
   /**
    * Creates a command that will move the pivot to a specified preset angle
@@ -67,16 +67,16 @@ public class ClimberCommand extends Command {
    * @param pivotSubsystem The PivotSubsystem to operate on
    * @param angle Angle preset the pivot should be moved to
    */
-  public ClimberCommand(ClimberSubsystem climberSubystem, ClimberPreset preset) {
-    m_climberSubsystem = climberSubystem;
-    m_targetExtensionPercent = preset.percent;
-    addRequirements(climberSubystem);
+  public PivotCommand(PivotSubsystem pivotSubsystem, AnglePreset angle) {
+    m_pivotSubsystem = pivotSubsystem;
+    m_angleDegrees = angle.angleDeg;
+    addRequirements(pivotSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_climberSubsystem.setExtensionPercent(m_targetExtensionPercent);
+    m_pivotSubsystem.setAngleDeg(m_angleDegrees);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -87,24 +87,23 @@ public class ClimberCommand extends Command {
   @Override
   public void end(boolean interrupted) {}
 
-  // Returns true to end the command when the pivot reaches the target angle within one degree
+  // Returns true when the pivot is within one degree of the pivot angle
   @Override
   public boolean isFinished() {
-    return Math.abs(m_climberSubsystem.getExtensionPercent() - m_targetExtensionPercent) < 0.02;
+    return m_pivotSubsystem.hasReachedTargetAngle();
   }
 
-  public enum ClimberPreset {
-    MaxExtension(1.0),
-    MinExtension(0.0),
-    Intake(1.0),
-    CaptureChain(0.8),
-    Climb(0.0);
+  public enum AnglePreset {
+    ShootForward(120.0),
+    ShootBackward(60.0),
+    Intake(195.0),
+    Climb(90.0);
 
-    /** Normalized percentage of full climber extension */
-    public final double percent;
+    /** Pivot angle in degrees */
+    public final double angleDeg;
 
-    private ClimberPreset(double percent) {
-      this.percent = percent;
+    private AnglePreset(double deg) {
+      angleDeg = deg;
     }
   }
 }
