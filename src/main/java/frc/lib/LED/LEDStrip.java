@@ -64,6 +64,7 @@ public class LEDStrip {
 
   /** Buffer of LED states addressed by this object */
   private AddressableLEDBuffer m_ledBuffer;
+
   private Color8Bit m_ColorConverter;
 
   /**
@@ -108,7 +109,11 @@ public class LEDStrip {
    * @param color Color to set the LED to
    */
   public void setLED(int offset, Color color) {
-    m_ledBuffer.setRGB(translateAddress(offset), (int) color.green * 255, (int) color.red * 255, (int) color.blue * 255);
+    m_ledBuffer.setRGB(
+        translateAddress(offset),
+        (int) color.green * 255,
+        (int) color.red * 255,
+        (int) color.blue * 255);
   }
 
   /**
