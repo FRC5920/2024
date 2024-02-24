@@ -92,7 +92,7 @@ public final class Constants {
     String logPath = new String();
     switch (getRobotMode()) {
       case REAL:
-        logPath = "/frclogs/"; 
+        logPath = "/frclogs/";
         break;
       case SIM:
         logPath = "logs/simulation";
