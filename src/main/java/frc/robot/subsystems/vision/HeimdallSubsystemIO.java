@@ -51,51 +51,19 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.numbers.N1;
-import edu.wpi.first.math.numbers.N3;
-import java.util.Optional;
-import org.photonvision.EstimatedRobotPose;
-import org.photonvision.targeting.PhotonPipelineResult;
 
 /** I/O interface for the Heimdall vision subsystem */
 public interface HeimdallSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Updates subsystem input measurements */
-  default void updateInputs(HeimdallSubsystemInputs inputs) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the latest PhotonPipelineResult from the vision system */
-  default PhotonPipelineResult getLatestResult() {
-    return null;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Gets the latest estimated pose of the robot from vision data
+   * Updates input and output measurements
    *
-   * @return An {@link EstimatedRobotPose} with an estimated pose, estimate timestamp, and targets
-   *     used for estimation; else empty if a pose is not known or can't be determined
-   * @remarks This method must only be called once per loop.
+   * @param inputs Inputs to update
+   * @param outputs Outputs to update
    */
-  default Optional<EstimatedRobotPose> getEstimatedGlobalPose() {
-    return Optional.empty();
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the standard deviations of the estimated pose from {@link #getEstimatedGlobalPose()}
-   * for use with {@link edu.wpi.first.math.estimator.SwerveDrivePoseEstimator
-   * SwerveDrivePoseEstimator}
-   *
-   * @param estimatedPose The estimated pose to guess standard deviations for.
-   * @remarks This method should only be used when targets are visible.
-   */
-  default Matrix<N3, N1> getEstimationStdDevs(Pose2d estimatedPose) {
-    return HeimdallSubsystem.kSingleTagStdDevs;
-  }
+  default void update(HeimdallSubsystemInputs inputs, HeimdallSubsystemOutputs outputs) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**

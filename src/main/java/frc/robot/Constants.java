@@ -51,6 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.utility.RobotRunMode;
 import frc.lib.utility.RobotType;
@@ -155,6 +156,38 @@ public final class Constants {
 
     private CANDevice(int id) {
       this.id = id;
+    }
+  }
+
+  /** Camera info */
+  public static class CameraInfo {
+
+    /**
+     * Location of the forward-looking camera relative to the center of the bot (meters, radians)
+     */
+    public static class FrontCameraLocation {
+      // Camera points toward the front RIGHT corner
+      public static final double xOffset = 0.115378; // Taken from CAD model 2/25/2024
+      public static final double yOffset = -0.282293; // Taken from CAD model 2/25/2024
+      public static final double zOffset = 0.1;
+      /** Rotation of the camera about its Z-axis */
+      public static final double yaw = Units.degreesToRadians(-45.0);
+    }
+
+    /** Location of the rear-looking camera relative to the center of the bot (meters, radians) */
+    public static class RearCameraLocation {
+      // Camera is mounted on the LEFT side of the bot, pointing toward the rear left corner
+      public static final double xOffset = 0.075053; // Taken from CAD model 2/25/2024
+      public static final double yOffset = 0.280637; // Taken from CAD model 2/25/2024
+      public static final double zOffset = 0.1; // Measured 2/25/2024
+      /** Rotation of the camera about its Z-axis */
+      public static final double yaw = Units.degreesToRadians(135.0);
+    }
+
+    /** Resolution of a tag cameras in pixels */
+    public static class TagCameraResolution {
+      public static final int widthPx = 1280;
+      public static final int heightPx = 720;
     }
   }
 }

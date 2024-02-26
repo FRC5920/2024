@@ -51,101 +51,95 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
-import org.photonvision.targeting.PhotonPipelineResult;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.numbers.N3;
+import java.util.function.BiConsumer;
 
-/** Measured inputs of the Heimdall vision subsystem */
-public class HeimdallSubsystemInputs implements LoggableInputs {
+/** An object used to evaluate estimated poses produced by PhotonVision */
+public class PoseEstimateProcessor {
 
-  /** Pose estimate data from the front camera */
-  public PoseEstimateInputs frontCam = new PoseEstimateInputs("frontCam");
+  /** Standard deviations reported for poses estimated from a single tag */
+  public static final Vector<N3> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
 
-  /** Pose estimate data from the rear camera */
-  public PoseEstimateInputs rearCam = new PoseEstimateInputs("rearCam");
+  /** Standard deviations reported for poses estimated using multiple tags */
+  public static final Vector<N3> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
 
-  /** Write input values to log */
-  public void toLog(LogTable table) {
-    frontCam.toLog(table);
-    rearCam.toLog(table);
-  }
+  /** Standard deviations reported for poses that should not be trusted at all */
+  public static final Vector<N3> kUntrustedPoseStdDevs =
+      VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 
-  /** Read input values from log */
-  public void fromLog(LogTable table) {
-    frontCam.fromLog(table);
-  }
+  private final AprilTagFieldLayout m_fieldLayout;
 
-  /** Create a clone of input values */
-  public HeimdallSubsystemInputs clone() {
-    HeimdallSubsystemInputs copy = new HeimdallSubsystemInputs();
-    copy.frontCam = frontCam.clone();
-    copy.rearCam = rearCam.clone();
-    return copy;
+  /** Routine called when a new robot pose is evaluated */
+  private BiConsumer<Pose2d, Vector<N3>> m_poseConsumer;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Creates an instance of the object
+   *
+   * @param fieldLayout April tag field layout used to evaluate poses
+   */
+  PoseEstimateProcessor(AprilTagFieldLayout fieldLayout) {
+    m_fieldLayout = fieldLayout;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** An object containing a PhotonVision-based pose estimate and associated data */
-  public static class PoseEstimateInputs {
+  /**
+   * Processes a new pose estimate produced by a PhotonPoseEstimator
+   *
+   * @param estimatedPose The estimated pose to process
+   * @param fiducialIDs Array containing the fiducial ID's of targets (tags) used to create the pose
+   *     estimate
+   */
+  Vector<N3> processPoseEstimate(Pose2d estimatedPose, int[] fiducialIDs) {
+    Vector<N3> estStdDevs = kUntrustedPoseStdDevs;
 
-    private final String m_keyIsFresh;
-    private final String m_keyTimestamp;
-    private final String m_keyPipelineResult;
+    // Iterate over each of the tags in the field to determine which tags were
+    // included in the estimate.  Calculate the average distance from the estimated
+    // pose to this collection of tags.
+    int numTags = 0;
+    double avgDist = 0;
+    for (int id : fiducialIDs) {
+      var tagPose = m_fieldLayout.getTagPose(id);
+      if (tagPose.isEmpty()) {
+        continue;
+      }
 
-    /** true if the estimate was created in the present robot cycle; else false if it is stale */
-    public boolean isFresh = false;
-    /** Timestamp of the estimate */
-    public double timestamp = 0.0;
-    /** PhotonPipelineResult used to create the pose estimate */
-    PhotonPipelineResult pipelineResult = new PhotonPipelineResult();
-
-    /**
-     * Creates a new instance of the inputs with a given log prefix
-     *
-     * @param prefix Prefix to use when logging data fields
-     */
-    public PoseEstimateInputs(String prefix) {
-      m_keyIsFresh = prefix + "isFresh";
-      m_keyTimestamp = prefix + "timestamp";
-      m_keyPipelineResult = prefix + "pipelineResult";
+      numTags++;
+      double distance =
+          tagPose.get().toPose2d().getTranslation().getDistance(estimatedPose.getTranslation());
+      avgDist += distance;
     }
 
-    /** Copy constructor */
-    private PoseEstimateInputs(PoseEstimateInputs other) {
-      m_keyIsFresh = other.m_keyIsFresh;
-      m_keyTimestamp = other.m_keyTimestamp;
-      m_keyPipelineResult = other.m_keyPipelineResult;
-    }
+    // CASE: no tags were used to produce the estimate
+    //  return standard deviations indicating a single tag
+    if (numTags == 0) {
+      estStdDevs = kSingleTagStdDevs;
+    } else
+    // CASE: multiple tags were used to produce the estimate, return stddevs for multiple tags
+    if (numTags > 1) {
+      estStdDevs = kMultiTagStdDevs;
+    } else
+    // CASE: only one tag was used to produce the estimate
+    if (numTags == 1) {
+      avgDist /= numTags;
 
-    /** Write input values to log */
-    public void toLog(LogTable table) {
-      table.put(m_keyIsFresh, isFresh);
-
-      // Only log remaining data if the estimate is fresh
-      if (isFresh) {
-        table.put(m_keyTimestamp, timestamp);
-        table.put(m_keyPipelineResult, pipelineResult);
+      if (avgDist > 4) {
+        // If the distance from the tag was greater than 4 meters, return standard deviations
+        // indicating
+        // a lack of trust
+        estStdDevs = kUntrustedPoseStdDevs;
+      } else {
+        estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
       }
     }
 
-    /** Read input values from log */
-    public void fromLog(LogTable table) {
-      // Read the fresh flag
-      isFresh = table.get(m_keyIsFresh, isFresh);
+    // Notify the registered consumer of the new pose and its standard deviations
+    m_poseConsumer.accept(estimatedPose, estStdDevs);
 
-      // Only load remaining data if it is flagged as fresh
-      if (isFresh) {
-        timestamp = table.get(m_keyTimestamp, timestamp);
-        pipelineResult = table.get(m_keyPipelineResult, pipelineResult);
-      }
-    }
-
-    /** Create a clone of input values */
-    public PoseEstimateInputs clone() {
-      PoseEstimateInputs copy = new PoseEstimateInputs(this);
-      copy.isFresh = this.isFresh;
-      copy.timestamp = this.timestamp;
-      copy.pipelineResult = this.pipelineResult;
-      return copy;
-    }
+    return estStdDevs;
   }
 }

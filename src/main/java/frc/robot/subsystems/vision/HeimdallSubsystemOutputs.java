@@ -51,101 +51,69 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
-import org.photonvision.targeting.PhotonPipelineResult;
+import edu.wpi.first.math.Vector;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.numbers.N3;
+import org.littletonrobotics.junction.Logger;
 
-/** Measured inputs of the Heimdall vision subsystem */
-public class HeimdallSubsystemInputs implements LoggableInputs {
+/** Logged outputs produced by the Heimdall vision subsystem */
+public class HeimdallSubsystemOutputs {
 
-  /** Pose estimate data from the front camera */
-  public PoseEstimateInputs frontCam = new PoseEstimateInputs("frontCam");
+  public final PoseEstimateOutputs frontCam;
+  public final PoseEstimateOutputs rearCam;
 
-  /** Pose estimate data from the rear camera */
-  public PoseEstimateInputs rearCam = new PoseEstimateInputs("rearCam");
-
-  /** Write input values to log */
-  public void toLog(LogTable table) {
-    frontCam.toLog(table);
-    rearCam.toLog(table);
+  /**
+   * Creates an instance of the outputs
+   *
+   * @param prefix Prefix to apply to logged data
+   */
+  public HeimdallSubsystemOutputs(String prefix) {
+    frontCam = new PoseEstimateOutputs(prefix + "frontCam");
+    rearCam = new PoseEstimateOutputs(prefix + "rearCam");
   }
 
-  /** Read input values from log */
-  public void fromLog(LogTable table) {
-    frontCam.fromLog(table);
-  }
-
-  /** Create a clone of input values */
-  public HeimdallSubsystemInputs clone() {
-    HeimdallSubsystemInputs copy = new HeimdallSubsystemInputs();
-    copy.frontCam = frontCam.clone();
-    copy.rearCam = rearCam.clone();
-    return copy;
+  /** Write output values to log */
+  public void toLog() {
+    frontCam.toLog();
+    rearCam.toLog();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** An object containing a PhotonVision-based pose estimate and associated data */
-  public static class PoseEstimateInputs {
+  /** An object containing a PhotonVision-based pose estimate and associated output data */
+  public static class PoseEstimateOutputs {
 
-    private final String m_keyIsFresh;
-    private final String m_keyTimestamp;
-    private final String m_keyPipelineResult;
+    private final String m_keyNoEstimate;
+    private final String m_keyPose;
+    private final String m_keyStdDevs;
+    private final String m_keyTagIDs;
 
-    /** true if the estimate was created in the present robot cycle; else false if it is stale */
-    public boolean isFresh = false;
-    /** Timestamp of the estimate */
-    public double timestamp = 0.0;
-    /** PhotonPipelineResult used to create the pose estimate */
-    PhotonPipelineResult pipelineResult = new PhotonPipelineResult();
+    /** true when an empty estimate was produced by the pose estimator; else false */
+    public boolean noEstimate = false;
+    /** Estimated robot pose produced from vision data */
+    public Pose3d pose = new Pose3d();
+    /** Standard deviations associated with the pose estimate */
+    public Vector<N3> stdDevs = PoseEstimateProcessor.kUntrustedPoseStdDevs;
+    /** Sorted array of tag ID's indicating the tags used to calculate the estimate */
+    public int[] tagIDs = new int[] {};
 
     /**
      * Creates a new instance of the inputs with a given log prefix
      *
      * @param prefix Prefix to use when logging data fields
      */
-    public PoseEstimateInputs(String prefix) {
-      m_keyIsFresh = prefix + "isFresh";
-      m_keyTimestamp = prefix + "timestamp";
-      m_keyPipelineResult = prefix + "pipelineResult";
+    public PoseEstimateOutputs(String prefix) {
+      m_keyNoEstimate = prefix + "noEstimate";
+      m_keyPose = prefix + "pose";
+      m_keyStdDevs = prefix + "stdDevs";
+      m_keyTagIDs = prefix + "tagIDs";
     }
 
-    /** Copy constructor */
-    private PoseEstimateInputs(PoseEstimateInputs other) {
-      m_keyIsFresh = other.m_keyIsFresh;
-      m_keyTimestamp = other.m_keyTimestamp;
-      m_keyPipelineResult = other.m_keyPipelineResult;
-    }
-
-    /** Write input values to log */
-    public void toLog(LogTable table) {
-      table.put(m_keyIsFresh, isFresh);
-
-      // Only log remaining data if the estimate is fresh
-      if (isFresh) {
-        table.put(m_keyTimestamp, timestamp);
-        table.put(m_keyPipelineResult, pipelineResult);
-      }
-    }
-
-    /** Read input values from log */
-    public void fromLog(LogTable table) {
-      // Read the fresh flag
-      isFresh = table.get(m_keyIsFresh, isFresh);
-
-      // Only load remaining data if it is flagged as fresh
-      if (isFresh) {
-        timestamp = table.get(m_keyTimestamp, timestamp);
-        pipelineResult = table.get(m_keyPipelineResult, pipelineResult);
-      }
-    }
-
-    /** Create a clone of input values */
-    public PoseEstimateInputs clone() {
-      PoseEstimateInputs copy = new PoseEstimateInputs(this);
-      copy.isFresh = this.isFresh;
-      copy.timestamp = this.timestamp;
-      copy.pipelineResult = this.pipelineResult;
-      return copy;
+    /** Writes outputs to the log */
+    public void toLog() {
+      Logger.recordOutput(m_keyNoEstimate, noEstimate);
+      Logger.recordOutput(m_keyPose, pose);
+      Logger.recordOutput(m_keyStdDevs, stdDevs.getData());
+      Logger.recordOutput(m_keyTagIDs, tagIDs);
     }
   }
 }
