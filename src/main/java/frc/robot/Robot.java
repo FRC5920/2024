@@ -58,6 +58,7 @@ import frc.lib.LED.ColorConstants;
 import frc.lib.utility.AdvantageKitLogInitializer;
 import frc.lib.utility.Alert;
 import frc.lib.utility.Alert.AlertType;
+import frc.lib.utility.BatteryTracker;
 import frc.lib.utility.CanBusErrorAlert;
 import frc.robot.commands.LEDCommands.LEDsToPattern;
 import frc.robot.commands.LEDCommands.LEDsToSolidColor;
@@ -127,6 +128,7 @@ public class Robot extends LoggedRobot {
     logInit.initializeLogging(Constants.kLoggingIsEnabled, Constants.getLogDirectory());
 
     // TODO: log battery name and info
+    Logger.recordMetadata("BatteryName", "BAT-" + BatteryTracker.scanBattery(1.5));
   }
 
   /**
