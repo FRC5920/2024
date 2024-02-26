@@ -59,6 +59,7 @@ import frc.lib.utility.AdvantageKitLogInitializer;
 import frc.lib.utility.Alert;
 import frc.lib.utility.Alert.AlertType;
 import frc.lib.utility.CanBusErrorAlert;
+import frc.robot.Constants.CameraID;
 import frc.robot.commands.LEDCommands.LEDsToPattern;
 import frc.robot.commands.LEDCommands.LEDsToSolidColor;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
@@ -138,6 +139,18 @@ public class Robot extends LoggedRobot {
    */
   @Override
   public void robotPeriodic() {
+    RobotContainer bc = m_robotContainer;
+
+    // Calculate vision-based robot pose estimates for each of the tag cameras, sending poses to
+    // the swerve drivebase as vision measurements
+    bc.visionSubsystem.processPoseUpdate(
+        CameraID.FrontCamera,
+        (est) -> bc.driveTrain.addVisionMeasurement(est.pose, est.timestamp, est.stddevs));
+    bc.visionSubsystem.processPoseUpdate(
+        CameraID.RearCamera,
+        (est) -> bc.driveTrain.addVisionMeasurement(est.pose, est.timestamp, est.stddevs));
+
+    // Process active command(s)
     CommandScheduler.getInstance().run();
 
     // Alert if a logging fault is detected
@@ -149,8 +162,8 @@ public class Robot extends LoggedRobot {
     // TODO: low battery alert
 
     // Update display of robot mechanisms
-    m_botMechanisms.updatePivotAngle(m_robotContainer.pivotSubsystem.getAngleDeg());
-    m_botMechanisms.updateClimberExtension(m_robotContainer.climberSubsystem.getExtensionPercent());
+    m_botMechanisms.updatePivotAngle(bc.pivotSubsystem.getAngleDeg());
+    m_botMechanisms.updateClimberExtension(bc.climberSubsystem.getExtensionPercent());
     m_botMechanisms.sendToDashboard();
   }
 

@@ -64,7 +64,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.dashboard.ChangeDetector;
 import frc.lib.dashboard.IDashboardTab;
 import frc.lib.dashboard.LoggedSendableChooser;
-import frc.lib.utility.TrajectoryUtil;
 import frc.robot.RobotContainer;
 import frc.robot.autos.AutoConstants.AutoPreset;
 import frc.robot.autos.preset.PresetAutoBuilder;
@@ -202,16 +201,16 @@ public class AutoDashboardTab implements IDashboardTab {
       }
 
       // Send all trajectories to the field
-      m_fieldTrajectories.forEach(
-          (String name, PathPlannerTrajectory traj) ->
-              m_field2d.getObject(name).setTrajectory(TrajectoryUtil.getWPITrajectory(traj)));
+      // m_fieldTrajectories.forEach(
+      //     (String name, PathPlannerTrajectory traj) ->
+      //         m_field2d.getObject(name).setTrajectory(TrajectoryUtil.getWPITrajectory(traj)));
 
       // Reset the drivebase Gyro and set odometry to the initial pose
       driveBase.getPigeon2().setYaw(initialPose.getRotation().getDegrees());
       driveBase.seedFieldRelative(initialPose);
     }
 
-    m_field2d.setRobotPose(driveBase.getPose());
+    // m_field2d.setRobotPose(driveBase.getPose());
   }
 
   /** Returns the current auto routine builder */

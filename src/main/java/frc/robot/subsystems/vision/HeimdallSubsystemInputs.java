@@ -104,9 +104,9 @@ public class HeimdallSubsystemInputs implements LoggableInputs {
      * @param prefix Prefix to use when logging data fields
      */
     public PoseEstimateInputs(String prefix) {
-      m_keyIsFresh = prefix + "isFresh";
-      m_keyTimestamp = prefix + "timestamp";
-      m_keyPipelineResult = prefix + "pipelineResult";
+      m_keyIsFresh = prefix + "/isFresh";
+      m_keyTimestamp = prefix + "/timestamp";
+      m_keyPipelineResult = prefix + "/pipelineResult";
     }
 
     /** Copy constructor */

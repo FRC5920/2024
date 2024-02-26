@@ -51,9 +51,11 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import frc.robot.Constants.CameraInfo.TagCameraResolution;
+import java.util.function.Supplier;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -61,6 +63,12 @@ import org.photonvision.simulation.VisionSystemSim;
 
 /** Add your docs here. */
 public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
+
+  /** Enable a raw camera stream for the simulated cameras */
+  private static final boolean kEnableRawSimCameraStream = true;
+
+  /** Enable a processed camera stream for the simulated cameras */
+  private static final boolean kEnableProcessedSimCameraStream = true;
 
   /** Draw a wire frame to the simulated camera stream (dramatically increases loop time) */
   private static final boolean kDrawWireFrameToVideoStream = false;
@@ -81,13 +89,16 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
   private static final double kCalibrationErrorStdDev = 0.1;
 
   /** Simulated PhotonVision system */
-  private VisionSystemSim m_visionSim;
+  private final VisionSystemSim m_visionSim;
 
   /** Simulated left camera */
-  private PhotonCameraSim m_frontCameraSim;
+  private final PhotonCameraSim m_frontCameraSim;
 
   /** Simulated right camera */
-  private PhotonCameraSim m_rearCameraSim;
+  private final PhotonCameraSim m_rearCameraSim;
+
+  /** Supplier from which the simulated robot pose is obtained */
+  private final Supplier<Pose2d> m_poseSupplier;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -95,8 +106,11 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
    *
    * @param camera Camera used by the vision subsystem I/O
    */
-  public HeimdallSubsystemIOSim(PhotonCamera leftCamera, PhotonCamera rightCamera) {
+  public HeimdallSubsystemIOSim(
+      PhotonCamera leftCamera, PhotonCamera rightCamera, Supplier<Pose2d> poseSupplier) {
     super(leftCamera, rightCamera);
+
+    m_poseSupplier = poseSupplier;
 
     // Create the vision system simulation which handles cameras and targets on the field.
     m_visionSim = new VisionSystemSim("main");
@@ -122,13 +136,23 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
     // Add the simulated camera to view the targets on this simulated field.
     m_visionSim.addCamera(m_rearCameraSim, HeimdallSubsystem.kRearCameraLocationTransform);
 
+    m_frontCameraSim.enableRawStream(kEnableRawSimCameraStream);
+    m_frontCameraSim.enableProcessedStream(kEnableProcessedSimCameraStream);
     m_frontCameraSim.enableDrawWireframe(kDrawWireFrameToVideoStream);
+
+    m_rearCameraSim.enableRawStream(kEnableRawSimCameraStream);
+    m_rearCameraSim.enableProcessedStream(kEnableProcessedSimCameraStream);
+    m_rearCameraSim.enableDrawWireframe(kDrawWireFrameToVideoStream);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Updates subsystem input and output measurements */
   @Override
   public void update(HeimdallSubsystemInputs inputs, HeimdallSubsystemOutputs outputs) {
+
+    // Update the vision simulation with the current simulated pose
+    m_visionSim.update(m_poseSupplier.get());
+
     super.update(inputs, outputs);
 
     // Update the estimated poses on the dashboard field when new estimates are calculated
@@ -136,20 +160,20 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
 
     // If the front camera produced a new pose, display it on the field
     if (inputs.frontCam.isFresh) {
-      debugField.getObject("FrontCamPose").setPose(outputs.frontCam.pose.toPose2d());
+      debugField.getObject("FrontCam").setPose(outputs.frontCam.pose.toPose2d());
     }
     // Otherwise, if the estimator produced no output, remove the pose from the field
     if (outputs.frontCam.noEstimate) {
-      debugField.getObject("FrontCamPose").setPoses();
+      debugField.getObject("FrontCam").setPoses();
     }
 
     // If the rear camera produced a new pose, display it on the field
     if (inputs.rearCam.isFresh) {
-      debugField.getObject("RearCamPose").setPose(outputs.rearCam.pose.toPose2d());
+      debugField.getObject("RearCam").setPose(outputs.rearCam.pose.toPose2d());
     }
     // Otherwise, if the estimator produced no output, remove the pose from the field
     if (outputs.rearCam.noEstimate) {
-      debugField.getObject("RearCamPose").setPoses();
+      debugField.getObject("RearCam").setPoses();
     }
   }
 }

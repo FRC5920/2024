@@ -68,8 +68,8 @@ public class HeimdallSubsystemOutputs {
    * @param prefix Prefix to apply to logged data
    */
   public HeimdallSubsystemOutputs(String prefix) {
-    frontCam = new PoseEstimateOutputs(prefix + "frontCam");
-    rearCam = new PoseEstimateOutputs(prefix + "rearCam");
+    frontCam = new PoseEstimateOutputs(prefix + "/frontCam");
+    rearCam = new PoseEstimateOutputs(prefix + "/rearCam");
   }
 
   /** Write output values to log */
@@ -102,10 +102,10 @@ public class HeimdallSubsystemOutputs {
      * @param prefix Prefix to use when logging data fields
      */
     public PoseEstimateOutputs(String prefix) {
-      m_keyNoEstimate = prefix + "noEstimate";
-      m_keyPose = prefix + "pose";
-      m_keyStdDevs = prefix + "stdDevs";
-      m_keyTagIDs = prefix + "tagIDs";
+      m_keyNoEstimate = prefix + "/noEstimate";
+      m_keyPose = prefix + "/pose";
+      m_keyStdDevs = prefix + "/stdDevs";
+      m_keyTagIDs = prefix + "/tagIDs";
     }
 
     /** Writes outputs to the log */

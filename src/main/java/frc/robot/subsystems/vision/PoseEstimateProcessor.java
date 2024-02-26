@@ -82,7 +82,7 @@ public class PoseEstimateProcessor {
    *
    * @param fieldLayout April tag field layout used to evaluate poses
    */
-  PoseEstimateProcessor(AprilTagFieldLayout fieldLayout) {
+  public PoseEstimateProcessor(AprilTagFieldLayout fieldLayout) {
     m_fieldLayout = fieldLayout;
   }
 

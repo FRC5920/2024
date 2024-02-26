@@ -89,6 +89,7 @@ public class HeimdallSubsystemIOReal implements HeimdallSubsystemIO {
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             frontCamera,
             HeimdallSubsystem.kFrontCameraLocationTransform);
+    frontEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     // Create a pose estimator for the right camera
     PhotonPoseEstimator rearEstimator =
@@ -97,6 +98,7 @@ public class HeimdallSubsystemIOReal implements HeimdallSubsystemIO {
             PoseStrategy.MULTI_TAG_PNP_ON_COPROCESSOR,
             rearCamera,
             HeimdallSubsystem.kRearCameraLocationTransform);
+    rearEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
     m_frontVision = new CameraEstimator(frontCamera, frontEstimator);
     m_rearVision = new CameraEstimator(rearCamera, rearEstimator);
@@ -119,6 +121,7 @@ public class HeimdallSubsystemIOReal implements HeimdallSubsystemIO {
    *
    * @param pose Pose to set to
    */
+  @Override
   public void setPose(Pose2d pose) {
     // Nothing to do here for real I/O.  The PhotonPoseEstimator doesn't support setting the pose
   }
