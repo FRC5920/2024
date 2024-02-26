@@ -196,7 +196,7 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
 
     // Ensure sensor is positive when output is positive
     // Choose so that Talon does not report sensor out of phase
-    final boolean kSensorPhase = false;
+    final boolean kSensorPhase = true;
     m_climberLeader.setSensorPhase(kSensorPhase);
 
     errors.addAll(configureClosedLoopControl());
