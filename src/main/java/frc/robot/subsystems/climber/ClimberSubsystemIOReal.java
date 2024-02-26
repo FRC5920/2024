@@ -169,7 +169,7 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
     // Set based on what direction you want forward/positive to be. This does not affect sensor
     // phase.
     // Choose based on what direction you want to be positive, this does not affect motor invert
-    final boolean kMotorInvert = false;
+    final boolean kMotorInvert = true;
     m_climberLeader.setInverted(kMotorInvert);
 
     // Set motor to brake when not commanded

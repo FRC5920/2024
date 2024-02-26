@@ -57,7 +57,7 @@ import frc.robot.subsystems.JoystickSubsystem;
 
 public class TeleopIntakeTest extends Command {
   /** Maximum flywheel velocity in rotations per second */
-  private static final double kMaxFlywheelVelocity = 4000.0;
+  private static final double kMaxFlywheelVelocity = 40000.0;
 
   /** Intake subsystem to operate on */
   private final IntakeSubsystem m_intakeSubsystem;

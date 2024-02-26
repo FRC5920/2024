@@ -144,7 +144,7 @@ public final class Constants {
 
     IntakeFlywheelMotor(25),
     IntakeIndexerMotor(27),
-    IntakeGamepieceSensor(29),
+    IntakeGamepieceSensor(41),
 
     PivotLeaderMotor(21),
     PivotFollowerMotor(22),
