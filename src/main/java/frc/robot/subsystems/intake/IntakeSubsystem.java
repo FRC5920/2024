@@ -84,7 +84,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public static final CANDevice kFlywheelMotorCANDevice = CANDevice.IntakeFlywheelMotor;
 
   /** Gear ratio between the flywheel motor and the flywheel mechanism */
-  public static final double kFlywheelMotorGearRatio = 20.0 / 1.0;
+  public static final double kFlywheelMotorGearRatio = 1.0 / 1.0;
 
   /** Set to true if the direction of the indexer motor should be reversed */
   public static final boolean kFlywheelMotorInverted = false;
