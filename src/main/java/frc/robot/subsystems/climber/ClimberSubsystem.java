@@ -91,7 +91,7 @@ public class ClimberSubsystem extends SubsystemBase {
   public static final boolean kInvertMotors = false;
 
   /** Max number of rotations to achieve full extension */
-  public static final double kMaxRotations = 100.0; // TODO: set this value based on mechanisms
+  public static final double kMaxRotations = 5.9; // TODO: set this value based on mechanisms
 
   /** Maximum motor output allowed (0.0 to 1.0) */
   public static final double kMaxMotorOutputPercent = 100.0;

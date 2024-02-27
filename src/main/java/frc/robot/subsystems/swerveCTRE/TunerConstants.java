@@ -100,7 +100,7 @@ public class TunerConstants {
   private static final boolean kInvertRightSide = true;
 
   public static final String kCANbusName = "SwerveCAN";
-  public static final int kPigeonId = 41;
+  public static final int kPigeonId = 40;
 
   // These are only used for simulation
   private static final double kSteerInertia = 0.00001;

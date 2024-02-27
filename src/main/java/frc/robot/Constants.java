@@ -139,16 +139,16 @@ public final class Constants {
     SwerveBackRightEncoder(TunerConstants.kBackRightEncoderId),
     Pigeon(TunerConstants.kPigeonId),
 
-    ClimberLeaderMotor(40),
-    ClimberFollowerMotor(41),
+    ClimberLeaderMotor(12),
+    ClimberFollowerMotor(11),
 
-    IntakeFlywheelMotor(42),
-    IntakeIndexerMotor(43),
-    IntakeGamepieceSensor(44),
+    IntakeFlywheelMotor(25),
+    IntakeIndexerMotor(27),
+    IntakeGamepieceSensor(41),
 
-    PivotLeaderMotor(45),
-    PivotFollowerMotor(46),
-    PivotCANcoder(47);
+    PivotLeaderMotor(21),
+    PivotFollowerMotor(22),
+    PivotCANcoder(23);
 
     /** CAN bus ID */
     public final int id;
