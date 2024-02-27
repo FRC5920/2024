@@ -70,7 +70,7 @@ public class LEDSubsystem extends SubsystemBase {
   public static int kLEDPort = 9; // Port connected to the addressable LED strip
 
   /** Number of contiguous LEDs in the addressable LED strip */
-  private static final int kNumAddressableLEDs = 20;
+  private static final int kNumAddressableLEDs = 32;
 
   /** Address of the first LED in the example LED strip */
   private static final int kFirstLEDAddress = 0;

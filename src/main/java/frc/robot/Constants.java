@@ -76,7 +76,7 @@ public final class Constants {
 
   /** A map of directories where log files should be stored */
   private static final Map<RobotRunMode, String> logDirectories =
-      Map.of(RobotRunMode.REAL, "/media/sda2/", RobotRunMode.SIM, "AKitBotLogs/");
+      Map.of(RobotRunMode.REAL, "/frclogs/", RobotRunMode.SIM, "AKitBotLogs/");
 
   /** Returns the current mode the robot is executing in */
   public static RobotRunMode getRobotMode() {
@@ -92,7 +92,7 @@ public final class Constants {
     String logPath = new String();
     switch (getRobotMode()) {
       case REAL:
-        logPath = "/media/sda2/";
+        logPath = "/frclogs/";
         break;
       case SIM:
         logPath = "logs/simulation";
@@ -113,7 +113,7 @@ public final class Constants {
 
   /** CAN Buses available on the robot */
   public enum RobotCANBus {
-    CANivore("canivore"),
+    CANivore("SwerveCAN"),
     Rio("rio");
 
     public final String name;
@@ -139,12 +139,14 @@ public final class Constants {
     SwerveBackRightEncoder(TunerConstants.kBackRightEncoderId),
     Pigeon(TunerConstants.kPigeonId),
 
+
     ClimberLeaderMotor(12),
     ClimberFollowerMotor(11),
 
     IntakeFlywheelMotor(25),
     IntakeIndexerMotor(27),
     IntakeGamepieceSensor(41),
+
 
     PivotLeaderMotor(21),
     PivotFollowerMotor(22),
