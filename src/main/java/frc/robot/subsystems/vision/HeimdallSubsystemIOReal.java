@@ -64,7 +64,7 @@ import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-/** Implementation of the HeimdallSubsystemIO interface using a real PhotonVision camera */
+/** HeimdallSubsystem I/O implementation using real PhotonVision cameras */
 public class HeimdallSubsystemIOReal implements HeimdallSubsystemIO {
 
   /** Camera and estimator for the front-looking camera */
@@ -77,12 +77,12 @@ public class HeimdallSubsystemIOReal implements HeimdallSubsystemIO {
   /**
    * Creates an instance of the I/O
    *
-   * @param frontCamera Camera on the left side of the robot
-   * @param rearCamera Camera on the left side of the robot
+   * @param frontCamera Camera pointing toward the front side of the robot
+   * @param rearCamera Camera pointing toward the rear side of the robot
    */
   public HeimdallSubsystemIOReal(PhotonCamera frontCamera, PhotonCamera rearCamera) {
 
-    // Create a pose estimator for the left camera
+    // Create a pose estimator for the front camera
     PhotonPoseEstimator frontEstimator =
         new PhotonPoseEstimator(
             HeimdallSubsystem.kTagLayout,
@@ -91,7 +91,7 @@ public class HeimdallSubsystemIOReal implements HeimdallSubsystemIO {
             HeimdallSubsystem.kFrontCameraLocationTransform);
     frontEstimator.setMultiTagFallbackStrategy(PoseStrategy.LOWEST_AMBIGUITY);
 
-    // Create a pose estimator for the right camera
+    // Create a pose estimator for the rear camera
     PhotonPoseEstimator rearEstimator =
         new PhotonPoseEstimator(
             HeimdallSubsystem.kTagLayout,
@@ -105,14 +105,21 @@ public class HeimdallSubsystemIOReal implements HeimdallSubsystemIO {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Updates subsystem input and output measurements */
+  /**
+   * Updates subsystem input and output measurements
+   *
+   * @param inputs Inputs to update
+   * @param outputs Outputs to update
+   */
   @Override
   public void update(HeimdallSubsystemInputs inputs, HeimdallSubsystemOutputs outputs) {
     // Update front camera estimate, inputs, and outputs
-    m_frontVision.update(inputs.frontCam, outputs.frontCam);
+    m_frontVision.processInputs(inputs.frontCam);
+    m_frontVision.calculatePose(inputs.frontCam, outputs.frontCam);
 
     // Update rear camera estimate, inputs, and outputs
-    m_rearVision.update(inputs.rearCam, outputs.rearCam);
+    m_rearVision.processInputs(inputs.rearCam);
+    m_rearVision.calculatePose(inputs.rearCam, outputs.rearCam);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -127,7 +134,10 @@ public class HeimdallSubsystemIOReal implements HeimdallSubsystemIO {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Inner class used to bundle a camera and PhotonPoseEstimator to produce pose estimates */
+  /**
+   * Inner class used to bundle a camera and PhotonPoseEstimator together for producing pose
+   * estimates
+   */
   protected static class CameraEstimator {
 
     /** PhotonCamera used to provide vision data */
@@ -136,44 +146,59 @@ public class HeimdallSubsystemIOReal implements HeimdallSubsystemIO {
     /** Vision-based pose estimator */
     public final PhotonPoseEstimator m_estimator;
 
-    /** Timestamp of the last camera pipeline result */
+    /** Timestamp of the last pipeline result result received from m_camera */
     private double m_lastTimestamp = 0.0;
 
+    /**
+     * Creates an instance of the object
+     *
+     * @param camera PhotonCamera to use
+     * @param estimator PhotonPoseEstimator to use
+     */
     public CameraEstimator(PhotonCamera camera, PhotonPoseEstimator estimator) {
       this.m_camera = camera;
       this.m_estimator = estimator;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * Gets the latest estimated pose of the robot from vision data
-     *
-     * @return An {@link EstimatedRobotPose} with an estimated pose, estimate timestamp, and targets
-     *     used for estimation; else empty if a pose is not known or can't be determined
-     * @remarks This method must only be called once per robot cycle.
-     */
-    private boolean update(PoseEstimateInputs inputs, PoseEstimateOutputs outputs) {
-      Optional<EstimatedRobotPose> estimatedPose = m_estimator.update();
-
-      // If the timestamp from the camera has changed, this is a new result
+    private void processInputs(PoseEstimateInputs inputs) {
       PhotonPipelineResult pipelineResult = m_camera.getLatestResult();
       double latestTimestamp = pipelineResult.getTimestampSeconds();
-      boolean isNewEstimate =
-          estimatedPose.isPresent() && Math.abs(latestTimestamp - m_lastTimestamp) > 1e-5;
+      inputs.isFresh = Math.abs(latestTimestamp - m_lastTimestamp) > 1e-5;
 
-      inputs.isFresh = isNewEstimate;
-      outputs.noEstimate = estimatedPose.isEmpty();
-
-      // If a new pose was calculated, update outputs and timestamp
+      // Only log pipeline result if a new PipelineResult was received
       if (inputs.isFresh) {
         inputs.pipelineResult = pipelineResult;
         inputs.timestamp = latestTimestamp;
-        outputs.pose = estimatedPose.get().estimatedPose;
-        outputs.tagIDs = getFiducialIDs(pipelineResult);
-        m_lastTimestamp = latestTimestamp;
+        m_lastTimestamp = latestTimestamp; // Rotate in the latest timestamp
+      }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    /**
+     * If a new pipeline result is available from the camera, this routine calculates a new
+     * estimated pose, updating inputs and outputs.
+     *
+     * @param inputs Inputs to update
+     * @param outputs Outputs to update
+     * @remarks This function always updates inputs.isFresh to reflect whether a new estimate was
+     *     calculated.
+     */
+    private void calculatePose(PoseEstimateInputs inputs, PoseEstimateOutputs outputs) {
+      // If a new PipelineResult hasn't been received, there's nothing to do
+      if (!inputs.isFresh) {
+        return;
       }
 
-      return isNewEstimate;
+      // Calculate a new estimated pose
+      Optional<EstimatedRobotPose> estimatedPose = m_estimator.update(inputs.pipelineResult);
+      outputs.noEstimate = estimatedPose.isEmpty();
+
+      // If a new pose estimate was calculated, update outputs
+      if (!outputs.noEstimate) {
+        outputs.pose = estimatedPose.get().estimatedPose;
+        outputs.tagIDs = getFiducialIDs(inputs.pipelineResult);
+      }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

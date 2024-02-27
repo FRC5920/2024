@@ -168,7 +168,7 @@ public final class Constants {
   /** Camera info */
   public static class CameraInfo {
 
-    /** Front-looking camera mounted on the RIGHT side of the robot */
+    /** FRONT-looking camera mounted on the RIGHT side of the robot */
     public static class FrontCamera {
       /** PhotonVision camera name */
       public static final String cameraName = "TagRight";
@@ -184,14 +184,14 @@ public final class Constants {
       }
     }
 
-    /** Rear-looking camera mounted on the LEFT side of the robot */
+    /** REAR-looking camera mounted on the LEFT side of the robot */
     public static class RearCamera {
       /** PhotonVision camera name */
       public static final String cameraName = "TagLeft";
 
       /** Location of the camera relative to the center of the bot (meters, radians) */
       public static class Location {
-        // Camera is mounted on the LEFT side of the bot, pointing toward the rear left corner
+        // Camera points toward the rear left corner
         public static final double xOffset = 0.075053; // Taken from CAD model 2/25/2024
         public static final double yOffset = 0.280637; // Taken from CAD model 2/25/2024
         public static final double zOffset = 0.1; // Measured 2/25/2024

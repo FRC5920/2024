@@ -91,10 +91,10 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
   /** Simulated PhotonVision system */
   private final VisionSystemSim m_visionSim;
 
-  /** Simulated left camera */
+  /** Front tag camera simulation */
   private final PhotonCameraSim m_frontCameraSim;
 
-  /** Simulated right camera */
+  /** Rear tag camera simulation */
   private final PhotonCameraSim m_rearCameraSim;
 
   /** Supplier from which the simulated robot pose is obtained */
@@ -104,7 +104,10 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
   /**
    * Creates an instance of the I/O
    *
-   * @param camera Camera used by the vision subsystem I/O
+   * @param frontCamera Camera pointing toward the front side of the robot
+   * @param rearCamera Camera pointing toward the rear side of the robot
+   * @param poseSupplier Routine that will be called to obtain the present robot pose for updating
+   *     the vision simulation
    */
   public HeimdallSubsystemIOSim(
       PhotonCamera leftCamera, PhotonCamera rightCamera, Supplier<Pose2d> poseSupplier) {
@@ -113,7 +116,7 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
     m_poseSupplier = poseSupplier;
 
     // Create the vision system simulation which handles cameras and targets on the field.
-    m_visionSim = new VisionSystemSim("main");
+    m_visionSim = new VisionSystemSim("TagCameras");
     // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
     m_visionSim.addAprilTags(HeimdallSubsystem.kTagLayout);
 
@@ -146,7 +149,12 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Updates subsystem input and output measurements */
+  /**
+   * Updates subsystem input and output measurements
+   *
+   * @param inputs Inputs to update
+   * @param outputs Outputs to update
+   */
   @Override
   public void update(HeimdallSubsystemInputs inputs, HeimdallSubsystemOutputs outputs) {
 
