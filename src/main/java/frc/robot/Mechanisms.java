@@ -109,25 +109,22 @@ public class Mechanisms {
   //  These mechanisms are not manipulated directly.
   //  They serve only as 'decorations'.
   /////////////////////////////////////////////////////
+  private final MechanismLigament2d[] m_decorationMechanisms = {
+    // Mechanism ligament used to display a representation of robot bumpers */
+    m_mechanism
+        .getRoot("robotBumperRoot", 0.2, 0.1)
+        .append(new MechanismLigament2d("robotBumper", 0.6, 0.0, 16, new Color8Bit(Color.kPlum))),
 
-  /** Mechanism used to decorate the climber segment with a 'hook' */
-  private final MechanismLigament2d m_climberHook =
-      m_leaderClimber.append(
-          new MechanismLigament2d("climberhook", 0.075, 145.0, 6, new Color8Bit(Color.kGray)));
+    // Mechanism used to decorate the climber segment with a 'hook' */
+    m_leaderClimber.append(
+        new MechanismLigament2d("climberhook", 0.075, 145.0, 6, new Color8Bit(Color.kGray))),
 
-  /** Mechanism ligament used to display a representation of the support for the pivot */
-  private final MechanismLigament2d m_pivotBase =
-      m_mechanism
-          .getRoot("pivotOffsetRoot", kPivotRootX, 0.1)
-          .append(
-              new MechanismLigament2d(
-                  "pivotOffset", 0.15, 90.0, 20, new Color8Bit(Color.kGoldenrod)));
-
-  /** Mechanism ligament used to display a representation of robot bumpers */
-  private final MechanismLigament2d m_bumpers =
-      m_mechanism
-          .getRoot("robotBumperRoot", 0.2, 0.1)
-          .append(new MechanismLigament2d("robotBumper", 0.6, 0.0, 16, new Color8Bit(Color.kPlum)));
+    // Mechanism ligament used to display a representation of the support for the pivot */
+    m_mechanism
+        .getRoot("pivotOffsetRoot", kPivotRootX, 0.1)
+        .append(
+            new MechanismLigament2d("pivotOffset", 0.15, 90.0, 20, new Color8Bit(Color.kGoldenrod)))
+  };
 
   /**
    * Updates the angle of pivot mechanisms
@@ -155,7 +152,7 @@ public class Mechanisms {
     if (alliance.isPresent()) {
       allianceColor = (alliance.get() == Alliance.Blue) ? kAllianceBlue : kAllianceRed;
     }
-    m_bumpers.setColor(allianceColor);
+    m_decorationMechanisms[0].setColor(allianceColor);
 
     SmartDashboard.putData("mech2d", m_mechanism); // Creates mech2d in SmartDashboard
   }

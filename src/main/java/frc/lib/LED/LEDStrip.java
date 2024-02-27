@@ -65,8 +65,6 @@ public class LEDStrip {
   /** Buffer of LED states addressed by this object */
   private AddressableLEDBuffer m_ledBuffer;
 
-  private Color8Bit m_ColorConverter;
-
   /**
    * Creates an instance of the object
    *

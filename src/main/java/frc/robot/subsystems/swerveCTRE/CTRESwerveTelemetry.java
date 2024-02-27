@@ -55,125 +55,114 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain.SwerveDriveState;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.DoublePublisher;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
-import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
-import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 
-public class Telemetry {
-  private final double MaxSpeed;
+/** An object that receives telemetry from the CTRE Phoenix 6 SwerveDrivetrain processing thread */
+public class CTRESwerveTelemetry {
+
+  /** Set this to true to publish swerve drive values to the dashboard */
+  private static final boolean kPublishToDashboard = true;
+
+  /** Most recent robot pose estimated by the swerve subsystem odometry */
+  private Pose2d m_lastPose = new Pose2d();
+
+  /** Most recent chassis speeds reported by swerve subsystem odometry */
+  private ChassisSpeeds m_lastChassisSpeeds = new ChassisSpeeds();
+
+  /* Keep a reference of the last pose to calculate the speeds */
+  private double lastTime = Utils.getCurrentTimeSeconds();
+
+  /** Object used to publish telemetry to the dashboard */
+  private final DashboardPublisher m_dashboardPublisher;
 
   /**
    * Construct a telemetry object, with the specified max speed of the robot
    *
    * @param maxSpeed Maximum speed in meters per second
    */
-  public Telemetry(double maxSpeed) {
-    MaxSpeed = maxSpeed;
+  public CTRESwerveTelemetry() {
+    m_dashboardPublisher = (kPublishToDashboard) ? new DashboardPublisher() : null;
   }
 
-  /* What to publish over networktables for telemetry */
-  NetworkTableInstance inst = NetworkTableInstance.getDefault();
-
-  /* Robot pose for field positioning */
-  NetworkTable table = inst.getTable("Pose");
-  DoubleArrayPublisher fieldPub = table.getDoubleArrayTopic("robotPose").publish();
-  StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
-
-  /* Robot speeds for general checking */
-  NetworkTable driveStats = inst.getTable("Drive");
-  DoublePublisher velocityX = driveStats.getDoubleTopic("Velocity X").publish();
-  DoublePublisher velocityY = driveStats.getDoubleTopic("Velocity Y").publish();
-  DoublePublisher speed = driveStats.getDoubleTopic("Speed").publish();
-  DoublePublisher odomPeriod = driveStats.getDoubleTopic("Odometry Period").publish();
-
-  /* Keep a reference of the last pose to calculate the speeds */
-  Pose2d m_lastPose = new Pose2d();
-  double lastTime = Utils.getCurrentTimeSeconds();
-
-  /* Mechanisms to represent the swerve module states */
-  Mechanism2d[] m_moduleMechanisms =
-      new Mechanism2d[] {
-        new Mechanism2d(1, 1), new Mechanism2d(1, 1), new Mechanism2d(1, 1), new Mechanism2d(1, 1),
-      };
-  /* A direction and length changing ligament for speed representation */
-  MechanismLigament2d[] m_moduleSpeeds =
-      new MechanismLigament2d[] {
-        m_moduleMechanisms[0]
-            .getRoot("RootSpeed", 0.5, 0.5)
-            .append(new MechanismLigament2d("Speed", 0.5, 0)),
-        m_moduleMechanisms[1]
-            .getRoot("RootSpeed", 0.5, 0.5)
-            .append(new MechanismLigament2d("Speed", 0.5, 0)),
-        m_moduleMechanisms[2]
-            .getRoot("RootSpeed", 0.5, 0.5)
-            .append(new MechanismLigament2d("Speed", 0.5, 0)),
-        m_moduleMechanisms[3]
-            .getRoot("RootSpeed", 0.5, 0.5)
-            .append(new MechanismLigament2d("Speed", 0.5, 0)),
-      };
-  /* A direction changing and length constant ligament for module direction */
-  MechanismLigament2d[] m_moduleDirections =
-      new MechanismLigament2d[] {
-        m_moduleMechanisms[0]
-            .getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        m_moduleMechanisms[1]
-            .getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        m_moduleMechanisms[2]
-            .getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-        m_moduleMechanisms[3]
-            .getRoot("RootDirection", 0.5, 0.5)
-            .append(new MechanismLigament2d("Direction", 0.1, 0, 0, new Color8Bit(Color.kWhite))),
-      };
-
-  /**
-   * Returns the last pose received from the drive train DANGER: this pose gets set from the drive
-   * train's DAQ thread!!!
-   */
-  public Pose2d getLastPose() {
+  /** Returns the last pose reported by swerve telemetry */
+  public Pose2d getPose() {
     return m_lastPose;
   }
 
-  /* Send swerve drive state to smartdashboard as Mechanism2d objects for a slick display
-   * @details This function gets executed whenever the SwerveDriveState function
-   * is updated in the CTRE swerve odometry thread
+  /** Returns the last ChassisSpeeds reported by swerve telemetry */
+  public ChassisSpeeds getChassisSpeeds() {
+    return m_lastChassisSpeeds;
+  }
+
+  /**
+   * Accumulate telemetry data and (optionally) publish swerve data to the dashboard
+   *
+   * @details This function is registered to be called from the context of the high-rate thread used
+   *     to process CTRE SwerveDrive odometry.
    */
-  public void telemeterize(SwerveDriveState state) {
-    /* Telemeterize the pose */
-    Pose2d pose = state.Pose;
-    fieldTypePub.set("Field2d");
-    fieldPub.set(new double[] {pose.getX(), pose.getY(), pose.getRotation().getDegrees()});
+  public void update(SwerveDriveState state) {
+    // Copy the updated pose out of the swerve state
+    Pose2d newPose = new Pose2d(state.Pose.getX(), state.Pose.getY(), state.Pose.getRotation());
+    // Copy the chassis speeds out of the swerve state
+    ChassisSpeeds newSpeeds =
+        new ChassisSpeeds(
+            state.speeds.vxMetersPerSecond,
+            state.speeds.vxMetersPerSecond,
+            state.speeds.omegaRadiansPerSecond);
 
-    /* Telemeterize the robot's general speeds */
-    double currentTime = Utils.getCurrentTimeSeconds();
-    double diffTime = currentTime - lastTime;
-    lastTime = currentTime;
-    Translation2d distanceDiff = pose.minus(m_lastPose).getTranslation();
-    m_lastPose = pose;
+    synchronized (this) {
+      m_lastPose = newPose;
+      m_lastChassisSpeeds = newSpeeds;
+    }
 
-    Translation2d velocities = distanceDiff.div(diffTime);
+    if (kPublishToDashboard) {
+      /* Telemeterize the robot's general speeds */
+      double currentTime = Utils.getCurrentTimeSeconds();
+      double diffTime = currentTime - lastTime;
+      lastTime = currentTime;
+      Translation2d distanceDiff = state.Pose.minus(m_lastPose).getTranslation();
 
-    speed.set(velocities.getNorm());
-    velocityX.set(velocities.getX());
-    velocityY.set(velocities.getY());
-    odomPeriod.set(state.OdometryPeriod);
+      Translation2d velocities = distanceDiff.div(diffTime);
 
-    /* Telemeterize the module's states */
-    for (int i = 0; i < 4; ++i) {
-      m_moduleSpeeds[i].setAngle(state.ModuleStates[i].angle);
-      m_moduleDirections[i].setAngle(state.ModuleStates[i].angle);
-      m_moduleSpeeds[i].setLength(state.ModuleStates[i].speedMetersPerSecond / (2 * MaxSpeed));
+      m_dashboardPublisher.speed.set(velocities.getNorm());
+      m_dashboardPublisher.velocityX.set(velocities.getX());
+      m_dashboardPublisher.velocityY.set(velocities.getY());
+      m_dashboardPublisher.odomPeriod.set(state.OdometryPeriod);
 
-      SmartDashboard.putData("Module " + i, m_moduleMechanisms[i]);
+      m_dashboardPublisher.fieldTypePub.set("Field2d");
+      m_dashboardPublisher.fieldPub.set(
+          new double[] {newPose.getX(), newPose.getY(), newPose.getRotation().getDegrees()});
+    }
+  }
+
+  private static class DashboardPublisher {
+    /* Robot speeds for general checking */
+    public DoublePublisher velocityX;
+    public DoublePublisher velocityY;
+    public DoublePublisher speed;
+    public DoublePublisher odomPeriod;
+
+    public DoubleArrayPublisher fieldPub;
+    public StringPublisher fieldTypePub;
+
+    public DashboardPublisher() {
+      /* What to publish over networktables for telemetry */
+      NetworkTableInstance inst = NetworkTableInstance.getDefault();
+      NetworkTable driveStats = inst.getTable("SwerveOdometry");
+
+      velocityX = driveStats.getDoubleTopic("Velocity X").publish();
+      velocityY = driveStats.getDoubleTopic("Velocity Y").publish();
+      speed = driveStats.getDoubleTopic("Speed").publish();
+      odomPeriod = driveStats.getDoubleTopic("Odometry Period").publish();
+
+      NetworkTable table = inst.getTable("SwerveOdometry");
+      fieldPub = table.getDoubleArrayTopic("robotPose").publish();
+      fieldTypePub = table.getStringTopic(".type").publish();
     }
   }
 }
