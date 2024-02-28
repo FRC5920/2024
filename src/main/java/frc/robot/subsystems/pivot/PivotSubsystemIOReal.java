@@ -201,7 +201,8 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
   public double getAngleDeg() {
     m_cancoderAngle.refresh();
     double rotations = m_cancoderAngle.refresh().getValueAsDouble();
-    double degrees = Units.rotationsToDegrees(rotations % 1);
+
+    double degrees = -1.0 * Units.rotationsToDegrees(rotations);
     return degrees;
   }
 
@@ -218,7 +219,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     // https://v6.docs.ctr-electronics.com/en/2023-pro/docs/api-reference/api-usage/device-specific/talonfx/remote-sensors.html#fusedcancoder
     CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
     cancoderConfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1;
-    cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+    cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
     cancoderConfig.MagnetSensor.MagnetOffset = m_config.cancoderOffsetRot;
 
     m_canCoder.getConfigurator().apply(cancoderConfig);

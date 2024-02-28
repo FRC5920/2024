@@ -139,7 +139,8 @@ public class PivotSubsystem extends SubsystemBase {
 
     // Display velocities on dashboard
     SmartDashboard.putNumber("pivot/targetAngleDeg", m_inputs.leader.targetPosition);
-    SmartDashboard.putNumber("pivot/angleDeg", m_inputs.leader.position);
+    SmartDashboard.putNumber("pivot/motorAngleDeg", m_inputs.leader.position);
+    SmartDashboard.putNumber("pivot/cancoderAngleRot", m_inputs.cancoderAngleRot);
     SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
   }
 }
