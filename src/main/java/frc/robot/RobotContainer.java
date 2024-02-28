@@ -132,6 +132,9 @@ public class RobotContainer {
 
     // Create the climber subsystem
     climberSubsystem = new ClimberSubsystem(climberIO);
+    climberSubsystem.setDefaultCommand(
+        new ClimberSubsystem.ClimberJoystickTeleOp(
+            climberSubsystem, joystickSubsystem.getOperatorController()));
 
     // Create the intake subsystem
     intakeSubsystem = new IntakeSubsystem(intakeIO);

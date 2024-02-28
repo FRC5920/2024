@@ -177,9 +177,9 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
 
     // Map POV
     operatorController.povUp.onTrue(
-        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.MaxExtension));
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersUp));
     operatorController.povDown.onTrue(
-        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.MinExtension));
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
     // Map bumpers
     operatorController.leftBumper.whileTrue(kDoNothing);

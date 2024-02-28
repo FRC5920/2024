@@ -85,7 +85,9 @@ public class ClimberCommand extends Command {
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    m_climberSubsystem.setMotorOutputPercent(0.0);
+  }
 
   // Returns true to end the command when the pivot reaches the target angle within one degree
   @Override
@@ -94,8 +96,8 @@ public class ClimberCommand extends Command {
   }
 
   public enum ClimberPreset {
-    MaxExtension(1.0),
-    MinExtension(0.0),
+    ClimbersUp(0.3),
+    ClimbersDown(0.0),
     Intake(1.0),
     CaptureChain(0.8),
     Climb(0.0);

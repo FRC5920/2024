@@ -105,6 +105,7 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Initializes and configures the I/O implementation */
+  @Override
   public void initialize() {
     configureMotors();
   }
@@ -158,10 +159,16 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  @Override
+  public void setMotorOutputPercent(double percent) {
+    m_climberLeader.set(ControlMode.PercentOutput, percent);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   private void configureMotors() {
     // Ensure sensor is positive when output is positive
     // Choose so that Talon does not report sensor out of phase
-    final boolean kSensorPhase = false;
+    final boolean kSensorPhase = true;
 
     ArrayList<ErrorCode> errors = new ArrayList<>();
 
@@ -174,8 +181,9 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
     // Set based on what direction you want forward/positive to be. This does not affect sensor
     // phase.
     // Choose based on what direction you want to be positive, this does not affect motor invert
-    final boolean kMotorInvert = false;
+    final boolean kMotorInvert = true;
     m_climberLeader.setInverted(kMotorInvert);
+    m_climberFollower.setInverted(!kMotorInvert);
 
     WPI_TalonSRX[] motors = new WPI_TalonSRX[] {m_climberLeader, m_climberFollower};
 
@@ -197,30 +205,31 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
       // position measurement
       FeedbackDevice feedBackDevice =
           RobotBase.isReal()
-              ? FeedbackDevice.CTRE_MagEncoder_Absolute
+              ? FeedbackDevice.CTRE_MagEncoder_Relative
               : FeedbackDevice.PulseWidthEncodedPosition;
       errors.add(motor.configSelectedFeedbackSensor(feedBackDevice, kPIDLoopIdx, kTimeoutMs));
 
       errors.addAll(configureClosedLoopControl());
       // errors.addAll(configureMotionMagicControl());
 
-      /**
-       * Grab the 360 degree position of the MagEncoder's absolute position, and intitally set the
-       * relative sensor to match.
-       */
-      int absolutePosition = motor.getSensorCollection().getPulseWidthPosition();
+      // /**
+      //  * Grab the 360 degree position of the MagEncoder's absolute position, and intitally set
+      // the
+      //  * relative sensor to match.
+      //  */
+      // int absolutePosition = motor.getSensorCollection().getPulseWidthPosition();
 
-      /* Mask out overflows, keep bottom 12 bits */
-      absolutePosition &= 0xFFF;
-      if (kSensorPhase) {
-        absolutePosition *= -1;
-      }
-      if (kMotorInvert) {
-        absolutePosition *= -1;
-      }
+      // /* Mask out overflows, keep bottom 12 bits */
+      // absolutePosition &= 0xFFF;
+      // if (kSensorPhase) {
+      //   absolutePosition *= -1;
+      // }
+      // if (kMotorInvert) {
+      //   absolutePosition *= -1;
+      // }
 
       /* Set the quadrature (absolute) sensor to match absolute */
-      errors.add(motor.setSelectedSensorPosition(absolutePosition, kPIDLoopIdx, kTimeoutMs));
+      errors.add(motor.setSelectedSensorPosition(0.0, kPIDLoopIdx, kTimeoutMs));
     }
 
     // Set the phase relationship between the leader motor and its connected mag encoder
