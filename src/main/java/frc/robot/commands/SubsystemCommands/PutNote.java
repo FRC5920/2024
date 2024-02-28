@@ -87,6 +87,11 @@ public class PutNote extends Command {
    */
   private final IntakeSubsystem m_intake;
 
+
+  //This is the distance of how far the ring has to be from the laser for the motors to stop.
+
+  private static final double kGamepieceSensorDistanceMeters = 0.5;
+
   /**
    * Creates a new IntakeRing command
    *
@@ -102,6 +107,8 @@ public class PutNote extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    m_intake.setFlywheelVelocity(kFlywheelVelocity);
+
     // TODO: start the flywheel motor
   }
 
@@ -110,17 +117,27 @@ public class PutNote extends Command {
   public void execute() {
     // Wait for the flywheel motor to reach the target speed.
     // Then turn on the indexer to feed the note into the flywheel.
+    if (m_intake.getFlywheelVelocity() >= kFlywheelVelocity){
+      m_intake.setIndexerSpeed(kIndexerSpeed);
+    }
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
     // TODO: the command is finished when the note moves past the end of the intake
+    m_intake.setFlywheelVelocity(0);
+    m_intake.setIndexerSpeed(0);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    if (m_intake.getGamepieceDistance() >= kGamepieceSensorDistanceMeters){
+      return true;
+    }else{
+      return false;
+    }
+
   }
 }
