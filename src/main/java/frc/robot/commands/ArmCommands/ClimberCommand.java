@@ -92,11 +92,11 @@ public class ClimberCommand extends Command {
   // Returns true to end the command when the pivot reaches the target angle within one degree
   @Override
   public boolean isFinished() {
-    return Math.abs(m_climberSubsystem.getExtensionPercent() - m_targetExtensionPercent) < 0.02;
+    return Math.abs(m_climberSubsystem.getExtensionPercent() - m_targetExtensionPercent) < 0.01;
   }
 
   public enum ClimberPreset {
-    ClimbersUp(0.3),
+    ClimbersUp(1.0),
     ClimbersDown(0.0),
     Intake(1.0),
     CaptureChain(0.8),

@@ -263,7 +263,7 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
 
     /* Config Position Closed Loop gains in slot0, tsypically kF stays zero. */
     errors.add(m_climberLeader.config_kF(kPIDLoopIdx, 0.0, kTimeoutMs));
-    errors.add(m_climberLeader.config_kP(kPIDLoopIdx, 0.15, kTimeoutMs));
+    errors.add(m_climberLeader.config_kP(kPIDLoopIdx, 1.0, kTimeoutMs));
     errors.add(m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs));
     errors.add(m_climberLeader.config_kD(kPIDLoopIdx, 1.0, kTimeoutMs));
 
