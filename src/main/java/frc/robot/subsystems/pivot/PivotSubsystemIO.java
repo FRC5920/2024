@@ -76,6 +76,12 @@ public interface PivotSubsystemIO {
   default void setAngleDeg(double degrees) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns the current pivot angle in degrees */
+  default double getAngleDeg() {
+    return 0.0;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
    * Returns the current angle of a pivot motor in degrees
    *

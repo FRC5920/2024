@@ -197,6 +197,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Returns the current pivot angle in degrees */
+  @Override
   public double getAngleDeg() {
     m_cancoderAngle.refresh();
     double rotations = m_cancoderAngle.refresh().getValueAsDouble();
@@ -219,6 +220,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     cancoderConfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1;
     cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
     cancoderConfig.MagnetSensor.MagnetOffset = m_config.cancoderOffsetRot;
+
     m_canCoder.getConfigurator().apply(cancoderConfig);
   }
 

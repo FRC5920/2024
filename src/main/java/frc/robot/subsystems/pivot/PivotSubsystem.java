@@ -87,7 +87,7 @@ public class PivotSubsystem extends SubsystemBase {
   public static final boolean kInvertMotors = false;
 
   /** Offset of the CANcoder magnet in rotations */
-  public static final double kCANcoderMagnetOffsetRot = 0.0;
+  public static final double kCANcoderMagnetOffsetRot = -0.956; // Measured 02/27/2024
 
   ////////////////////////////////////
   // Attributes
@@ -125,7 +125,7 @@ public class PivotSubsystem extends SubsystemBase {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Returns the current pivot angle in degrees */
   public double getAngleDeg() {
-    return m_io.getMotorAngleDeg(PivotMotorID.Leader);
+    return m_io.getAngleDeg();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
