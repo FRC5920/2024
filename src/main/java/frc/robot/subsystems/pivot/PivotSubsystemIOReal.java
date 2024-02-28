@@ -138,7 +138,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     m_followerCurrentSignal = m_pivotFollower.getStatorCurrent();
     m_followerTempSignal = m_pivotFollower.getDeviceTemp();
 
-    m_cancoderAngle = m_canCoder.getPosition();
+    m_cancoderAngle = m_canCoder.getAbsolutePosition();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -166,6 +166,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     follower.tempCelsius = m_followerTempSignal.refresh().getValueAsDouble();
 
     // Get CANcoder angle in degrees
+    inputs.cancoderAngleRot = m_cancoderAngle.refresh().getValueAsDouble();
     inputs.cancoderAngleDeg = getAngleDeg();
   }
 
@@ -202,7 +203,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     m_cancoderAngle.refresh();
     double rotations = m_cancoderAngle.refresh().getValueAsDouble();
 
-    double degrees = -1.0 * Units.rotationsToDegrees(rotations);
+    double degrees = Units.rotationsToDegrees(rotations);
     return degrees;
   }
 
