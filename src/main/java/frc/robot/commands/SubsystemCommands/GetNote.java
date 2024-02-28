@@ -106,6 +106,9 @@ public class GetNote extends Command {
   @Override
   public void initialize() {
     // TODO: turn on the flywheel and indexer motors
+    //done
+    m_intake.setFlywheelVelocity(kFlywheelVelocity);
+    m_intake.setIndexerSpeed(kIndexerSpeed);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -118,11 +121,18 @@ public class GetNote extends Command {
   @Override
   public void end(boolean interrupted) {
     // TODO: turn off the flywheel and indexer motors
+    //done
+    m_intake.setFlywheelVelocity(0);
+    m_intake.setIndexerSpeed(0);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    if (m_intake.getGamepieceDistance() <= kGamepieceSensorDistanceMeters) {
+      return true;
+    } else {
+      return false;
+    }
   }
 }
