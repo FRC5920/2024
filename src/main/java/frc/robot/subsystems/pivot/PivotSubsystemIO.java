@@ -98,7 +98,6 @@ public interface PivotSubsystemIO {
     public final CANDevice followerMotorDevice;
     public final CANDevice cancoderDevice;
     public final double pivotGearRatio;
-    public final boolean invertMotors;
     public final double cancoderOffsetRot;
 
     public Config() {
@@ -107,7 +106,6 @@ public interface PivotSubsystemIO {
       this.followerMotorDevice = PivotSubsystem.kFollowerMotorDevice;
       this.cancoderDevice = PivotSubsystem.kCANcoderDevice;
       this.pivotGearRatio = PivotSubsystem.kFalconToPivotGearRatio;
-      this.invertMotors = PivotSubsystem.kInvertMotors;
       this.cancoderOffsetRot = PivotSubsystem.kCANcoderMagnetOffsetRot;
     }
   }

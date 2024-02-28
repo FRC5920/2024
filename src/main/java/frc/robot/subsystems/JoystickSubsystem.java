@@ -172,9 +172,8 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
     operatorController.B.onTrue(
         new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootBackward));
-    operatorController.X.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootForward));
-    operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Climb));
+    operatorController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
+    operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park));
 
     // Map POV
     operatorController.povUp.onTrue(
