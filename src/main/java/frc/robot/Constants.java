@@ -207,21 +207,23 @@ public final class Constants {
       public static final int heightPx = 720;
     }
 
-    public static class GamePieceCamera{
+    public static class GamePieceCamera {
       public static final String cameraName = "MLGamePiece";
     }
   }
+
   public enum CameraTarget {
     GameNote(0),
     AprilTag2D(1);
 
     public final int PVIndex;
-    private CameraTarget(int PipelineIndex){
+
+    private CameraTarget(int PipelineIndex) {
       this.PVIndex = PipelineIndex;
     }
-    public int PVIndex(){
+
+    public int PVIndex() {
       return PVIndex;
     }
   }
-
 }

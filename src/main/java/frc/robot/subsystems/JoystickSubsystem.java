@@ -58,13 +58,13 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.lib.joystick.JoystickSubsystemBase;
 import frc.lib.joystick.ProcessedXboxController;
-import frc.robot.RobotContainer;
 import frc.robot.Constants.CameraTarget;
-import frc.robot.commands.DriveWithZTargeting;
+import frc.robot.RobotContainer;
 import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.PivotCommand;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.commands.DriveWithZTargeting;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem.IntakePreset;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
@@ -142,20 +142,18 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     driverController.rightBumper.whileTrue(
         new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
 
-        //Driver intake button
-        //Old
-          //driverController.rightTriggerAsButton.whileTrue(
-            //new IntakeSubsystem.RunIntakeAtSpeed(
-            //botContainer.intakeSubsystem, IntakePreset.IntakeRing));
-        //New
+    // Driver intake button
+    // Old
+    // driverController.rightTriggerAsButton.whileTrue(
+    // new IntakeSubsystem.RunIntakeAtSpeed(
+    // botContainer.intakeSubsystem, IntakePreset.IntakeRing));
+    // New
     driverController.rightTriggerAsButton.whileTrue(
         new IntakeSubsystem.RunIntakeAtSpeed(
             botContainer.intakeSubsystem, IntakePreset.IntakeRing));
 
-
     driverController.leftBumper.whileTrue(
-      new DriveWithZTargeting(
-          driveTrain, driverController, CameraTarget.AprilTag2D));
+        new DriveWithZTargeting(driveTrain, driverController, CameraTarget.AprilTag2D));
 
     // // Map stick press buttons
     // driverController.leftStickPress.onTrue(kDoNothing);

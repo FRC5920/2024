@@ -56,7 +56,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.CameraTarget;
-
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
 
@@ -130,7 +129,7 @@ public class ZTargeter {
   /** This method must be called to initialize the camera used by the ZTargeter */
   public void initialize() {
     m_camera.setPipelineIndex(m_CameraTarget.PVIndex);
-    //BotLog.Debugf("<Z-Targeter> targeting " + String.valueOf(m_CameraTarget));
+    // BotLog.Debugf("<Z-Targeter> targeting " + String.valueOf(m_CameraTarget));
   }
 
   /**

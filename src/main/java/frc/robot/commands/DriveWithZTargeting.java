@@ -1,30 +1,72 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
+////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2024 FIRST and other WPILib contributors.
+// http://github.com/FRC5920
+// Open Source Software; you can modify and/or share it under the terms of the
+// license given in WPILib-License.md in the root directory of this project.
+////////////////////////////////////////////////////////////////////////////////
 
+/*-----------------------------------------------------------------------------\
+|                                                                              |
+|                       ================================                       |
+|                       **    TEAM 5920 - Vikotics    **                       |
+|                       ================================                       |
+|                                                                              |
+|                            °        #°                                       |
+|                            *O       °@o                                      |
+|                            O@ °o@@#° o@@                                     |
+|                           #@@@@@@@@@@@@@@                                    |
+|                           @@@@@@@@@@@@@@@                                    |
+|                           @@@@@@@@@@@@@@°                                    |
+|                             #@@@@@@@@@@@@@O....   .                          |
+|                             o@@@@@@@@@@@@@@@@@@@@@o                          |
+|                             O@@@@@@@@@@@@@@@@@@@#°                    *      |
+|                             O@@@@@@@@@@@@@@@@@@@@@#O                O@@    O |
+|                            .@@@@@@@@°@@@@@@@@@@@@@@@@#            °@@@    °@@|
+|                            #@@O°°°°  @@@@@@@@@@@@@@@@@@°          @@@#*   @@@|
+|                         .#@@@@@  o#oo@@@@@@@@@@@@@@@@@@@@@.       O@@@@@@@@@@|
+|                        o@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@°     @@@@@@@@@°|
+|                        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   .@@@@@o°   |
+|          °***          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  @@@@@o     |
+|     o#@@@@@@@@@@@@.   *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@o@@@@@@      |
+|OOo°@@@@@@@@@@@@O°#@#   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@       |
+|@@@@@@@@@@@@@@@@    o°  .@@@@@@@@@@@@@@@@@@@@@@@@#*@@@@@@@@@@@@@@@@@@@@       |
+|@@@@@@@@@@@@@@@*         O@@@@@@@@@@@@@@@@@@@@@@@   °@@@@@@@@@@@@@@@@@@o      |
+|@@@@#@@@@@@@@@            @@@@@@@@@@@@@@@@@@@@@@       .*@@@@@@@@@@@@@@.      |
+|@@@°      @@@@O           @@@@@@@@@@@@@@@@@@@@o           °@@@@@@@@@@@o       |
+|          @@@@@          .@@@@@@@@@@@@@@@@@@@*               O@@@@@@@*        |
+|           @@@@@        o@@@@@@@@@@@@@@@@@@@@.               #@@@@@O          |
+|           *@@@@@@@*  o@@@@@@@@@@@@@@@@@@@@@@°              o@@@@@            |
+|           @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.              @@@@@#            |
+|          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@O             #@@@@@             |
+|          .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#           .@@@@@°             |
+|           @@@@@@@@@@O*    @@@@@@@@@@@@@@@@@@@@@°         °O@@@°              |
+|            °O@@@@@@       @@@@@@@@@@@@@@@@@@@@@@@                            |
+|              o@@@@@°      @@@@@@@@@@@@@@@@@@@@@@@@                           |
+|               @@@@@@.     @@@@@@@@@@@@@@@@@@@@@@@@@o                         |
+|                @@@@@@*    @@@@@@@@@@@@@@@@@@@@@@@@@@                         |
+|                o@@@@@@.  o@@@@@@@@@@@@@@@@@@@@@@@@@@@                        |
+|                 #@@@@@@  *@@@@@@@@@@@@@@@@@@@@@@@@@@@@                       |
+|                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
+|                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
+\-----------------------------------------------------------------------------*/
 package frc.robot.commands;
-
-import org.photonvision.PhotonCamera;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
-
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.lib.utility.ZTargeter;
-import frc.robot.subsystems.intake.IntakeSubsystem;
-import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
-import frc.robot.Constants.CameraTarget;
-import frc.robot.RobotContainer;
 import frc.robot.Constants.CameraInfo.GamePieceCamera;
+import frc.robot.Constants.CameraTarget;
+import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
+import org.photonvision.PhotonCamera;
 
 public class DriveWithZTargeting extends Command {
 
   public final PhotonCamera ArmCamera = new PhotonCamera(GamePieceCamera.cameraName);
 
-   /** Default maximum linear speed the swerve drive should move at in meters per second */
+  /** Default maximum linear speed the swerve drive should move at in meters per second */
   public static final double kMaxSpeed = 6.0;
 
   /** Default maximum rate the swerve drive should rotate in radians per second */
@@ -50,15 +92,15 @@ public class DriveWithZTargeting extends Command {
 
   /** ZTargeting Library */
   private final ZTargeter m_zTargeter;
-  
+
   /**
    * Creates an instance of the command
    *
    * @param swerve Swerve drive to be controlled
    * @param controller XBox controller used to control the swerve drive
    */
-
-  public DriveWithZTargeting(CommandSwerveDrivetrain swerve, ProcessedXboxController controller, CameraTarget target) {
+  public DriveWithZTargeting(
+      CommandSwerveDrivetrain swerve, ProcessedXboxController controller, CameraTarget target) {
     addRequirements(swerve);
     m_swerve = swerve;
     m_controller = controller;
@@ -77,7 +119,6 @@ public class DriveWithZTargeting extends Command {
   @Override
   public void initialize() {
     m_zTargeter.initialize(); // Initialize Z-targeting
-
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -86,30 +127,28 @@ public class DriveWithZTargeting extends Command {
     double xVelocity = -m_controller.getLeftY() * kMaxSpeed;
     double yVelocity = -m_controller.getLeftX() * kMaxSpeed;
     double angularRate = -m_controller.getRightX() * kMaxAngularRate;
-    
 
-        // Get the rotation to a target.  Returns null if no target is found
+    // Get the rotation to a target.  Returns null if no target is found
     Rotation2d zRotation = m_zTargeter.getRotationToTarget();
     boolean targetExists = (zRotation != null);
     if (targetExists) {
       angularRate = zRotation.getRadians() * kMaxAngularRate;
 
-      if (m_Target == CameraTarget.GameNote)
-      {
-        //TODO: Set LEDs Orange
+      if (m_Target == CameraTarget.GameNote) {
+        // TODO: Set LEDs Orange
       }
-            /* Code for bot relative drive. 
-            if ((m_Target == CameraTarget.GameNote)
-              && ((Math.abs(m_controller.getRightY()) > 0.1)
-                    || (Math.abs(m_controller.getRightX()) > 0.1))) {
-              translation =
-                  new Translation2d(-m_controller.getRightY(), m_controller.getRightX())
-                      .times(RobotContainer.MaxSpeed);
-              isFieldRelative = false;
-            } else {
-              translation = new Translation2d(yAxis, xAxis).times(RobotContainer.MaxSpeed);
-              isFieldRelative = true;
-            } */
+      /* Code for bot relative drive.
+      if ((m_Target == CameraTarget.GameNote)
+        && ((Math.abs(m_controller.getRightY()) > 0.1)
+              || (Math.abs(m_controller.getRightX()) > 0.1))) {
+        translation =
+            new Translation2d(-m_controller.getRightY(), m_controller.getRightX())
+                .times(RobotContainer.MaxSpeed);
+        isFieldRelative = false;
+      } else {
+        translation = new Translation2d(yAxis, xAxis).times(RobotContainer.MaxSpeed);
+        isFieldRelative = true;
+      } */
     }
 
     // Update our SwerveRequest with the requested velocities and apply them to the swerve drive
