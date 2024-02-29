@@ -71,7 +71,7 @@ import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 public class JoystickSubsystem extends JoystickSubsystemBase {
 
   /** true to support a second "operator" controller */
-  public static final boolean kOperatorControllerIsEnabled = true;
+  public static final boolean kOperatorControllerIsEnabled = false;
 
   /** A placeholder command that does nothing for unused button bindings */
   public static final InstantCommand kDoNothing = new InstantCommand();
