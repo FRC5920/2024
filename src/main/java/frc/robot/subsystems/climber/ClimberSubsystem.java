@@ -52,7 +52,9 @@
 package frc.robot.subsystems.climber;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
 import org.littletonrobotics.junction.Logger;
@@ -91,10 +93,10 @@ public class ClimberSubsystem extends SubsystemBase {
   public static final boolean kInvertMotors = false;
 
   /** Max number of rotations to achieve full extension */
-  public static final double kMaxRotations = 5.9; // TODO: set this value based on mechanisms
+  public static final double kMaxRotations = 6.3; // TODO: set this value based on mechanisms
 
   /** Maximum motor output allowed (0.0 to 1.0) */
-  public static final double kMaxMotorOutputPercent = 100.0;
+  public static final double kMaxMotorOutputPercent = 1.0;
 
   ////////////////////////////////////
   // Attributes
@@ -132,6 +134,16 @@ public class ClimberSubsystem extends SubsystemBase {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
+   * Runs the climber motors directly
+   *
+   * @param percent Percent of motor output (-1.0 to 1.0)
+   */
+  public void setMotorOutputPercent(double percent) {
+    m_io.setMotorOutputPercent(percent);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
    * Returns the current extension of a climber motor as a normalized percentage of maximum
    *
    * @motorID Climber motor whose extension is to be returned
@@ -163,5 +175,41 @@ public class ClimberSubsystem extends SubsystemBase {
     // Display velocities on dashboard
     SmartDashboard.putNumber("climber/targetPosition", m_inputs.leader.targetPosition);
     SmartDashboard.putNumber("climber/position", m_inputs.leader.position);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  public static class ClimberJoystickTeleOp extends Command {
+    private final ClimberSubsystem m_climberSubsystem;
+    private final ProcessedXboxController m_controller;
+
+    /** Creates a new ClimberJoystickTeleOp. */
+    public ClimberJoystickTeleOp(
+        ClimberSubsystem climberSubsystem, ProcessedXboxController controller) {
+      m_climberSubsystem = climberSubsystem;
+      m_controller = controller;
+      addRequirements(m_climberSubsystem);
+      // Use addRequirements() here to declare subsystem dependencies.
+    }
+
+    // Called when the command is initially scheduled.
+    @Override
+    public void initialize() {}
+
+    // Called every time the scheduler runs while the command is scheduled.
+    @Override
+    public void execute() {
+      double percent = m_controller.getLeftY() * -1.0;
+      m_climberSubsystem.setMotorOutputPercent(percent);
+    }
+
+    // Called once the command ends or is interrupted.
+    @Override
+    public void end(boolean interrupted) {}
+
+    // Returns true when the command should end.
+    @Override
+    public boolean isFinished() {
+      return false;
+    }
   }
 }

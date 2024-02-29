@@ -139,14 +139,12 @@ public final class Constants {
     SwerveBackRightEncoder(TunerConstants.kBackRightEncoderId),
     Pigeon(TunerConstants.kPigeonId),
 
-
     ClimberLeaderMotor(12),
     ClimberFollowerMotor(11),
 
     IntakeFlywheelMotor(25),
     IntakeIndexerMotor(27),
     IntakeGamepieceSensor(41),
-
 
     PivotLeaderMotor(21),
     PivotFollowerMotor(22),

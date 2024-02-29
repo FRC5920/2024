@@ -86,6 +86,14 @@ public interface ClimberSubsystemIO {
     return 0.0;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Sets the desired motor output as a normalized percentage of maximum
+   *
+   * @param degrees Normalized percentage (-1.0 to 1.0)
+   */
+  default void setMotorOutputPercent(double percent) {}
+
   /** Parameters used to configure the subsystem I/O */
   public static class Config {
     public final RobotCANBus canBus;

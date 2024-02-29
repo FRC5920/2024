@@ -67,7 +67,6 @@ import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystemIO;
 import frc.robot.subsystems.intake.IntakeSubsystemIOReal;
 import frc.robot.subsystems.intake.IntakeSubsystemIOSim;
-import frc.robot.subsystems.intake.TeleopIntakeTest;
 import frc.robot.subsystems.pivot.PivotSubsystem;
 import frc.robot.subsystems.pivot.PivotSubsystemIO;
 import frc.robot.subsystems.pivot.PivotSubsystemIOReal;
@@ -132,10 +131,12 @@ public class RobotContainer {
 
     // Create the climber subsystem
     climberSubsystem = new ClimberSubsystem(climberIO);
+    climberSubsystem.setDefaultCommand(
+        new ClimberSubsystem.ClimberJoystickTeleOp(
+            climberSubsystem, joystickSubsystem.getOperatorController()));
 
     // Create the intake subsystem
     intakeSubsystem = new IntakeSubsystem(intakeIO);
-    intakeSubsystem.setDefaultCommand(new TeleopIntakeTest(intakeSubsystem, joystickSubsystem));
 
     // Create the pivot subsystem
     pivotSubsystem = new PivotSubsystem(pivotIO);

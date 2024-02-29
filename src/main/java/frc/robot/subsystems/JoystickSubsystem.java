@@ -53,7 +53,6 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -64,6 +63,8 @@ import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.PivotCommand;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystem.IntakePreset;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 
 /** A subsystem providing Xbox controllers for driving the robot manually */
@@ -112,35 +113,36 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // Map buttons on driver controller
     ProcessedXboxController driverController = getDriverController();
 
-    // Map A button to swerve brake command
-    driverController.A.whileTrue(
+    driverController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park));
+    // Map B button to swerve brake command
+    driverController.B.whileTrue(
         driveTrain.applyRequest(() -> new SwerveRequest.SwerveDriveBrake()));
 
-    // Map B button to a command that rotates the wheels in the direction of the left stick without
-    // driving
-    driverController.B.whileTrue(
-        driveTrain.applyRequest(
-            () ->
-                new SwerveRequest.PointWheelsAt()
-                    .withModuleDirection(
-                        new Rotation2d(
-                            -1.0f * driverController.getLeftY(),
-                            -1.0f * driverController.getLeftX()))));
+    // Map POV
+    driverController.povUp.onTrue(
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersUp));
+    driverController.povDown.onTrue(
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
-    driverController.povUp.whileTrue(
-        driveTrain.applyRequest(() -> m_driveForwardStraight.withVelocityX(0.5).withVelocityY(0)));
-    driverController.povDown.whileTrue(
-        driveTrain.applyRequest(() -> m_driveForwardStraight.withVelocityX(-0.5).withVelocityY(0)));
-
-    driverController.X.onTrue(kDoNothing);
-    driverController.Y.onTrue(kDoNothing);
+    driverController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
+    driverController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
 
     // // Map right bumper
     // driverController.rightBumper.whileTrue(kDoNothing);
 
-    // // Map left bumper
+    // // Map back button
     // reset the field-centric heading on left bumper press
-    driverController.leftBumper.onTrue(driveTrain.runOnce(() -> driveTrain.seedFieldRelative()));
+    driverController.back.onTrue(driveTrain.runOnce(() -> driveTrain.seedFieldRelative()));
+
+    driverController.leftBumper.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+
+    driverController.rightBumper.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+
+    driverController.rightTriggerAsButton.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(
+            botContainer.intakeSubsystem, IntakePreset.IntakeRing));
 
     // // Map stick press buttons
     // driverController.leftStickPress.onTrue(kDoNothing);
@@ -172,15 +174,20 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
     operatorController.B.onTrue(
         new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootBackward));
-    operatorController.X.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootForward));
-    operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Climb));
+    operatorController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
+    operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park));
 
     // Map POV
     operatorController.povUp.onTrue(
-        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.MaxExtension));
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersUp));
     operatorController.povDown.onTrue(
-        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.MinExtension));
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
+
+    operatorController.leftTriggerAsButton.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(
+            botContainer.intakeSubsystem, IntakePreset.IntakeRing));
+    operatorController.rightTriggerAsButton.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
 
     // Map bumpers
     operatorController.leftBumper.whileTrue(kDoNothing);

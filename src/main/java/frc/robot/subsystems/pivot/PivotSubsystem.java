@@ -64,6 +64,9 @@ public class PivotSubsystem extends SubsystemBase {
   // CONSTANTS
   ////////////////////////////////////
 
+  /** Set this to true to publish values to the dashboard */
+  public static final boolean kPublishToDashboard = false;
+
   /** CAN bus used to communicate with the subsystem */
   public static final RobotCANBus kCANBus = RobotCANBus.Rio;
 
@@ -81,13 +84,19 @@ public class PivotSubsystem extends SubsystemBase {
   public static final CANDevice kCANcoderDevice = CANDevice.PivotCANcoder;
 
   /** Gear ratio between the Falcon motors and the pivot axle */
-  public static final double kFalconToPivotGearRatio = 40.0 / 1.0;
-
-  /** Set to true to reverse the direction of pivot motors */
-  public static final boolean kInvertMotors = false;
+  public static final double kFalconToPivotGearRatio = 40.0;
 
   /** Offset of the CANcoder magnet in rotations */
-  public static final double kCANcoderMagnetOffsetRot = 0.0;
+  public static final double kCANcoderMagnetOffsetRot = -0.950; // Measured 02/27/2024
+
+  /** Maximum output (+/-) applied to the pivot motors (for safety) */
+  public static final double kPeakPivotMotorOutputVoltage = 2.0;
+
+  /** Minimum pivot angle in degrees */
+  public static final double kMinPivotAngleDeg = 0.0;
+
+  /** Maximum pivot angle in degrees */
+  public static final double kMaxPivotAngleDeg = 178.5;
 
   ////////////////////////////////////
   // Attributes
@@ -112,6 +121,10 @@ public class PivotSubsystem extends SubsystemBase {
    * @param degrees The desired pivot angle in degrees
    */
   public void setAngleDeg(double degrees) {
+    // Clamp commanded angle
+    degrees = (degrees < kMinPivotAngleDeg) ? kMinPivotAngleDeg : degrees;
+    degrees = (degrees > kMaxPivotAngleDeg) ? kMaxPivotAngleDeg : degrees;
+
     m_inputs.leader.targetPosition = degrees;
     m_inputs.follower.targetPosition = degrees;
     m_io.setAngleDeg(degrees);
@@ -125,7 +138,7 @@ public class PivotSubsystem extends SubsystemBase {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Returns the current pivot angle in degrees */
   public double getAngleDeg() {
-    return m_io.getMotorAngleDeg(PivotMotorID.Leader);
+    return m_io.getAngleDeg();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -137,9 +150,12 @@ public class PivotSubsystem extends SubsystemBase {
     // Send input data to the logging framework (or update from the log during replay)
     Logger.processInputs("Pivot", m_inputs);
 
-    // Display velocities on dashboard
-    SmartDashboard.putNumber("pivot/targetAngleDeg", m_inputs.leader.targetPosition);
-    SmartDashboard.putNumber("pivot/angleDeg", m_inputs.leader.position);
-    SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
+    if (kPublishToDashboard) {
+      // Display velocities on dashboard
+      SmartDashboard.putNumber("pivot/targetAngleDeg", m_inputs.leader.targetPosition);
+      SmartDashboard.putNumber("pivot/motorAngleDeg", m_inputs.leader.position);
+      SmartDashboard.putNumber("pivot/cancoderAngleRot", m_inputs.cancoderAngleRot);
+      SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
+    }
   }
 }
