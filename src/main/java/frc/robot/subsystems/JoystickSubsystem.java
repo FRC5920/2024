@@ -53,7 +53,6 @@ package frc.robot.subsystems;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -114,20 +113,10 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // Map buttons on driver controller
     ProcessedXboxController driverController = getDriverController();
 
-    // Map A button to swerve brake command
-    driverController.A.whileTrue(
-        driveTrain.applyRequest(() -> new SwerveRequest.SwerveDriveBrake()));
-
-    // Map B button to a command that rotates the wheels in the direction of the left stick without
-    // driving
+    driverController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park));
+    // Map B button to swerve brake command
     driverController.B.whileTrue(
-        driveTrain.applyRequest(
-            () ->
-                new SwerveRequest.PointWheelsAt()
-                    .withModuleDirection(
-                        new Rotation2d(
-                            -1.0f * driverController.getLeftY(),
-                            -1.0f * driverController.getLeftX()))));
+        driveTrain.applyRequest(() -> new SwerveRequest.SwerveDriveBrake()));
 
     // Map POV
     driverController.povUp.onTrue(
@@ -135,15 +124,25 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     driverController.povDown.onTrue(
         new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
-    driverController.X.onTrue(kDoNothing);
-    driverController.Y.onTrue(kDoNothing);
+    driverController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
+    driverController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
 
     // // Map right bumper
     // driverController.rightBumper.whileTrue(kDoNothing);
 
-    // // Map left bumper
+    // // Map back button
     // reset the field-centric heading on left bumper press
-    driverController.leftBumper.onTrue(driveTrain.runOnce(() -> driveTrain.seedFieldRelative()));
+    driverController.back.onTrue(driveTrain.runOnce(() -> driveTrain.seedFieldRelative()));
+
+    driverController.leftBumper.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+
+    driverController.rightBumper.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+
+    driverController.rightTriggerAsButton.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(
+            botContainer.intakeSubsystem, IntakePreset.IntakeRing));
 
     // // Map stick press buttons
     // driverController.leftStickPress.onTrue(kDoNothing);

@@ -101,7 +101,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public static final CANDevice kIndexerMotorCANDevice = CANDevice.IntakeIndexerMotor;
 
   /** Gear ratio between the indexer motor and the indexer mechanism */
-  public static final double kIndexerMotorGearRatio = 5.0 / 1.0;
+  public static final double kIndexerMotorGearRatio = 10.0 / 1.0;
 
   /** Set to true if the direction of the indexer motor should be reversed */
   public static final boolean kIndexerMotorInverted = false;
