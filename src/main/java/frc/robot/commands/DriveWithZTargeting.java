@@ -8,12 +8,16 @@ import org.photonvision.PhotonCamera;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.lib.utility.ZTargeter;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import frc.robot.Constants.CameraTarget;
+import frc.robot.RobotContainer;
 import frc.robot.Constants.CameraInfo.GamePieceCamera;
 
 public class DriveWithZTargeting extends Command {
@@ -72,7 +76,7 @@ public class DriveWithZTargeting extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-
+    m_zTargeter.initialize(); // Initialize Z-targeting
 
   }
 
@@ -82,6 +86,31 @@ public class DriveWithZTargeting extends Command {
     double xVelocity = -m_controller.getLeftY() * kMaxSpeed;
     double yVelocity = -m_controller.getLeftX() * kMaxSpeed;
     double angularRate = -m_controller.getRightX() * kMaxAngularRate;
+    
+
+        // Get the rotation to a target.  Returns null if no target is found
+    Rotation2d zRotation = m_zTargeter.getRotationToTarget();
+    boolean targetExists = (zRotation != null);
+    if (targetExists) {
+      angularRate = zRotation.getRadians() * kMaxAngularRate;
+
+      if (m_Target == CameraTarget.GameNote)
+      {
+        //TODO: Set LEDs Orange
+      }
+            /* Code for bot relative drive. 
+            if ((m_Target == CameraTarget.GameNote)
+              && ((Math.abs(m_controller.getRightY()) > 0.1)
+                    || (Math.abs(m_controller.getRightX()) > 0.1))) {
+              translation =
+                  new Translation2d(-m_controller.getRightY(), m_controller.getRightX())
+                      .times(RobotContainer.MaxSpeed);
+              isFieldRelative = false;
+            } else {
+              translation = new Translation2d(yAxis, xAxis).times(RobotContainer.MaxSpeed);
+              isFieldRelative = true;
+            } */
+    }
 
     // Update our SwerveRequest with the requested velocities and apply them to the swerve drive
     m_swerveRequest
