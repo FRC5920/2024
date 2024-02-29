@@ -69,8 +69,10 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.logging.LoggableMotorInputs;
 import frc.lib.utility.Alert;
+import frc.robot.Constants.CANDevice;
 import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
 
 /** Implementation of the PivotSubsystemIO interface using real hardware */
@@ -138,7 +140,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     m_followerCurrentSignal = m_pivotFollower.getStatorCurrent();
     m_followerTempSignal = m_pivotFollower.getDeviceTemp();
 
-    m_cancoderAngle = m_canCoder.getPosition();
+    m_cancoderAngle = m_canCoder.getAbsolutePosition();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -151,6 +153,11 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Update logged input quantities */
   public void processInputs(PivotSubsystemInputs inputs) {
+    SmartDashboard.putBoolean(
+        "pivot/fusedSensorOutOfSync", m_pivotLeader.getFault_FusedSensorOutOfSync().getValue());
+    SmartDashboard.putNumber(
+        "pivot/closedLoopError", m_pivotLeader.getClosedLoopError().getValueAsDouble());
+
     // Get input measurements for leader motor
     LoggableMotorInputs leader = inputs.leader;
     leader.position = getMotorAngleDeg(PivotMotorID.Leader);
@@ -166,6 +173,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     follower.tempCelsius = m_followerTempSignal.refresh().getValueAsDouble();
 
     // Get CANcoder angle in degrees
+    inputs.cancoderAngleRot = m_cancoderAngle.refresh().getValueAsDouble();
     inputs.cancoderAngleDeg = getAngleDeg();
   }
 
@@ -175,8 +183,10 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
    *
    * @param degrees The desired pivot angle in degrees
    */
+  @Override
   public void setAngleDeg(double degrees) {
     double rotations = Units.degreesToRotations(degrees);
+    SmartDashboard.putNumber("pivot/targetAngleRot", rotations);
     m_pivotLeader.setControl(m_mmReq.withPosition(rotations).withSlot(0));
   }
 
@@ -201,7 +211,8 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
   public double getAngleDeg() {
     m_cancoderAngle.refresh();
     double rotations = m_cancoderAngle.refresh().getValueAsDouble();
-    double degrees = Units.rotationsToDegrees(rotations % 1);
+
+    double degrees = Units.rotationsToDegrees(rotations);
     return degrees;
   }
 
@@ -218,7 +229,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     // https://v6.docs.ctr-electronics.com/en/2023-pro/docs/api-reference/api-usage/device-specific/talonfx/remote-sensors.html#fusedcancoder
     CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
     cancoderConfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1;
-    cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.CounterClockwise_Positive;
+    cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
     cancoderConfig.MagnetSensor.MagnetOffset = m_config.cancoderOffsetRot;
 
     m_canCoder.getConfigurator().apply(cancoderConfig);
@@ -237,11 +248,22 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     outputConfig.Inverted = InvertedValue.CounterClockwise_Positive;
     outputConfig.withNeutralMode(NeutralModeValue.Brake);
 
+    falconConfig.Voltage.PeakForwardVoltage = PivotSubsystem.kPeakPivotMotorOutputVoltage;
+    falconConfig.Voltage.PeakReverseVoltage = -1.0 * PivotSubsystem.kPeakPivotMotorOutputVoltage;
+
+    // Set up the CANcoder as the feedback sensor
+    FeedbackConfigs fbCfg = falconConfig.Feedback;
+    fbCfg.FeedbackRemoteSensorID = CANDevice.PivotCANcoder.id;
+    fbCfg.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
+    fbCfg.SensorToMechanismRatio = 1.0;
+    fbCfg.RotorToSensorRatio = PivotSubsystem.kFalconToPivotGearRatio;
+    fbCfg.FeedbackRotorOffset = 0.0;
+
     // Configure trapezoidal motion profile using Motion Magic
     MotionMagicConfigs mm = falconConfig.MotionMagic;
-    mm.MotionMagicCruiseVelocity = Units.degreesToRotations(360.0 * m_config.pivotGearRatio) * 2.0;
-    mm.MotionMagicAcceleration = Units.degreesToRotations(720.0 * m_config.pivotGearRatio) * 2.0;
-    mm.MotionMagicJerk = Units.degreesToRotations(1000.0 * m_config.pivotGearRatio);
+    mm.MotionMagicAcceleration = 2.0; // acceleration in rotations per second ^2
+    mm.MotionMagicCruiseVelocity = 1.0; // velocity in rotations per second
+    mm.MotionMagicJerk = 30;
 
     // set slot 0 gains
     //   Ks - output to overcome static friction (output)
@@ -252,17 +274,13 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     //   Kd - output per unit of error in velocity (output/rps)
     Slot0Configs slot0 = falconConfig.Slot0;
 
-    slot0.kP = 400.0;
-    slot0.kI = 0;
-    slot0.kD = 80.0;
-    slot0.kV = 0.12;
-    slot0.kS = 0.25; // Approximately 0.25V to get the mechanism moving
+    slot0.kP = 9;
+    slot0.kI = 0.0;
+    slot0.kD = 2;
+    slot0.kV = 0.0;
+    slot0.kS = 0.0; // Approximately 0.25V to get the mechanism moving
 
-    FeedbackConfigs fbCfg = falconConfig.Feedback;
-    fbCfg.FeedbackRemoteSensorID = m_canCoder.getDeviceID();
-    fbCfg.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
-    fbCfg.SensorToMechanismRatio = 1.0;
-    fbCfg.RotorToSensorRatio = m_config.pivotGearRatio;
+    // fbCfg.RotorToSensorRatio = m_config.pivotGearRatio;
 
     StatusCode status = StatusCode.StatusCodeNotInitialized;
     for (int i = 0; i < 5; ++i) {
@@ -275,6 +293,6 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     }
 
     // Configure pivot follower motor to follow pivot leader in the opposite direction
-    m_pivotFollower.setControl(new Follower(m_pivotLeader.getDeviceID(), true));
+    m_pivotFollower.setControl(new Follower(CANDevice.PivotLeaderMotor.id, true));
   }
 }

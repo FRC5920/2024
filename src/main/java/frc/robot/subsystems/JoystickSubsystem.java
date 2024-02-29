@@ -64,6 +64,8 @@ import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.PivotCommand;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.subsystems.intake.IntakeSubsystem;
+import frc.robot.subsystems.intake.IntakeSubsystem.IntakePreset;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 
 /** A subsystem providing Xbox controllers for driving the robot manually */
@@ -172,15 +174,20 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
     operatorController.B.onTrue(
         new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootBackward));
-    operatorController.X.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootForward));
-    operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Climb));
+    operatorController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
+    operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park));
 
     // Map POV
     operatorController.povUp.onTrue(
-        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.MaxExtension));
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersUp));
     operatorController.povDown.onTrue(
-        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.MinExtension));
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
+
+    operatorController.leftTriggerAsButton.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(
+            botContainer.intakeSubsystem, IntakePreset.IntakeRing));
+    operatorController.rightTriggerAsButton.whileTrue(
+        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
 
     // Map bumpers
     operatorController.leftBumper.whileTrue(kDoNothing);

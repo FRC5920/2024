@@ -105,6 +105,7 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Initializes and configures the I/O implementation */
+  @Override
   public void initialize() {
     configureMotors();
   }
@@ -158,68 +159,81 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  @Override
+  public void setMotorOutputPercent(double percent) {
+    m_climberLeader.set(ControlMode.PercentOutput, percent);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   private void configureMotors() {
+    // Ensure sensor is positive when output is positive
+    // Choose so that Talon does not report sensor out of phase
+    final boolean kSensorPhase = true;
+
     ArrayList<ErrorCode> errors = new ArrayList<>();
 
     ///////////////////////////////////
     // Configure CTRE SRX controllers
     ///////////////////////////////////
     m_climberLeader.configFactoryDefault();
+    m_climberFollower.configFactoryDefault();
 
     // Set based on what direction you want forward/positive to be. This does not affect sensor
     // phase.
     // Choose based on what direction you want to be positive, this does not affect motor invert
-    final boolean kMotorInvert = false;
+    final boolean kMotorInvert = true;
     m_climberLeader.setInverted(kMotorInvert);
+    m_climberFollower.setInverted(!kMotorInvert);
 
-    // Set motor to brake when not commanded
-    m_climberLeader.setNeutralMode(NeutralMode.Brake);
+    WPI_TalonSRX[] motors = new WPI_TalonSRX[] {m_climberLeader, m_climberFollower};
 
-    // Set neutral deadband to super small 0.001 (0.1 %) because the default deadband is 0.04 (4 %)
-    errors.add(m_climberLeader.configNeutralDeadband(0.01, kTimeoutMs));
+    for (WPI_TalonSRX motor : motors) {
+      // Set motor to brake when not commanded
+      motor.setNeutralMode(NeutralMode.Brake);
 
-    /* Config the peak and nominal outputs, 12V means full */
-    errors.add(m_climberLeader.configNominalOutputForward(0, kTimeoutMs));
-    errors.add(m_climberLeader.configNominalOutputReverse(0, kTimeoutMs));
-    errors.add(m_climberLeader.configPeakOutputForward(m_config.maxMotorOutputPercent, kTimeoutMs));
-    errors.add(
-        m_climberLeader.configPeakOutputReverse(-1.0 * m_config.maxMotorOutputPercent, kTimeoutMs));
+      // Set neutral deadband to super small 0.001 (0.1 %) because the default deadband is 0.04 (4
+      // %)
+      errors.add(motor.configNeutralDeadband(0.01, kTimeoutMs));
 
-    // Configure the SRX controller to use an attached CTRE magnetic encoder's absolute
-    // position measurement
-    FeedbackDevice feedBackDevice =
-        RobotBase.isReal()
-            ? FeedbackDevice.CTRE_MagEncoder_Absolute
-            : FeedbackDevice.PulseWidthEncodedPosition;
-    errors.add(
-        m_climberLeader.configSelectedFeedbackSensor(feedBackDevice, kPIDLoopIdx, kTimeoutMs));
+      /* Config the peak and nominal outputs, 12V means full */
+      errors.add(motor.configNominalOutputForward(0, kTimeoutMs));
+      errors.add(motor.configNominalOutputReverse(0, kTimeoutMs));
+      errors.add(motor.configPeakOutputForward(m_config.maxMotorOutputPercent, kTimeoutMs));
+      errors.add(motor.configPeakOutputReverse(-1.0 * m_config.maxMotorOutputPercent, kTimeoutMs));
 
-    // Ensure sensor is positive when output is positive
-    // Choose so that Talon does not report sensor out of phase
-    final boolean kSensorPhase = false;
+      // Configure the SRX controller to use an attached CTRE magnetic encoder's absolute
+      // position measurement
+      FeedbackDevice feedBackDevice =
+          RobotBase.isReal()
+              ? FeedbackDevice.CTRE_MagEncoder_Relative
+              : FeedbackDevice.PulseWidthEncodedPosition;
+      errors.add(motor.configSelectedFeedbackSensor(feedBackDevice, kPIDLoopIdx, kTimeoutMs));
+
+      errors.addAll(configureClosedLoopControl());
+      // errors.addAll(configureMotionMagicControl());
+
+      // /**
+      //  * Grab the 360 degree position of the MagEncoder's absolute position, and intitally set
+      // the
+      //  * relative sensor to match.
+      //  */
+      // int absolutePosition = motor.getSensorCollection().getPulseWidthPosition();
+
+      // /* Mask out overflows, keep bottom 12 bits */
+      // absolutePosition &= 0xFFF;
+      // if (kSensorPhase) {
+      //   absolutePosition *= -1;
+      // }
+      // if (kMotorInvert) {
+      //   absolutePosition *= -1;
+      // }
+
+      /* Set the quadrature (absolute) sensor to match absolute */
+      errors.add(motor.setSelectedSensorPosition(0.0, kPIDLoopIdx, kTimeoutMs));
+    }
+
+    // Set the phase relationship between the leader motor and its connected mag encoder
     m_climberLeader.setSensorPhase(kSensorPhase);
-
-    errors.addAll(configureClosedLoopControl());
-    // configureMotionMagicControl();
-
-    /**
-     * Grab the 360 degree position of the MagEncoder's absolute position, and intitally set the
-     * relative sensor to match.
-     */
-    int absolutePosition = m_climberLeader.getSensorCollection().getPulseWidthPosition();
-
-    /* Mask out overflows, keep bottom 12 bits */
-    absolutePosition &= 0xFFF;
-    if (kSensorPhase) {
-      absolutePosition *= -1;
-    }
-    if (kMotorInvert) {
-      absolutePosition *= -1;
-    }
-
-    /* Set the quadrature (absolute) sensor to match absolute */
-    errors.add(
-        m_climberLeader.setSelectedSensorPosition(absolutePosition, kPIDLoopIdx, kTimeoutMs));
 
     // Configure follower motor to follow leader motor
     m_climberFollower.follow(m_climberLeader);
@@ -248,31 +262,39 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
     // m_climberLeader.configAllowableClosedloopError(0, deadbandSensorUnits, kTimeoutMs);
 
     /* Config Position Closed Loop gains in slot0, tsypically kF stays zero. */
-    m_climberLeader.config_kF(kPIDLoopIdx, 0.0, kTimeoutMs);
-    m_climberLeader.config_kP(kPIDLoopIdx, 0.15, kTimeoutMs);
-    m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs);
-    m_climberLeader.config_kD(kPIDLoopIdx, 1.0, kTimeoutMs);
+    errors.add(m_climberLeader.config_kF(kPIDLoopIdx, 0.0, kTimeoutMs));
+    errors.add(m_climberLeader.config_kP(kPIDLoopIdx, 1.0, kTimeoutMs));
+    errors.add(m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs));
+    errors.add(m_climberLeader.config_kD(kPIDLoopIdx, 1.0, kTimeoutMs));
 
     return errors;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Configure to use Motion Magic trapezoidal profile motor control */
-  void configureMotionMagicControl() {
+  ArrayList<ErrorCode> configureMotionMagicControl() {
+    ArrayList<ErrorCode> errors = new ArrayList<>();
+
     // Select a motion profile slot
     int kSlotIdx = 0;
     m_climberLeader.selectProfileSlot(kSlotIdx, kPIDLoopIdx);
 
     // Set up PID gains
-    m_climberLeader.config_kF(kPIDLoopIdx, 0.3, kTimeoutMs);
-    m_climberLeader.config_kP(kPIDLoopIdx, 0.25, kTimeoutMs);
-    m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs);
-    m_climberLeader.config_kD(kPIDLoopIdx, 0.005, kTimeoutMs);
-    m_climberLeader.config_IntegralZone(kPIDLoopIdx, 0.01);
+    errors.add(m_climberLeader.config_kF(kPIDLoopIdx, 0.3, kTimeoutMs));
+    errors.add(m_climberLeader.config_kP(kPIDLoopIdx, 0.25, kTimeoutMs));
+    errors.add(m_climberLeader.config_kI(kPIDLoopIdx, 0.0, kTimeoutMs));
+    errors.add(m_climberLeader.config_kD(kPIDLoopIdx, 0.005, kTimeoutMs));
+    errors.add(m_climberLeader.config_IntegralZone(kPIDLoopIdx, 0.01));
 
     // Set acceleration and cruise velocity
-    m_climberLeader.configMotionCruiseVelocity(Phoenix5Util.degreesToFalconTicks(7.6), kTimeoutMs);
-    m_climberLeader.configMotionAcceleration(Phoenix5Util.degreesToFalconTicks(4.94), kTimeoutMs);
-    m_climberLeader.configMotionSCurveStrength(6);
+    errors.add(
+        m_climberLeader.configMotionCruiseVelocity(
+            Phoenix5Util.degreesToFalconTicks(7.6), kTimeoutMs));
+    errors.add(
+        m_climberLeader.configMotionAcceleration(
+            Phoenix5Util.degreesToFalconTicks(4.94), kTimeoutMs));
+    errors.add(m_climberLeader.configMotionSCurveStrength(6));
+
+    return errors;
   }
 }

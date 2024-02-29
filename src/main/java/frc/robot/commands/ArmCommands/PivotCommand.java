@@ -94,10 +94,13 @@ public class PivotCommand extends Command {
   }
 
   public enum AnglePreset {
-    ShootForward(120.0),
-    ShootBackward(60.0),
-    Intake(195.0),
-    Climb(90.0);
+    ShootForward(100.0),
+    ShootBackward(45.0),
+    Intake(176.5),
+    Park(1.8),
+
+    TestLow(176.4),
+    TestHi(90.0);
 
     /** Pivot angle in degrees */
     public final double angleDeg;

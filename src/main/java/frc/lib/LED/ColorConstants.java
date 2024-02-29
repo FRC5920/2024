@@ -61,7 +61,7 @@ public class ColorConstants {
 
   public static final Color kOff = new Color(0, 0, 0);
   public static final Color kWhite = new Color(255, 255, 255);
-  public static final Color kVikoticsYellow = new Color(255, 120, 0);
+  public static final Color kVikoticsYellow = new Color(255, 100, 0);
 
   /** Official FIRST Blue for blue alliance */
   public static final Color kAllianceBlue = Color.kFirstBlue;

@@ -60,6 +60,7 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityTorqueCurrentFOC;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -104,6 +105,9 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
   /* Start at velocity 0, no feed forward, use slot 1 */
   private final VelocityTorqueCurrentFOC m_torqueVelocityReq =
       new VelocityTorqueCurrentFOC(0, 0, 0, kFlywheelTorquePIDSlot, false, false, false);
+
+  /* Keep a neutral out so we can disable the motor */
+  private final NeutralOut m_coast = new NeutralOut();
 
   /** Status signal used to read the velocity of the flywheel motor */
   private final StatusSignal<Double> m_flywheelVelocitySignal;
@@ -183,10 +187,14 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    * @param rotPerSec Desired velocity in rotations per second
    */
   public void setFlywheelVelocity(double rotPerSec) {
-    // m_flywheelMotor.setControl(m_voltsVelocityReq.withVelocity(rotPerSec *
-    // m_config.flywheelGearRatio));
-    m_flywheelMotor.setControl(
-        m_torqueVelocityReq.withVelocity(rotPerSec * m_config.flywheelGearRatio));
+    if (rotPerSec != 0.0) {
+      m_flywheelMotor.setControl(
+          m_voltsVelocityReq.withVelocity(rotPerSec * m_config.flywheelGearRatio));
+      // m_flywheelMotor.setControl(
+      //     m_torqueVelocityReq.withVelocity(rotPerSec * m_config.flywheelGearRatio));
+    } else {
+      m_flywheelMotor.setControl(m_coast);
+    }
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -243,13 +251,13 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
     TalonFXConfiguration configs = new TalonFXConfiguration();
 
     /* Voltage-based velocity requires a feed forward to account for the back-emf of the motor */
-    configs.Slot0.kP = 0.11; // An error of 1 rotation per second results in 2V output
+    configs.Slot0.kP = 5.0; // An error of 1 rotation per second results in 2V output
     configs.Slot0.kI =
-        0.5; // An error of 1 rotation per second increases output by 0.5V every second
+        0.0; // An error of 1 rotation per second increases output by 0.5V every second
     configs.Slot0.kD =
-        0.0001; // A change of 1 rotation per second squared results in 0.01 volts output
+        0.001; // A change of 1 rotation per second squared results in 0.01 volts output
     configs.Slot0.kV =
-        0.12; // Falcon 500 is a 500kV motor, 500rpm per V = 8.333 rps per V, 1/8.33 = 0.12 volts /
+        0.0; // Falcon 500 is a 500kV motor, 500rpm per V = 8.333 rps per V, 1/8.33 = 0.12 volts /
     // Rotation per second
     // Peak output of 8 volts
     // TODO: set peak output of voltage-based commands using measured values
@@ -269,15 +277,12 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
     configs.TorqueCurrent.PeakReverseTorqueCurrent = -40;
 
     // Implement motor invert
-    configs.MotorOutput.Inverted =
-        m_config.invertFlywheelMotor
-            ? InvertedValue.Clockwise_Positive
-            : InvertedValue.CounterClockwise_Positive;
+    configs.MotorOutput.Inverted = InvertedValue.Clockwise_Positive;
     configs.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
     // Ramp flywheel speed slightly to avoid current spikes
     // Set the time required to ramp from zero to full speed (12V) output
-    configs.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.15;
+    configs.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.1;
 
     /* Retry config apply up to 5 times, report if failure */
     StatusCode status = StatusCode.StatusCodeNotInitialized;
@@ -305,7 +310,7 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
     m_indexerMotor.configFactoryDefault();
 
     // Implement motor direction invert
-    m_indexerMotor.setInverted(m_config.invertIndexerMotor);
+    m_indexerMotor.setInverted(false);
 
     // Set motor to brake when not commanded
     m_indexerMotor.setNeutralMode(NeutralMode.Brake);
@@ -324,9 +329,9 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
 
     // Configure motor to limit current draw after 100 ms
     // TODO: set indexer motor current limits using measured values
-    errors.add(m_indexerMotor.configPeakCurrentDuration(100));
-    errors.add(m_indexerMotor.configPeakCurrentLimit(20));
-    errors.add(m_indexerMotor.configContinuousCurrentLimit(20));
+    // errors.add(m_indexerMotor.configPeakCurrentDuration(100));
+    // errors.add(m_indexerMotor.configPeakCurrentLimit(20));
+    // errors.add(m_indexerMotor.configContinuousCurrentLimit(20));
 
     // Handle errors encountered during configuration
     for (ErrorCode err : errors) {

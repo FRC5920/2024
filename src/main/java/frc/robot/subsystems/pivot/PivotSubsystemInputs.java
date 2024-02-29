@@ -63,12 +63,15 @@ public class PivotSubsystemInputs implements LoggableInputs {
   public LoggableMotorInputs follower = new LoggableMotorInputs("follower");
 
   /** CANcoder inputs */
+  public double cancoderAngleRot = 0.0;
+
   public double cancoderAngleDeg = 0.0;
 
   /** Write input values to log */
   public void toLog(LogTable table) {
     leader.toLog(table);
     follower.toLog(table);
+    table.put("cancoderAngleRot", cancoderAngleRot);
     table.put("cancoderAngleDeg", cancoderAngleDeg);
   }
 
@@ -76,6 +79,7 @@ public class PivotSubsystemInputs implements LoggableInputs {
   public void fromLog(LogTable table) {
     leader.fromLog(table);
     follower.fromLog(table);
+    cancoderAngleDeg = table.get("cancoderAngleRot", cancoderAngleRot);
     cancoderAngleDeg = table.get("cancoderAngleDeg", cancoderAngleDeg);
   }
 
@@ -84,6 +88,7 @@ public class PivotSubsystemInputs implements LoggableInputs {
     PivotSubsystemInputs copy = new PivotSubsystemInputs();
     copy.leader = this.leader;
     copy.follower = this.follower;
+    copy.cancoderAngleRot = this.cancoderAngleRot;
     copy.cancoderAngleDeg = this.cancoderAngleDeg;
     return copy;
   }
