@@ -129,10 +129,11 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
                             -1.0f * driverController.getLeftY(),
                             -1.0f * driverController.getLeftX()))));
 
-    driverController.povUp.whileTrue(
-        driveTrain.applyRequest(() -> m_driveForwardStraight.withVelocityX(0.5).withVelocityY(0)));
-    driverController.povDown.whileTrue(
-        driveTrain.applyRequest(() -> m_driveForwardStraight.withVelocityX(-0.5).withVelocityY(0)));
+    // Map POV
+    driverController.povUp.onTrue(
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersUp));
+    driverController.povDown.onTrue(
+        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
     driverController.X.onTrue(kDoNothing);
     driverController.Y.onTrue(kDoNothing);
