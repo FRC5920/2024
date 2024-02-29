@@ -66,7 +66,7 @@ public class TeleopSwerveCTRE extends Command {
   public static final double kMaxSpeed = 6.0;
 
   /** Default maximum rate the swerve drive should rotate in radians per second */
-  public static final double kMaxAngularRate = 10; //Math.PI; Math.Pi was the default
+  public static final double kMaxAngularRate = 10; // Math.PI; Math.Pi was the default
 
   /** Deadband applied to linear motion as a normalized percentage (0.0 to 1.0) */
   private static final double kSpeedDeadband = 0.1;
