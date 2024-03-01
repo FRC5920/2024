@@ -92,6 +92,7 @@ public class IntakeSubsystemIOSim extends IntakeSubsystemIOReal {
    *
    * @param inputs Object to populate with subsystem input values to be logged
    */
+  @Override
   public void processInputs(IntakeSubsystemInputs inputs) {
     // Update device simulations
     m_simFlywheel.calculate();
@@ -99,5 +100,16 @@ public class IntakeSubsystemIOSim extends IntakeSubsystemIOReal {
 
     // Process inputs
     super.processInputs(inputs);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Returns the distance measured by the gamepiece sensor
+   *
+   * @return The distance measured by the gamepiece sensor in meters
+   */
+  @Override
+  public double getGamepieceDistance() {
+    return 0.0;
   }
 }

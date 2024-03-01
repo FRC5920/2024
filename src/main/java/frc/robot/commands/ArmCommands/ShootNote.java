@@ -51,6 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.commands.ArmCommands;
 
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.lib.logging.BotLog;
 import frc.lib.logging.BotLog.DebugPrintCommand;
@@ -78,7 +79,9 @@ public class ShootNote extends SequentialCommandGroup {
             new DebugPrintCommand("Spin up the Flywheel"),
             new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp, 1.0),
             new DebugPrintCommand("Run the indexer"),
-            new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp, 1.0));
+            new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp, 1.0),
+            new DebugPrintCommand("Stop the flywheel"),
+            new InstantCommand(() -> m_IntakeSubsystem.setFlywheelVelocity(0.0)));
         break;
       case Speaker:
         addCommands(
@@ -88,7 +91,9 @@ public class ShootNote extends SequentialCommandGroup {
             new DebugPrintCommand("Spin up the Flywheel"),
             new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteSpeaker, 2.0),
             new DebugPrintCommand("Run the indexer"),
-            new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteSpeaker, 1.0));
+            new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteSpeaker, 1.0),
+            new DebugPrintCommand("Stop the flywheel"),
+            new InstantCommand(() -> m_IntakeSubsystem.setFlywheelVelocity(0.0)));
         break;
       case Trap:
         addCommands(new BotLog.InfoPrintCommand("ShootAtTrap"));

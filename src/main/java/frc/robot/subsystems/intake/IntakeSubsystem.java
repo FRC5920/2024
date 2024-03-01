@@ -327,7 +327,6 @@ public class IntakeSubsystem extends SubsystemBase {
     // Called once the command ends or is interrupted to shut off the flywheel
     @Override
     public void end(boolean interrupted) {
-      m_intakeSubsystem.setFlywheelVelocity(0.0);
       if (interrupted) {
         BotLog.Debugf("RunFlywheelAtSpeed command was interrupted");
       }
