@@ -90,6 +90,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
+  private SwerveRequest.RobotCentric m_botCentricSwerveReq = new SwerveRequest.RobotCentric();
+
   /** Instance of an object used to log inputs fed to the swerve drive base */
   private SwerveInputsAutoLogged m_swerveInputs = new SwerveInputsAutoLogged();
 
@@ -156,6 +158,26 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     m_swerveInputs.angularRate = request.RotationalRate;
 
     this.setControl(request);
+  }
+
+  /**
+   * Applies a robot-centric control request to the swerve drivetrain.
+   * @param velocityX  Velocity requested along the robot's X-axis
+   * @param velocityY  Velocity requested along the robot's Y-axis
+   * @param velocityRot  Rotational velocity requested about the robot's Z-axis
+   * 
+   * @details This method logs robot-centric control values issued to the swerve drive
+   */
+  public void driveRobotCentric(double velocityX, double velocityY, double velocityRot) {
+    m_botCentricSwerveReq.withVelocityX(velocityX)
+    .withVelocityY(velocityY)
+    .withRotationalRate(velocityRot);
+    m_swerveInputs.requestType = SwerveRequest.FieldCentric.class.getName();
+    m_swerveInputs.xVelocity = m_botCentricSwerveReq.VelocityX;
+    m_swerveInputs.yVelocity = m_botCentricSwerveReq.VelocityY;
+    m_swerveInputs.angularRate = m_botCentricSwerveReq.RotationalRate;
+
+    this.setControl(m_botCentricSwerveReq);
   }
 
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
