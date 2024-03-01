@@ -1,0 +1,31 @@
+{
+  "version": 1.0,
+  "startingPose": null,
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "ScootToAmp"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootAmpClose"
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "ScootFromAmp"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}

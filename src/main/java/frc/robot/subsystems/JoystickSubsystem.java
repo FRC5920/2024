@@ -51,7 +51,6 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems;
 
-import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -76,8 +75,8 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
   /** A placeholder command that does nothing for unused button bindings */
   public static final InstantCommand kDoNothing = new InstantCommand();
 
-  private final SwerveRequest.RobotCentric m_driveForwardStraight =
-      new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+  // private final SwerveRequest.RobotCentric m_driveForwardStraight =
+  //     new SwerveRequest.RobotCentric().withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
   /** Creates an instance of the subsystem */
   public JoystickSubsystem() {

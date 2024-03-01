@@ -1,0 +1,95 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.0,
+        "y": 0.75
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.7574475059168293,
+        "y": 0.7500000000000002
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.15,
+        "y": 2.0272530091623717
+      },
+      "prevControl": {
+        "x": 2.15,
+        "y": 1.0412486701047357
+      },
+      "nextControl": {
+        "x": 2.15,
+        "y": 2.432995578215021
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.15,
+        "y": 5.296553158123967
+      },
+      "prevControl": {
+        "x": 2.185181833875053,
+        "y": 4.8895608251358045
+      },
+      "nextControl": {
+        "x": 2.1166106173351653,
+        "y": 5.682809963157414
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.3681192543768323,
+        "y": 5.560692183512343
+      },
+      "prevControl": {
+        "x": 1.7845461941096916,
+        "y": 5.563771761671084
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "eventMarkers": [
+    {
+      "name": "ShootSpeakerClose",
+      "waypointRelativePos": 3.0,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": []
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": -179.15935900288773,
+    "rotateFast": false
+  },
+  "reversed": false,
+  "folder": "Clackamas",
+  "previewStartingState": {
+    "rotation": 179.12797143718277,
+    "velocity": 0
+  },
+  "useDefaultConstraints": true
+}

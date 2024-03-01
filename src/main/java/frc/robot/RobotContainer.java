@@ -51,11 +51,19 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot;
 
+import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
+import com.pathplanner.lib.util.PIDConstants;
+import com.pathplanner.lib.util.ReplanningConfig;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import frc.lib.LED.ColorConstants;
 import frc.robot.autos.AutoDashboardTab;
 import frc.robot.commands.TeleopSwerveCTRE;
+import frc.robot.commands.autoCommands.ShootAmpClose;
+import frc.robot.commands.autoCommands.ShootSpeakerClose;
 import frc.robot.subsystems.JoystickSubsystem;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
 import frc.robot.subsystems.climber.ClimberSubsystem;
@@ -72,7 +80,6 @@ import frc.robot.subsystems.pivot.PivotSubsystemIO;
 import frc.robot.subsystems.pivot.PivotSubsystemIOReal;
 import frc.robot.subsystems.pivot.PivotSubsystemIOSim;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
-import frc.robot.subsystems.swerveCTRE.Telemetry;
 import frc.robot.subsystems.swerveCTRE.TunerConstants;
 
 public class RobotContainer {
@@ -95,16 +102,27 @@ public class RobotContainer {
   // Subsystem facilitating display of dashboard tabs
   public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
 
-  private final AutoDashboardTab autoDashboardTab = new AutoDashboardTab();
+  private final AutoDashboardTab autoDashboardTab;
 
-  // driving in open loop
-  public final Telemetry swerveTelemetry = new Telemetry(TeleopSwerveCTRE.kMaxSpeed);
+  // Register an object to receive telemetry from the swerve drive
+  // public final CTRESwerveTelemetry swerveTelemetry = new CTRESwerveTelemetry();
 
   // Subsystem used to drive addressable LEDs
   public final LEDSubsystem ledSubsystem = new LEDSubsystem(ColorConstants.kOff);
 
+  /** Swerve request used to process robot-centric motion commands from the AutoBuilder */
+  private final SwerveRequest.ApplyChassisSpeeds m_autochassisSpeedsReq =
+      new SwerveRequest.ApplyChassisSpeeds();
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Called to create the robot container */
   public RobotContainer() {
+
+    // Configure the PathPlanner AutoBuilder, the set up the auto dashboard tab.
+    // NOTE: these must occur in this order
+    configureAutoBuilder();
+    autoDashboardTab = new AutoDashboardTab();
+
     ClimberSubsystemIO climberIO = null;
     IntakeSubsystemIO intakeIO = null;
     PivotSubsystemIO pivotIO = null;
@@ -142,12 +160,13 @@ public class RobotContainer {
     pivotSubsystem = new PivotSubsystem(pivotIO);
 
     joystickSubsystem.configureButtonBindings(this);
+
     // Set up a command to drive the swerve in Teleoperated mode
     driveTrain.setDefaultCommand(
         new TeleopSwerveCTRE(driveTrain, joystickSubsystem.getDriverController()));
 
-    // Register a function to be called to receive swerve telemetry
-    driveTrain.registerTelemetry(swerveTelemetry::telemeterize);
+    // Tell the swerve drive subsystem to update our telemetry from its odometry thread
+    // driveTrain.registerTelemetry(swerveTelemetry::update);
 
     // Add the field dashboard tab
     dashboardSubsystem.add(autoDashboardTab);
@@ -157,8 +176,58 @@ public class RobotContainer {
     // }
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Returns the present autonomous command */
   public Command getAutonomousCommand() {
-    return Commands.print("No autonomous command configured");
+    return autoDashboardTab.getCurrentAutoRoutine();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Configures the PathPlanner AutoBuilder
+   *
+   * @remarks This should be called after the swerve drive subsystem is constructed.
+   */
+  private void configureAutoBuilder() {
+
+    // Configure AutoBuilder last
+    AutoBuilder.configureHolonomic(
+        driveTrain::getPose, // Robot pose supplier
+        driveTrain
+            ::seedFieldRelative, // Method to reset odometry (will be called if your auto has a
+        // starting pose)
+        driveTrain::getChassisSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+        (speeds) ->
+            driveTrain.setControl(
+                m_autochassisSpeedsReq.withSpeeds(
+                    speeds)), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds
+        new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely live in
+            // your Constants class
+            new PIDConstants(10.0, 0.0, 0.0), // Translation PID constants
+            new PIDConstants(10.0, 0.0, 0.0), // Rotation PID constants
+            TunerConstants.kSpeedAt12VoltsMps, // Max module speed, in m/s
+            driveTrain
+                .getDriveBaseRadius(), // Drive base radius in meters. Distance from robot center to
+            // furthest module.
+            new ReplanningConfig() // Default path replanning config. See the API for the options
+            // here
+            ),
+        () -> {
+          // Boolean supplier that controls when the path will be mirrored for the red alliance
+          // This will flip the path being followed to the red side of the field.
+          // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
+
+          var alliance = DriverStation.getAlliance();
+          if (alliance.isPresent()) {
+            return alliance.get() == DriverStation.Alliance.Red;
+          }
+          return false;
+        },
+        driveTrain // Reference to this subsystem to set requirements
+        );
+
+    // Register named commands
+    NamedCommands.registerCommand("ShootAmpClose", new ShootAmpClose());
+    NamedCommands.registerCommand("ShootSpeakerClose", new ShootSpeakerClose());
   }
 }

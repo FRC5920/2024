@@ -1,0 +1,100 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.1,
+        "y": 7.65
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.6754347067756266,
+        "y": 7.65
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.55,
+        "y": 7.65
+      },
+      "prevControl": {
+        "x": 2.5595295809093868,
+        "y": 7.65
+      },
+      "nextControl": {
+        "x": 2.540470419090613,
+        "y": 7.65
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.05,
+        "y": 7.35
+      },
+      "prevControl": {
+        "x": 2.0545845276544057,
+        "y": 7.699969973149392
+      },
+      "nextControl": {
+        "x": 2.039105470162241,
+        "y": 6.518342171274357
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.05,
+        "y": 6.061688811732224
+      },
+      "prevControl": {
+        "x": 2.05,
+        "y": 6.084960010600563
+      },
+      "nextControl": {
+        "x": 2.05,
+        "y": 5.838027241468996
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.4101866515242716,
+        "y": 5.552712384377784
+      },
+      "prevControl": {
+        "x": 1.8792453482173943,
+        "y": 5.575039355337472
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 180.0,
+    "rotateFast": false
+  },
+  "reversed": false,
+  "folder": "Clackamas",
+  "previewStartingState": {
+    "rotation": 180.0,
+    "velocity": 0
+  },
+  "useDefaultConstraints": true
+}

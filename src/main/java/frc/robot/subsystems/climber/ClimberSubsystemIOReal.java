@@ -99,8 +99,8 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
    */
   public ClimberSubsystemIOReal(ClimberSubsystemIO.Config config) {
     m_config = config;
-    m_climberLeader = new WPI_TalonSRX(config.leaderMotorDevice.id);
-    m_climberFollower = new WPI_TalonSRX(config.followerMotorDevice.id);
+    m_climberLeader = new WPI_TalonSRX(config.leaderMotorDevice.id());
+    m_climberFollower = new WPI_TalonSRX(config.followerMotorDevice.id());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +256,7 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
     // range.
     // See Table in Section 17.2.1 for native units per rotation.
 
-    // final double deadbandRotations = kMaxRotations * 0.01; // TODO: set up allowable deadband
+    // final double deadbandRotations = kMaxRotations * 0.01;
     // final double deadbandSensorUnits =
     // m_sensorConverter.rotationsToSensorUnits(deadbandRotations);
     // m_climberLeader.configAllowableClosedloopError(0, deadbandSensorUnits, kTimeoutMs);

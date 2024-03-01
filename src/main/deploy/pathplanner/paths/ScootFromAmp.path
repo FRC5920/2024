@@ -1,0 +1,90 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 1.82,
+        "y": 7.63
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 1.835631911554352,
+        "y": 7.33078068946534
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.82,
+        "y": 7.288377465553766
+      },
+      "prevControl": {
+        "x": 1.8200180138002515,
+        "y": 7.411555831673999
+      },
+      "nextControl": {
+        "x": 1.819977240780296,
+        "y": 7.132749921216591
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 2.5246313211907214,
+        "y": 7.65
+      },
+      "prevControl": {
+        "x": 1.7222176231213542,
+        "y": 7.65
+      },
+      "nextControl": {
+        "x": 3.308188076800751,
+        "y": 7.65
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 5.326563185449214,
+        "y": 7.65
+      },
+      "prevControl": {
+        "x": 4.326563185449214,
+        "y": 7.65
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 1,
+      "rotationDegrees": 0.0,
+      "rotateFast": false
+    }
+  ],
+  "constraintZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0,
+    "rotateFast": false
+  },
+  "reversed": false,
+  "folder": "Clackamas",
+  "previewStartingState": {
+    "rotation": 90.0,
+    "velocity": 0
+  },
+  "useDefaultConstraints": true
+}

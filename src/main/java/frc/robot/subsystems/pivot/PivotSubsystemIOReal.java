@@ -126,9 +126,9 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
    */
   public PivotSubsystemIOReal(PivotSubsystemIO.Config config) {
     m_config = config;
-    m_pivotLeader = new TalonFX(config.leaderMotorDevice.id, config.canBus.name);
-    m_pivotFollower = new TalonFX(config.followerMotorDevice.id, config.canBus.name);
-    m_canCoder = new CANcoder(config.cancoderDevice.id, config.canBus.name);
+    m_pivotLeader = new TalonFX(config.leaderMotorDevice.id(), config.canBus.name);
+    m_pivotFollower = new TalonFX(config.followerMotorDevice.id(), config.canBus.name);
+    m_canCoder = new CANcoder(config.cancoderDevice.id(), config.canBus.name);
 
     m_leaderPositionSignal = m_pivotLeader.getPosition();
     m_leaderVoltageSignal = m_pivotLeader.getMotorVoltage();
@@ -253,7 +253,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
 
     // Set up the CANcoder as the feedback sensor
     FeedbackConfigs fbCfg = falconConfig.Feedback;
-    fbCfg.FeedbackRemoteSensorID = CANDevice.PivotCANcoder.id;
+    fbCfg.FeedbackRemoteSensorID = CANDevice.PivotCANcoder.id();
     fbCfg.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
     fbCfg.SensorToMechanismRatio = 1.0;
     fbCfg.RotorToSensorRatio = PivotSubsystem.kFalconToPivotGearRatio;
@@ -293,6 +293,6 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     }
 
     // Configure pivot follower motor to follow pivot leader in the opposite direction
-    m_pivotFollower.setControl(new Follower(CANDevice.PivotLeaderMotor.id, true));
+    m_pivotFollower.setControl(new Follower(CANDevice.PivotLeaderMotor.id(), true));
   }
 }
