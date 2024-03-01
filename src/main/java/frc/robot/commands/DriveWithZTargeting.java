@@ -54,11 +54,13 @@ package frc.robot.commands;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.lib.utility.ZTargeter;
 import frc.robot.Constants.CameraInfo.GamePieceCamera;
 import frc.robot.Constants.CameraTarget;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import org.photonvision.PhotonCamera;
 
@@ -137,26 +139,20 @@ public class DriveWithZTargeting extends Command {
       if (m_Target == CameraTarget.GameNote) {
         // TODO: Set LEDs Orange
       }
-      /* Code for bot relative drive.
-      if ((m_Target == CameraTarget.GameNote)
-        && ((Math.abs(m_controller.getRightY()) > 0.1)
-              || (Math.abs(m_controller.getRightX()) > 0.1))) {
-        translation =
-            new Translation2d(-m_controller.getRightY(), m_controller.getRightX())
-                .times(RobotContainer.MaxSpeed);
-        isFieldRelative = false;
+      // Code for bot relative drive.
+      if ((m_Target == CameraTarget.GameNote) && ((Math.abs(m_controller.getRightY()) > 0.1) || (Math.abs(m_controller.getRightX()) > 0.1))) {
+        m_swerve.driveRobotCentric(-m_controller.getRightY(), m_controller.getRightX(), yVelocity);
       } else {
-        translation = new Translation2d(yAxis, xAxis).times(RobotContainer.MaxSpeed);
-        isFieldRelative = true;
-      } */
-    }
-
-    // Update our SwerveRequest with the requested velocities and apply them to the swerve drive
-    m_swerveRequest
+        //
+        // Update our SwerveRequest with the requested velocities and apply them to the swerve drive
+        m_swerveRequest
         .withVelocityX(xVelocity) // Drive forward with negative Y (forward)
         .withVelocityY(yVelocity) // Drive left with negative X (left)
         .withRotationalRate(angularRate); // Drive counterclockwise with negative X (left)
-    m_swerve.driveFieldCentric(m_swerveRequest);
+        m_swerve.driveFieldCentric(m_swerveRequest);
+      } 
+    }
+
   }
 
   // Called once the command ends or is interrupted.
