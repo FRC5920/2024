@@ -73,7 +73,7 @@ public class ShootNote extends SequentialCommandGroup {
       case Amp:
         addCommands(
             new BotLog.InfoPrintCommand("ShootAtAmp"),
-            new PivotCommand(m_PivotSubsystem, AnglePreset.TestHi),
+            new PivotCommand(m_PivotSubsystem, AnglePreset.ShootAmp),
             new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp),
             new WaitCommand(0.5),
             new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp));
@@ -81,7 +81,7 @@ public class ShootNote extends SequentialCommandGroup {
       case Speaker:
         addCommands(
             new BotLog.InfoPrintCommand("ShootAtSpeaker"),
-            new PivotCommand(m_PivotSubsystem, AnglePreset.Park),
+            new PivotCommand(m_PivotSubsystem, AnglePreset.ShootSpeaker),
             new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp),
             new WaitCommand(1.25),
             new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp));

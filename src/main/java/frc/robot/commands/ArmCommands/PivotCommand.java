@@ -96,6 +96,8 @@ public class PivotCommand extends Command {
   public enum AnglePreset {
     ShootForward(100.0),
     ShootBackward(45.0),
+    ShootAmp(90),
+    ShootSpeaker(5),
     Intake(176.5),
     Park(1.8),
 
