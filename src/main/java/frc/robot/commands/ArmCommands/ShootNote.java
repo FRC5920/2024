@@ -51,10 +51,10 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.commands.ArmCommands;
 
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.lib.logging.BotLog;
+import frc.lib.logging.BotLog.DebugPrintCommand;
+import frc.lib.logging.BotLog.InfoPrintCommand;
 import frc.robot.Constants.ScoringTarget;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
 import frc.robot.subsystems.intake.IntakeSubsystem;
@@ -73,25 +73,22 @@ public class ShootNote extends SequentialCommandGroup {
     switch (m_Target) {
       case Amp:
         addCommands(
-            new BotLog.InfoPrintCommand("ShootAtAmp"),
+            new InfoPrintCommand("ShootAtAmp"),
             new PivotCommand(m_PivotSubsystem, AnglePreset.ShootAmp),
-            Commands.parallel(
-              new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp),
-                Commands.sequence(
-                  new WaitCommand(0.5),
-                  new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp))))
-            ;
+            new DebugPrintCommand("Spin up the Flywheel"),
+            new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp, 1.0),
+            new DebugPrintCommand("Run the indexer"),
+            new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp, 1.0));
         break;
       case Speaker:
         addCommands(
             new BotLog.InfoPrintCommand("ShootAtSpeaker"),
+            new BotLog.DebugPrintCommand("Pivot to shooting position"),
             new PivotCommand(m_PivotSubsystem, AnglePreset.ShootSpeaker),
-            Commands.parallel(
-              new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteSpeaker),
-                Commands.sequence(
-                  new WaitCommand(1.5),
-                  new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteSpeaker))))
-            ;
+            new DebugPrintCommand("Spin up the Flywheel"),
+            new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteSpeaker, 2.0),
+            new DebugPrintCommand("Run the indexer"),
+            new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteSpeaker, 1.0));
         break;
       case Trap:
         addCommands(new BotLog.InfoPrintCommand("ShootAtTrap"));

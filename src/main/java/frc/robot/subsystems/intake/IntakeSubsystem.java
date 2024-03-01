@@ -53,9 +53,11 @@ package frc.robot.subsystems.intake;
 
 import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.LaserCan.RegionOfInterest;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.logging.BotLog;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
 import org.littletonrobotics.junction.Logger;
@@ -236,7 +238,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private final IntakeSubsystem m_intakeSubsystem;
     private final IntakePreset m_preset;
 
-    /** Creates a new ClimberJoystickTeleOp. */
+    /** Creates a new instance of the command */
     public RunIntakeAtSpeed(IntakeSubsystem intakeSubsystem, IntakePreset preset) {
       m_intakeSubsystem = intakeSubsystem;
       m_preset = preset;
@@ -272,10 +274,25 @@ public class IntakeSubsystem extends SubsystemBase {
     private final IntakeSubsystem m_intakeSubsystem;
     private final IntakePreset m_preset;
 
-    /** Creates a new ClimberJoystickTeleOp. */
-    public RunFlywheelAtSpeed(IntakeSubsystem intakeSubsystem, IntakePreset preset) {
+    /** Maximum time to run the flywheel */
+    private final double m_timeoutSec;
+
+    /** Used to implement timeout */
+    private final Timer m_timer;
+
+    /**
+     * Creates an instance of the command
+     *
+     * @param intakeSubsystem The intake subsystem to operate on
+     * @param preset Preset giving the speed to run the flywheel at
+     * @param seconds Maximum number of seconds to run the flywheel
+     */
+    public RunFlywheelAtSpeed(
+        IntakeSubsystem intakeSubsystem, IntakePreset preset, double seconds) {
       m_intakeSubsystem = intakeSubsystem;
       m_preset = preset;
+      m_timeoutSec = seconds;
+      m_timer = new Timer();
       addRequirements(m_intakeSubsystem);
     }
 
@@ -283,21 +300,40 @@ public class IntakeSubsystem extends SubsystemBase {
     @Override
     public void initialize() {
       m_intakeSubsystem.setFlywheelVelocity(m_preset.flywheelRPS);
+      m_timer.restart();
     }
 
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {}
 
-    // Called once the command ends or is interrupted.
+    // Called once the command ends or is interrupted to shut off the flywheel
     @Override
     public void end(boolean interrupted) {
       m_intakeSubsystem.setFlywheelVelocity(0.0);
+      if (interrupted) {
+        BotLog.Debugf("RunFlywheelAtSpeed command was interrupted");
+      }
     }
 
-    // Returns true when the command should end.
+    // Returns true when the flywheel has reached the target speed within a capture range
     @Override
     public boolean isFinished() {
+      double velocity = m_intakeSubsystem.getFlywheelVelocity();
+      boolean timedOut = m_timer.hasElapsed(m_timeoutSec);
+
+      // NOTE: flywheel velocity is signed.  We are only concerned about magnitude here.
+      if (Math.abs(velocity) > Math.abs(m_preset.flywheelRPS)) {
+        BotLog.Debugf("RunFlywheelAtSpeed finished: flywheel velocity=%f", velocity);
+        return true;
+      }
+
+      if (timedOut) {
+        BotLog.Debugf(
+            "RunFlywheelAtSpeed timed out after %f seconds: velocity=%f", m_timeoutSec, velocity);
+        return true;
+      }
+
       return false;
     }
   }
@@ -306,10 +342,24 @@ public class IntakeSubsystem extends SubsystemBase {
     private final IntakeSubsystem m_intakeSubsystem;
     private final IntakePreset m_preset;
 
-    /** Creates a new ClimberJoystickTeleOp. */
-    public RunIndexerAtSpeed(IntakeSubsystem intakeSubsystem, IntakePreset preset) {
+    /** Maximum time to run the flywheel */
+    private final double m_timeoutSec;
+
+    /** Used to implement timeout */
+    private final Timer m_timer;
+
+    /**
+     * Creates an instance of the command
+     *
+     * @param intakeSubsystem The intake subsystem to operate on
+     * @param preset Preset giving the speed to run the flywheel at
+     * @param seconds Maximum number of seconds to run the flywheel
+     */
+    public RunIndexerAtSpeed(IntakeSubsystem intakeSubsystem, IntakePreset preset, double seconds) {
       m_intakeSubsystem = intakeSubsystem;
       m_preset = preset;
+      m_timeoutSec = seconds;
+      m_timer = new Timer();
       addRequirements(m_intakeSubsystem);
     }
 
@@ -317,6 +367,7 @@ public class IntakeSubsystem extends SubsystemBase {
     @Override
     public void initialize() {
       m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
+      m_timer.restart();
     }
 
     // Called every time the scheduler runs while the command is scheduled.
@@ -327,12 +378,21 @@ public class IntakeSubsystem extends SubsystemBase {
     @Override
     public void end(boolean interrupted) {
       m_intakeSubsystem.setIndexerSpeed(0.0);
+      if (interrupted) {
+        BotLog.Debugf("RunIndexerAtSpeed command was interrupted");
+      }
     }
 
     // Returns true when the command should end.
     @Override
     public boolean isFinished() {
-      return false;
+      boolean timedOut = m_timer.hasElapsed(m_timeoutSec);
+      if (timedOut) {
+        BotLog.Debugf("RunIndexerAtSpeed completed after %f seconds", m_timeoutSec);
+        return true;
+      }
+
+      return timedOut;
     }
   }
 }
