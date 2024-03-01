@@ -51,6 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot;
 
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.utility.RobotRunMode;
 import frc.lib.utility.RobotType;
@@ -161,6 +162,74 @@ public final class Constants {
 
     public int id() {
       return RobotBase.isReal() ? realID : simID;
+    }
+  }
+
+  /** ID's used to specify a camera/estimator in the subsystem */
+  public enum CameraID {
+    FrontCamera,
+    RearCamera,
+    GamePieceCamera;
+  }
+
+  /** Camera info */
+  public static class CameraInfo {
+
+    /** FRONT-looking camera mounted on the RIGHT side of the robot */
+    public static class FrontCamera {
+      /** PhotonVision camera name */
+      public static final String cameraName = "TagRight";
+
+      /** Location of the camera relative to the center of the bot (meters, radians) */
+      public static class Location {
+        // Camera points toward the front RIGHT corner
+        public static final double xOffset = 0.115378; // Taken from CAD model 2/25/2024
+        public static final double yOffset = -0.282293; // Taken from CAD model 2/25/2024
+        public static final double zOffset = 0.1;
+        /** Rotation of the camera about its Z-axis */
+        public static final double yaw = Units.degreesToRadians(-45.0);
+      }
+    }
+
+    /** REAR-looking camera mounted on the LEFT side of the robot */
+    public static class RearCamera {
+      /** PhotonVision camera name */
+      public static final String cameraName = "TagLeft";
+
+      /** Location of the camera relative to the center of the bot (meters, radians) */
+      public static class Location {
+        // Camera points toward the rear left corner
+        public static final double xOffset = 0.075053; // Taken from CAD model 2/25/2024
+        public static final double yOffset = 0.280637; // Taken from CAD model 2/25/2024
+        public static final double zOffset = 0.1; // Measured 2/25/2024
+        /** Rotation of the camera about its Z-axis */
+        public static final double yaw = Units.degreesToRadians(135.0);
+      }
+    }
+
+    /** Resolution of a tag cameras in pixels */
+    public static class TagCameraResolution {
+      public static final int widthPx = 1280;
+      public static final int heightPx = 720;
+    }
+
+    public static class GamePieceCamera {
+      public static final String cameraName = "MLGamePiece";
+    }
+  }
+
+  public enum CameraTarget {
+    GameNote(0),
+    AprilTag2D(1);
+
+    public final int PVIndex;
+
+    private CameraTarget(int PipelineIndex) {
+      this.PVIndex = PipelineIndex;
+    }
+
+    public int PVIndex() {
+      return PVIndex;
     }
   }
 }
