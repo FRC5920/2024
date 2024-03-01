@@ -1,0 +1,31 @@
+{
+  "version": 1.0,
+  "startingPose": {
+    "position": {
+      "x": 0.7657064171825311,
+      "y": 6.65
+    },
+    "rotation": -120.01999999999998
+  },
+  "command": {
+    "type": "sequential",
+    "data": {
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "StaticSpkr45"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootSpeakerClose"
+          }
+        }
+      ]
+    }
+  },
+  "folder": null,
+  "choreoAuto": false
+}

@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 0.43,
-        "y": 7.25
+        "x": 1.35,
+        "y": 5.55
       },
       "prevControl": null,
       "nextControl": {
-        "x": 1.018833374082282,
-        "y": 7.25
+        "x": 1.4000000000000001,
+        "y": 5.55
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 1.82,
-        "y": 7.625656141941132
+        "x": 1.35,
+        "y": 5.55
       },
       "prevControl": {
-        "x": 1.7443657344632912,
-        "y": 7.377803528450589
+        "x": 1.4000000000000001,
+        "y": 5.55
       },
       "nextControl": null,
       "isLocked": false,
@@ -39,14 +39,14 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 90.0,
+    "rotation": 180.0,
     "rotateFast": false
   },
   "reversed": false,
   "folder": "Clackamas",
   "previewStartingState": {
-    "rotation": 90.0,
+    "rotation": 180.0,
     "velocity": 0
   },
-  "useDefaultConstraints": true
+  "useDefaultConstraints": false
 }
