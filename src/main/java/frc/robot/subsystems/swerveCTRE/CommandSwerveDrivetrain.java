@@ -162,16 +162,17 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
   /**
    * Applies a robot-centric control request to the swerve drivetrain.
-   * @param velocityX  Velocity requested along the robot's X-axis
-   * @param velocityY  Velocity requested along the robot's Y-axis
-   * @param velocityRot  Rotational velocity requested about the robot's Z-axis
-   * 
+   *
+   * @param velocityX Velocity requested along the robot's X-axis
+   * @param velocityY Velocity requested along the robot's Y-axis
+   * @param velocityRot Rotational velocity requested about the robot's Z-axis
    * @details This method logs robot-centric control values issued to the swerve drive
    */
   public void driveRobotCentric(double velocityX, double velocityY, double velocityRot) {
-    m_botCentricSwerveReq.withVelocityX(velocityX)
-    .withVelocityY(velocityY)
-    .withRotationalRate(velocityRot);
+    m_botCentricSwerveReq
+        .withVelocityX(velocityX)
+        .withVelocityY(velocityY)
+        .withRotationalRate(velocityRot);
     m_swerveInputs.requestType = SwerveRequest.FieldCentric.class.getName();
     m_swerveInputs.xVelocity = m_botCentricSwerveReq.VelocityX;
     m_swerveInputs.yVelocity = m_botCentricSwerveReq.VelocityY;
