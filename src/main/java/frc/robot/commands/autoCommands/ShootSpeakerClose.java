@@ -53,6 +53,9 @@ package frc.robot.commands.autoCommands;
 
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.lib.logging.BotLog;
+import frc.robot.Constants.ScoringTarget;
+import frc.robot.RobotContainer;
+import frc.robot.commands.ArmCommands.ShootNote;
 
 /**
  * TODO: replace this class with an actual implementation that shoots a note into the speaker from a
@@ -60,9 +63,12 @@ import frc.lib.logging.BotLog;
  */
 public class ShootSpeakerClose extends SequentialCommandGroup {
   /** Creates a new instance of the command(s) */
-  public ShootSpeakerClose() {
+  public ShootSpeakerClose(RobotContainer botContainer) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new BotLog.InfoPrintCommand("ShootSpeakerClose"));
+    addCommands(
+        new BotLog.InfoPrintCommand("Running ShootSpeakerClose command"),
+        new ShootNote(
+            ScoringTarget.Speaker, botContainer.pivotSubsystem, botContainer.intakeSubsystem));
   }
 }
