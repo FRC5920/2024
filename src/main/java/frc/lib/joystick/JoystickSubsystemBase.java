@@ -123,7 +123,6 @@ public abstract class JoystickSubsystemBase extends SubsystemBase {
     m_driverControllerIsEnabled = enableDriverController;
     m_operatorControllerIsEnabled = enableOperatorController;
     m_driverController = new ProcessedXboxController(kDriverControllerPort);
-    m_operatorController = new ProcessedXboxController(kOperatorControllerPort);
 
     if (m_driverControllerIsEnabled) {
       configureAxisProcessing(
@@ -134,6 +133,7 @@ public abstract class JoystickSubsystemBase extends SubsystemBase {
     }
 
     if (m_operatorControllerIsEnabled) {
+    m_operatorController = new ProcessedXboxController(kOperatorControllerPort);
       configureAxisProcessing(
           m_operatorController,
           new AxisProcChain.Config(kOperatorLeftStickSensitivity, kOperatorLeftStickDeadbands),

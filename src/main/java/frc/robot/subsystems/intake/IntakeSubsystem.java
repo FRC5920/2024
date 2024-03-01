@@ -237,6 +237,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public static class RunIntakeAtSpeed extends Command {
     private final IntakeSubsystem m_intakeSubsystem;
     private final IntakePreset m_preset;
+    private double m_Timer;
 
     /** Creates a new instance of the command */
     public RunIntakeAtSpeed(IntakeSubsystem intakeSubsystem, IntakePreset preset) {
@@ -248,13 +249,29 @@ public class IntakeSubsystem extends SubsystemBase {
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
+      m_Timer = Timer.getFPGATimestamp();
       m_intakeSubsystem.setFlywheelVelocity(m_preset.flywheelRPS);
-      m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
     }
 
     // Called every time the scheduler runs while the command is scheduled.
     @Override
-    public void execute() {}
+    public void execute() {
+      switch (m_preset){
+        case ShootNoteAmp:
+          if ((Timer.getFPGATimestamp() - m_Timer) > 0.5){
+            m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
+          }
+        break;
+        case ShootNoteSpeaker:
+           if ((Timer.getFPGATimestamp() - m_Timer) > 1.5){
+            m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
+          }
+        break;
+        default:
+            m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
+        break;
+      }
+    }
 
     // Called once the command ends or is interrupted.
     @Override
