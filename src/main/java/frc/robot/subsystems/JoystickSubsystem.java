@@ -57,7 +57,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.lib.joystick.JoystickSubsystemBase;
 import frc.lib.joystick.ProcessedXboxController;
-import frc.robot.Constants.CameraTarget;
 import frc.robot.Constants.ScoringTarget;
 import frc.robot.RobotContainer;
 import frc.robot.commands.ArmCommands.ClimberCommand;
@@ -65,7 +64,6 @@ import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.PivotCommand;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
 import frc.robot.commands.ArmCommands.ShootNote;
-import frc.robot.commands.DriveWithZTargeting;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem.IntakePreset;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
@@ -154,16 +152,15 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // botContainer.intakeSubsystem, IntakePreset.IntakeRing));
     // New
     driverController.rightTriggerAsButton.whileTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake)
-            .andThen(
-                new IntakeSubsystem.RunIntakeAtSpeed(
-                    botContainer.intakeSubsystem, IntakePreset.IntakeRing))
-            .andThen(new DriveWithZTargeting(driveTrain, driverController, CameraTarget.GameNote))
-            .finallyDo(
-                (interrupted) -> new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park)));
-
-    driverController.leftBumper.whileTrue(
-        new DriveWithZTargeting(driveTrain, driverController, CameraTarget.AprilTag2D));
+        new IntakeSubsystem.RunIntakeAtSpeed(
+            botContainer.intakeSubsystem, IntakePreset.IntakeRing));
+    /*new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake)
+    .andThen(
+        new IntakeSubsystem.RunIntakeAtSpeed(
+            botContainer.intakeSubsystem, IntakePreset.IntakeRing))
+    .andThen(new DriveWithZTargeting(driveTrain, driverController, CameraTarget.GameNote))
+    .finallyDo(
+        (interrupted) -> new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park)));*/
 
     // // Map stick press buttons
     // driverController.leftStickPress.onTrue(kDoNothing);
