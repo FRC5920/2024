@@ -51,6 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.commands.ArmCommands;
 
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.lib.logging.BotLog;
@@ -74,17 +75,23 @@ public class ShootNote extends SequentialCommandGroup {
         addCommands(
             new BotLog.InfoPrintCommand("ShootAtAmp"),
             new PivotCommand(m_PivotSubsystem, AnglePreset.ShootAmp),
-            new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp),
-            new WaitCommand(0.5),
-            new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp));
+            Commands.parallel(
+              new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp),
+                Commands.sequence(
+                  new WaitCommand(0.5),
+                  new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp))))
+            ;
         break;
       case Speaker:
         addCommands(
             new BotLog.InfoPrintCommand("ShootAtSpeaker"),
             new PivotCommand(m_PivotSubsystem, AnglePreset.ShootSpeaker),
-            new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp),
-            new WaitCommand(1.25),
-            new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteAmp));
+            Commands.parallel(
+              new RunFlywheelAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteSpeaker),
+                Commands.sequence(
+                  new WaitCommand(1.5),
+                  new RunIndexerAtSpeed(m_IntakeSubsystem, IntakePreset.ShootNoteSpeaker))))
+            ;
         break;
       case Trap:
         addCommands(new BotLog.InfoPrintCommand("ShootAtTrap"));
