@@ -149,9 +149,13 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // botContainer.intakeSubsystem, IntakePreset.IntakeRing));
     // New
     driverController.rightTriggerAsButton.whileTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake).andThen(new IntakeSubsystem.RunIntakeAtSpeed(
-            botContainer.intakeSubsystem, IntakePreset.IntakeRing)).andThen(new DriveWithZTargeting(driveTrain, driverController, CameraTarget.GameNote)).finallyDo((interrupted) -> new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park))
-            );
+        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake)
+            .andThen(
+                new IntakeSubsystem.RunIntakeAtSpeed(
+                    botContainer.intakeSubsystem, IntakePreset.IntakeRing))
+            .andThen(new DriveWithZTargeting(driveTrain, driverController, CameraTarget.GameNote))
+            .finallyDo(
+                (interrupted) -> new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park)));
 
     driverController.leftBumper.whileTrue(
         new DriveWithZTargeting(driveTrain, driverController, CameraTarget.AprilTag2D));
