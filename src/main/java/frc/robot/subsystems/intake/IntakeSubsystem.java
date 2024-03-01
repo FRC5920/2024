@@ -218,7 +218,9 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public enum IntakePreset {
     IntakeRing(10.0, 0.5),
-    ShootRing(-3000.0, -0.5);
+    ShootRing(-3000.0, -0.5),
+    ShootNoteAmp(-1000, -0.5),
+    ShootNoteSpeaker(-3000, -0.5);
 
     public final double flywheelRPS;
     public final double indexerSpeed;
@@ -256,6 +258,74 @@ public class IntakeSubsystem extends SubsystemBase {
     @Override
     public void end(boolean interrupted) {
       m_intakeSubsystem.setFlywheelVelocity(0.0);
+      m_intakeSubsystem.setIndexerSpeed(0.0);
+    }
+
+    // Returns true when the command should end.
+    @Override
+    public boolean isFinished() {
+      return false;
+    }
+  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  public static class RunFlywheelAtSpeed extends Command {
+    private final IntakeSubsystem m_intakeSubsystem;
+    private final IntakePreset m_preset;
+
+    /** Creates a new ClimberJoystickTeleOp. */
+    public RunFlywheelAtSpeed(IntakeSubsystem intakeSubsystem, IntakePreset preset) {
+      m_intakeSubsystem = intakeSubsystem;
+      m_preset = preset;
+      addRequirements(m_intakeSubsystem);
+    }
+
+    // Called when the command is initially scheduled.
+    @Override
+    public void initialize() {
+      m_intakeSubsystem.setFlywheelVelocity(m_preset.flywheelRPS);
+    }
+
+    // Called every time the scheduler runs while the command is scheduled.
+    @Override
+    public void execute() {}
+
+    // Called once the command ends or is interrupted.
+    @Override
+    public void end(boolean interrupted) {
+      m_intakeSubsystem.setFlywheelVelocity(0.0);
+    }
+
+    // Returns true when the command should end.
+    @Override
+    public boolean isFinished() {
+      return false;
+    }
+  }
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  public static class RunIndexerAtSpeed extends Command {
+    private final IntakeSubsystem m_intakeSubsystem;
+    private final IntakePreset m_preset;
+
+    /** Creates a new ClimberJoystickTeleOp. */
+    public RunIndexerAtSpeed(IntakeSubsystem intakeSubsystem, IntakePreset preset) {
+      m_intakeSubsystem = intakeSubsystem;
+      m_preset = preset;
+      addRequirements(m_intakeSubsystem);
+    }
+
+    // Called when the command is initially scheduled.
+    @Override
+    public void initialize() {
+      m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
+    }
+
+    // Called every time the scheduler runs while the command is scheduled.
+    @Override
+    public void execute() {}
+
+    // Called once the command ends or is interrupted.
+    @Override
+    public void end(boolean interrupted) {
       m_intakeSubsystem.setIndexerSpeed(0.0);
     }
 

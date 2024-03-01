@@ -232,4 +232,10 @@ public final class Constants {
       return PVIndex;
     }
   }
+
+  public enum ScoringTarget {
+    Amp,
+    Speaker,
+    Trap
+  }
 }

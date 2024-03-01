@@ -58,11 +58,13 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.lib.joystick.JoystickSubsystemBase;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.Constants.CameraTarget;
+import frc.robot.Constants.ScoringTarget;
 import frc.robot.RobotContainer;
 import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.PivotCommand;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.commands.ArmCommands.ShootNote;
 import frc.robot.commands.DriveWithZTargeting;
 import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.intake.IntakeSubsystem.IntakePreset;
@@ -136,10 +138,14 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     driverController.back.onTrue(driveTrain.runOnce(() -> driveTrain.seedFieldRelative()));
 
     driverController.leftBumper.whileTrue(
-        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+        new ShootNote(
+            ScoringTarget.Amp, botContainer.pivotSubsystem, botContainer.intakeSubsystem));
+    // new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
 
     driverController.rightBumper.whileTrue(
-        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+        new ShootNote(
+            ScoringTarget.Speaker, botContainer.pivotSubsystem, botContainer.intakeSubsystem));
+    // new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
 
     // Driver intake button
     // Old
