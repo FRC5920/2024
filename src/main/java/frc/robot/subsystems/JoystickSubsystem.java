@@ -136,9 +136,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     driverController.back.onTrue(driveTrain.runOnce(() -> driveTrain.seedFieldRelative()));
 
     driverController.leftBumper.whileTrue(
-        new ShootNote(
-            ScoringTarget.Amp, botContainer.pivotSubsystem, botContainer.intakeSubsystem));
-    // new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
 
     driverController.rightBumper.whileTrue(
         new ShootNote(

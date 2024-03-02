@@ -256,20 +256,20 @@ public class IntakeSubsystem extends SubsystemBase {
     // Called every time the scheduler runs while the command is scheduled.
     @Override
     public void execute() {
-      switch (m_preset){
+      switch (m_preset) {
         case ShootNoteAmp:
-          if ((Timer.getFPGATimestamp() - m_Timer) > 0.5){
+          if ((Timer.getFPGATimestamp() - m_Timer) > 0.5) {
             m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
           }
-        break;
+          break;
         case ShootNoteSpeaker:
-           if ((Timer.getFPGATimestamp() - m_Timer) > 1.5){
+          if ((Timer.getFPGATimestamp() - m_Timer) > 1.5) {
             m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
           }
-        break;
+          break;
         default:
-            m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
-        break;
+          m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
+          break;
       }
     }
 

@@ -52,9 +52,7 @@
 package frc.robot.subsystems.climber;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
 import org.littletonrobotics.junction.Logger;
@@ -176,13 +174,13 @@ public class ClimberSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("climber/targetPosition", m_inputs.leader.targetPosition);
     SmartDashboard.putNumber("climber/position", m_inputs.leader.position);
   }
-
+  /*
   //////////////////////////////////////////////////////////////////////////////////////////////////
   public static class ClimberJoystickTeleOp extends Command {
     private final ClimberSubsystem m_climberSubsystem;
-    private final ProcessedXboxController m_controller;
+    //private final ProcessedXboxController m_controller;
 
-    /** Creates a new ClimberJoystickTeleOp. */
+
     public ClimberJoystickTeleOp(
         ClimberSubsystem climberSubsystem, ProcessedXboxController controller) {
       m_climberSubsystem = climberSubsystem;
@@ -211,5 +209,5 @@ public class ClimberSubsystem extends SubsystemBase {
     public boolean isFinished() {
       return false;
     }
-  }
+  }*/
 }
