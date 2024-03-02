@@ -49,7 +49,7 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.indexer;
 
 import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.LaserCan.RegionOfInterest;
@@ -68,7 +68,7 @@ import org.littletonrobotics.junction.Logger;
  * @remarks Motor config is based on the CTRE Phoenix 5 library PositionClosedLoop example
  *     https://github.com/CrossTheRoadElec/Phoenix5-Examples/blob/master/Java%20General/PositionClosedLoop/src/main/java/frc/robot/Robot.java
  */
-public class IntakeSubsystem extends SubsystemBase {
+public class IndexerSubsystem extends SubsystemBase {
 
   ////////////////////////////////////
   // CONSTANTS
@@ -128,10 +128,10 @@ public class IntakeSubsystem extends SubsystemBase {
       LaserCan.TimingBudget.TIMING_BUDGET_33MS;
 
   /** Subsystem I/O to use */
-  private final IntakeSubsystemIO m_io;
+  private final IndexerSubsystemIO m_io;
 
   /** Logged subsystem inputs */
-  private final IntakeSubsystemInputs m_inputs = new IntakeSubsystemInputs("");
+  private final IndexerSubsystemInputs m_inputs = new IndexerSubsystemInputs("");
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -139,7 +139,7 @@ public class IntakeSubsystem extends SubsystemBase {
    *
    * @param io Subsystem I/O to use
    */
-  public IntakeSubsystem(IntakeSubsystemIO io) {
+  public IndexerSubsystem(IndexerSubsystemIO io) {
     m_io = io;
     m_io.initialize();
   }
@@ -231,11 +231,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   public static class RunIntakeAtSpeed extends Command {
-    private final IntakeSubsystem m_intakeSubsystem;
+    private final IndexerSubsystem m_intakeSubsystem;
     private final IntakePreset m_preset;
 
     /** Creates a new ClimberJoystickTeleOp. */
-    public RunIntakeAtSpeed(IntakeSubsystem intakeSubsystem, IntakePreset preset) {
+    public RunIntakeAtSpeed(IndexerSubsystem intakeSubsystem, IntakePreset preset) {
       m_intakeSubsystem = intakeSubsystem;
       m_preset = preset;
       addRequirements(m_intakeSubsystem);

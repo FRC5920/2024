@@ -49,7 +49,7 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.flywheel;
 
 import frc.lib.logging.LoggableLaserCANInputs;
 import frc.lib.logging.LoggableMotorInputs;
@@ -57,7 +57,7 @@ import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 /** Logged inputs for the IntakeSubsystem */
-public class IntakeSubsystemInputs implements LoggableInputs {
+public class FlywheelSubsystemInputs implements LoggableInputs {
   /** Flywheel motor inputs */
   public LoggableMotorInputs flywheel;
   /** Indexer motor inputs */
@@ -70,14 +70,14 @@ public class IntakeSubsystemInputs implements LoggableInputs {
    *
    * @param prefix Prefix the inputs will be logged under
    */
-  public IntakeSubsystemInputs(String prefix) {
+  public FlywheelSubsystemInputs(String prefix) {
     flywheel = new LoggableMotorInputs("Flywheel");
     indexer = new LoggableMotorInputs("Indexer");
     laserCAN = new LoggableLaserCANInputs("LaserCAN");
   }
 
   /** Creates an instance of the loggable object during clone() calls */
-  private IntakeSubsystemInputs() {}
+  private FlywheelSubsystemInputs() {}
 
   /** Write input values to log */
   public void toLog(LogTable table) {
@@ -94,8 +94,8 @@ public class IntakeSubsystemInputs implements LoggableInputs {
   }
 
   /** Create a clone of input values */
-  public IntakeSubsystemInputs clone() {
-    IntakeSubsystemInputs copy = new IntakeSubsystemInputs();
+  public FlywheelSubsystemInputs clone() {
+    FlywheelSubsystemInputs copy = new FlywheelSubsystemInputs();
     copy.flywheel = this.flywheel;
     copy.indexer = this.indexer;
     copy.laserCAN = this.laserCAN;

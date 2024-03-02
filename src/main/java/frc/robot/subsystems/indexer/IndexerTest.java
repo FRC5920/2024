@@ -49,94 +49,54 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.indexer;
 
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.joystick.ProcessedXboxController;
+import frc.robot.subsystems.JoystickSubsystem;
 
-/** I/O abstraction for the IntakeSubsystem */
-public interface IntakeSubsystemIO {
+public class IndexerTest extends Command {
+  /** Maximum flywheel velocity in rotations per second */
+  private static final double kMaxFlywheelVelocity = 4000.0;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Initializes and configures the I/O implementation */
-  default void initialize() {}
+  /** Intake subsystem to operate on */
+  private final IndexerSubsystem m_intakeSubsystem;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Update logged input quantities */
-  default void processInputs(IntakeSubsystemInputs inputs) {}
+  /** Controller used to operate the intake */
+  private final ProcessedXboxController m_controller;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired speed of the indexer mechanism as a normalized percentage of full scale
+   * Creates an instance of the comman
    *
-   * @param percent Normalized percentage of full speed (0.0 to 1.0)
+   * @param intakeSubsystem Intake subsystem to operate on
+   * @param joystickSubsystem Joystick subsystem used to control the intake
    */
-  default void setIndexerSpeed(double percent) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Sets the desired velocity of the flywheel mechanism
-   *
-   * @param rotPerSec Desired velocity in rotations per second
-   */
-  default void setFlywheelVelocity(double rotPerSec) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current speed of the indexer mechanism as a percentage of full speed
-   *
-   * @return Normalized percentage of full speed (0.0 to 1.0)
-   */
-  default double getIndexerSpeed() {
-    return 0.0;
+  public IndexerTest(IndexerSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
+    addRequirements(intakeSubsystem);
+    m_intakeSubsystem = intakeSubsystem;
+    m_controller = joystickSubsystem.getOperatorController();
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current velocity of the flywheel mechanism
-   *
-   * @return The velocity of the flywheel mechanism in rotations per second
-   */
-  default double getFlywheelVelocity() {
-    return 0.0;
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {}
+
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+    double indexerSpeed = -1.0 * m_controller.getRightY();
+    double flywheelVelocity = -1.0 * m_controller.getLeftY() * kMaxFlywheelVelocity;
+    m_intakeSubsystem.setIndexerSpeed(indexerSpeed);
+    m_intakeSubsystem.setFlywheelVelocity(flywheelVelocity);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the distance measured by the gamepiece sensor
-   *
-   * @return The distance measured by the gamepiece sensor in meters
-   */
-  default double getGamepieceDistance() {
-    return 0.0;
-  }
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {}
 
-  /** Parameters used to configure the subsystem I/O */
-  public static class Config {
-    public final RobotCANBus canBus;
-    public final CANDevice flywheelMotorDevice;
-    public final double flywheelGearRatio;
-    public final boolean invertFlywheelMotor;
-    public final double maxFlywheelVelocity;
-
-    public final CANDevice indexerMotorDevice;
-    public final double indexerGearRatio;
-    public final boolean invertIndexerMotor;
-    public final double maxIndexerSpeed;
-
-    public final CANDevice gamepieceSensorDevice;
-
-    public Config() {
-      this.canBus = IntakeSubsystem.kCANBus;
-      this.flywheelMotorDevice = IntakeSubsystem.kFlywheelMotorCANDevice;
-      this.flywheelGearRatio = IntakeSubsystem.kFlywheelMotorGearRatio;
-      this.invertFlywheelMotor = IntakeSubsystem.kFlywheelMotorInverted;
-      this.maxFlywheelVelocity = IntakeSubsystem.kMaxFlywheelMotorVelocity;
-      this.indexerMotorDevice = IntakeSubsystem.kIndexerMotorCANDevice;
-      this.indexerGearRatio = IntakeSubsystem.kIndexerMotorGearRatio;
-      this.invertIndexerMotor = IntakeSubsystem.kIndexerMotorInverted;
-      this.maxIndexerSpeed = IntakeSubsystem.kMaxIndexerSpeed;
-      this.gamepieceSensorDevice = IntakeSubsystem.kGamepieceSensorCANDevice;
-    }
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
   }
 }

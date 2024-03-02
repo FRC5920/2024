@@ -49,55 +49,54 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.flywheel;
 
-import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.joystick.ProcessedXboxController;
+import frc.robot.subsystems.JoystickSubsystem;
 
-/** Add your docs here. */
-public class IntakeSubsystemIOSim extends IntakeSubsystemIOReal {
+public class FlywheelTestCommand extends Command {
+  /** Maximum flywheel velocity in rotations per second */
+  private static final double kMaxFlywheelVelocity = 4000.0;
 
-  /** Simulated rotor inertia used for the indexer motor */
-  private static final double kIndexerRotorInertia = 0.001;
+  /** Intake subsystem to operate on */
+  private final FlywheelSubsystem m_intakeSubsystem;
 
-  /** Simulated rotor inertia used for the flywheel motor */
-  private static final double kFlywheelRotorInertia = 0.001;
+  /** Controller used to operate the intake */
+  private final ProcessedXboxController m_controller;
 
-  /** Simulated indexer motor */
-  private final SimulatedDevice m_simIndexer;
-
-  /** Simulated flywheel motor */
-  private final SimulatedDevice m_simFlywheel;
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Creates an instance of the I/O implementation
+   * Creates an instance of the comman
    *
-   * @param config Configuration values for the I/O implementation
+   * @param intakeSubsystem Intake subsystem to operate on
+   * @param joystickSubsystem Joystick subsystem used to control the intake
    */
-  public IntakeSubsystemIOSim(IntakeSubsystemIO.Config config) {
-    super(config);
-    m_simFlywheel = new SimulatedDevice(new TalonFXProfile(m_flywheelMotor, kFlywheelRotorInertia));
-    m_simIndexer =
-        new SimulatedDevice(
-            new TalonSRXSimProfile(
-                m_indexerMotor, DCMotor.getAndymarkRs775_125(1), kIndexerRotorInertia));
+  public FlywheelTestCommand(FlywheelSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
+    addRequirements(intakeSubsystem);
+    m_intakeSubsystem = intakeSubsystem;
+    m_controller = joystickSubsystem.getOperatorController();
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * This method is called each robot cycle to process inputs to the subsystem
-   *
-   * @param inputs Object to populate with subsystem input values to be logged
-   */
-  public void processInputs(IntakeSubsystemInputs inputs) {
-    // Update device simulations
-    m_simFlywheel.calculate();
-    m_simIndexer.calculate();
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {}
 
-    // Process inputs
-    super.processInputs(inputs);
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+    double indexerSpeed = -1.0 * m_controller.getRightY();
+    double flywheelVelocity = -1.0 * m_controller.getLeftY() * kMaxFlywheelVelocity;
+    m_intakeSubsystem.setIndexerSpeed(indexerSpeed);
+    m_intakeSubsystem.setFlywheelVelocity(flywheelVelocity);
+  }
+
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {}
+
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
   }
 }

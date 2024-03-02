@@ -49,7 +49,7 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.flywheel;
 
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
@@ -70,7 +70,7 @@ import frc.lib.utility.Alert;
 import java.util.ArrayList;
 
 /** Implementation of the IntakeSubsystemIO interface using real hardware */
-public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
+public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
 
   /** PID slot used for Flywheel voltage control requests */
   private static final int kFlywheelVoltsPIDSlot = 0;
@@ -135,7 +135,7 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    *
    * @param config Configuration values for the I/O implementation
    */
-  public IntakeSubsystemIOReal(IntakeSubsystemIO.Config config) {
+  public FlywheelSubsystemIOReal(FlywheelSubsystemIO.Config config) {
     m_config = config;
     m_flywheelMotor = new TalonFX(config.flywheelMotorDevice.id(), config.canBus.name);
     m_indexerMotor = new WPI_TalonSRX(config.indexerMotorDevice.id());
@@ -162,7 +162,7 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
    *
    * @param inputs Object to populate with subsystem input values to be logged
    */
-  public void processInputs(IntakeSubsystemInputs inputs) {
+  public void processInputs(FlywheelSubsystemInputs inputs) {
     // Get input measurements for flywheel
     inputs.flywheel.velocity = getFlywheelVelocity();
     inputs.flywheel.voltage = m_flywheelVoltageSignal.refresh().getValueAsDouble();
@@ -339,9 +339,9 @@ public class IntakeSubsystemIOReal implements IntakeSubsystemIO {
   private void configureLaserCAN() {
     // Initialise the settings of the LaserCAN
     try {
-      m_gamepieceSensor.setRangingMode(IntakeSubsystem.kLaserCANRangingMode);
-      m_gamepieceSensor.setRegionOfInterest(IntakeSubsystem.kLaserCANRegionOfInterest);
-      m_gamepieceSensor.setTimingBudget(IntakeSubsystem.kLaserCANTimingBudget);
+      m_gamepieceSensor.setRangingMode(FlywheelSubsystem.kLaserCANRangingMode);
+      m_gamepieceSensor.setRegionOfInterest(FlywheelSubsystem.kLaserCANRegionOfInterest);
+      m_gamepieceSensor.setTimingBudget(FlywheelSubsystem.kLaserCANTimingBudget);
     } catch (ConfigurationFailedException e) {
       s_laserCANConfigFailedAlert.set(true);
       BotLog.Errorf("LaserCAN configuration failed. Error: " + e);
