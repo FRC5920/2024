@@ -51,54 +51,50 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.flywheel;
 
-import frc.lib.logging.LoggableLaserCANInputs;
-import frc.lib.logging.LoggableMotorInputs;
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
+import edu.wpi.first.wpilibj2.command.Command;
 
-/** Logged inputs for the IntakeSubsystem */
-public class FlywheelSubsystemInputs implements LoggableInputs {
-  /** Flywheel motor inputs */
-  public LoggableMotorInputs flywheel;
-  /** Indexer motor inputs */
-  public LoggableMotorInputs indexer;
-  /** Gamepiece sensor inputs */
-  public LoggableLaserCANInputs laserCAN;
+//////////////////////////////////////////////////////////////////////////////////////////////////
+public class RunFlywheelAtSpeed extends Command {
+  private final FlywheelSubsystem m_intakeSubsystem;
+  private final FlywheelPreset m_preset;
 
-  /**
-   * Creates an instance of the inputs and sets the prefix to log them under
-   *
-   * @param prefix Prefix the inputs will be logged under
-   */
-  public FlywheelSubsystemInputs(String prefix) {
-    flywheel = new LoggableMotorInputs("Flywheel");
-    indexer = new LoggableMotorInputs("Indexer");
-    laserCAN = new LoggableLaserCANInputs("LaserCAN");
+  /** Creates a new ClimberJoystickTeleOp. */
+  public RunFlywheelAtSpeed(FlywheelSubsystem intakeSubsystem, FlywheelPreset preset) {
+    m_intakeSubsystem = intakeSubsystem;
+    m_preset = preset;
+    addRequirements(m_intakeSubsystem);
   }
 
-  /** Creates an instance of the loggable object during clone() calls */
-  private FlywheelSubsystemInputs() {}
-
-  /** Write input values to log */
-  public void toLog(LogTable table) {
-    flywheel.toLog(table);
-    indexer.toLog(table);
-    laserCAN.toLog(table);
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {
+    m_intakeSubsystem.setFlywheelVelocity(m_preset.flywheelRPS);
   }
 
-  /** Read input values from log */
-  public void fromLog(LogTable table) {
-    flywheel.fromLog(table);
-    indexer.fromLog(table);
-    laserCAN.fromLog(table);
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {}
+
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {
+    m_intakeSubsystem.setFlywheelVelocity(0.0);
   }
 
-  /** Create a clone of input values */
-  public FlywheelSubsystemInputs clone() {
-    FlywheelSubsystemInputs copy = new FlywheelSubsystemInputs();
-    copy.flywheel = this.flywheel;
-    copy.indexer = this.indexer;
-    copy.laserCAN = this.laserCAN;
-    return copy;
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
+  }
+
+  public enum FlywheelPreset {
+    IntakeRing(10.0),
+    ShootRing(-3000.0);
+
+    public final double flywheelRPS;
+
+    private FlywheelPreset(double flywheelRPS) {
+      this.flywheelRPS = flywheelRPS;
+    }
   }
 }

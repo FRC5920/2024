@@ -54,7 +54,6 @@ package frc.robot.subsystems.climber;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
 import frc.robot.subsystems.climber.ClimberSubsystem.ClimberMotorID;
-import frc.robot.subsystems.intake.IntakeSubsystem;
 
 /** Interface implemented by subsystem I/O */
 public interface ClimberSubsystemIO {
@@ -105,7 +104,7 @@ public interface ClimberSubsystemIO {
     public final double maxMotorOutputPercent;
 
     public Config() {
-      this.canBus = IntakeSubsystem.kCANBus;
+      this.canBus = ClimberSubsystem.kCANBus;
       this.leaderMotorDevice = ClimberSubsystem.kLeaderMotorDevice;
       this.followerMotorDevice = ClimberSubsystem.kFollowerMotorDevice;
       this.climberGearRatio = ClimberSubsystem.kClimberMotorGearRatio;

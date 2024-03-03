@@ -53,7 +53,6 @@ package frc.robot.subsystems.pivot;
 
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
-import frc.robot.subsystems.intake.IntakeSubsystem;
 import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
 
 /** Interface implemented by subsystem I/O */
@@ -101,7 +100,7 @@ public interface PivotSubsystemIO {
     public final double cancoderOffsetRot;
 
     public Config() {
-      this.canBus = IntakeSubsystem.kCANBus;
+      this.canBus = PivotSubsystem.kCANBus;
       this.leaderMotorDevice = PivotSubsystem.kLeaderMotorDevice;
       this.followerMotorDevice = PivotSubsystem.kFollowerMotorDevice;
       this.cancoderDevice = PivotSubsystem.kCANcoderDevice;

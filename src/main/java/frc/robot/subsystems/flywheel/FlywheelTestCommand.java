@@ -71,7 +71,8 @@ public class FlywheelTestCommand extends Command {
    * @param intakeSubsystem Intake subsystem to operate on
    * @param joystickSubsystem Joystick subsystem used to control the intake
    */
-  public FlywheelTestCommand(FlywheelSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
+  public FlywheelTestCommand(
+      FlywheelSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
     addRequirements(intakeSubsystem);
     m_intakeSubsystem = intakeSubsystem;
     m_controller = joystickSubsystem.getOperatorController();
@@ -84,9 +85,7 @@ public class FlywheelTestCommand extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double indexerSpeed = -1.0 * m_controller.getRightY();
     double flywheelVelocity = -1.0 * m_controller.getLeftY() * kMaxFlywheelVelocity;
-    m_intakeSubsystem.setIndexerSpeed(indexerSpeed);
     m_intakeSubsystem.setFlywheelVelocity(flywheelVelocity);
   }
 

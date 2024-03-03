@@ -56,24 +56,21 @@ import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.subsystems.JoystickSubsystem;
 
 public class IndexerTest extends Command {
-  /** Maximum flywheel velocity in rotations per second */
-  private static final double kMaxFlywheelVelocity = 4000.0;
+  /** Indexer subsystem to operate on */
+  private final IndexerSubsystem m_indexerSubsystem;
 
-  /** Intake subsystem to operate on */
-  private final IndexerSubsystem m_intakeSubsystem;
-
-  /** Controller used to operate the intake */
+  /** Controller used to operate the indexer */
   private final ProcessedXboxController m_controller;
 
   /**
    * Creates an instance of the comman
    *
-   * @param intakeSubsystem Intake subsystem to operate on
-   * @param joystickSubsystem Joystick subsystem used to control the intake
+   * @param indexerSubsystem indexer subsystem to operate on
+   * @param joystickSubsystem Joystick subsystem used to control the indexer
    */
-  public IndexerTest(IndexerSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
-    addRequirements(intakeSubsystem);
-    m_intakeSubsystem = intakeSubsystem;
+  public IndexerTest(IndexerSubsystem indexerSubsystem, JoystickSubsystem joystickSubsystem) {
+    addRequirements(indexerSubsystem);
+    m_indexerSubsystem = indexerSubsystem;
     m_controller = joystickSubsystem.getOperatorController();
   }
 
@@ -85,9 +82,7 @@ public class IndexerTest extends Command {
   @Override
   public void execute() {
     double indexerSpeed = -1.0 * m_controller.getRightY();
-    double flywheelVelocity = -1.0 * m_controller.getLeftY() * kMaxFlywheelVelocity;
-    m_intakeSubsystem.setIndexerSpeed(indexerSpeed);
-    m_intakeSubsystem.setFlywheelVelocity(flywheelVelocity);
+    m_indexerSubsystem.setIndexerSpeed(indexerSpeed);
   }
 
   // Called once the command ends or is interrupted.

@@ -58,8 +58,6 @@ import org.littletonrobotics.junction.inputs.LoggableInputs;
 
 /** Logged inputs for the IntakeSubsystem */
 public class IndexerSubsystemInputs implements LoggableInputs {
-  /** Flywheel motor inputs */
-  public LoggableMotorInputs flywheel;
   /** Indexer motor inputs */
   public LoggableMotorInputs indexer;
   /** Gamepiece sensor inputs */
@@ -71,7 +69,6 @@ public class IndexerSubsystemInputs implements LoggableInputs {
    * @param prefix Prefix the inputs will be logged under
    */
   public IndexerSubsystemInputs(String prefix) {
-    flywheel = new LoggableMotorInputs("Flywheel");
     indexer = new LoggableMotorInputs("Indexer");
     laserCAN = new LoggableLaserCANInputs("LaserCAN");
   }
@@ -81,14 +78,12 @@ public class IndexerSubsystemInputs implements LoggableInputs {
 
   /** Write input values to log */
   public void toLog(LogTable table) {
-    flywheel.toLog(table);
     indexer.toLog(table);
     laserCAN.toLog(table);
   }
 
   /** Read input values from log */
   public void fromLog(LogTable table) {
-    flywheel.fromLog(table);
     indexer.fromLog(table);
     laserCAN.fromLog(table);
   }
@@ -96,7 +91,6 @@ public class IndexerSubsystemInputs implements LoggableInputs {
   /** Create a clone of input values */
   public IndexerSubsystemInputs clone() {
     IndexerSubsystemInputs copy = new IndexerSubsystemInputs();
-    copy.flywheel = this.flywheel;
     copy.indexer = this.indexer;
     copy.laserCAN = this.laserCAN;
     return copy;

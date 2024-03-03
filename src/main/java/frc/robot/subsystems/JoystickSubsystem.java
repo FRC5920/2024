@@ -64,8 +64,6 @@ import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.PivotCommand;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
 import frc.robot.commands.DriveWithZTargeting;
-import frc.robot.subsystems.intake.IntakeSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsystem.IntakePreset;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 
 /** A subsystem providing Xbox controllers for driving the robot manually */
@@ -135,26 +133,30 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // reset the field-centric heading on left bumper press
     driverController.back.onTrue(driveTrain.runOnce(() -> driveTrain.seedFieldRelative()));
 
-    driverController.leftBumper.whileTrue(
-        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+    // driverController.leftBumper.whileTrue(
+    //     new RunIndexerAtSpeed.RunIntakeAtSpeed(botContainer.intakeSubsystem,
+    // IntakePreset.ShootRing));
 
-    driverController.rightBumper.whileTrue(
-        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+    // driverController.rightBumper.whileTrue(
+    //     new RunIndexerAtSpeed.RunIntakeAtSpeed(botContainer.intakeSubsystem,
+    // IntakePreset.ShootRing));
 
-    // Driver intake button
+    // Driver indexer button
     // Old
     // driverController.rightTriggerAsButton.whileTrue(
     // new IntakeSubsystem.RunIntakeAtSpeed(
     // botContainer.intakeSubsystem, IntakePreset.IntakeRing));
     // New
-    driverController.rightTriggerAsButton.whileTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake)
-            .andThen(
-                new IntakeSubsystem.RunIntakeAtSpeed(
-                    botContainer.intakeSubsystem, IntakePreset.IntakeRing))
-            .andThen(new DriveWithZTargeting(driveTrain, driverController, CameraTarget.GameNote))
-            .finallyDo(
-                (interrupted) -> new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park)));
+    // driverController.rightTriggerAsButton.whileTrue(
+    //     new PivotCommand(botContainer.pivotSubsystem, AnglePreset.indexer)
+    //         .andThen(
+    //             new RunIndexerAtSpeed.RunIntakeAtSpeed(
+    //                 botContainer.indexerSubsystem, IndexerPreset.IntakeRing))
+    //         .andThen(new DriveWithZTargeting(driveTrain, driverController,
+    // CameraTarget.GameNote))
+    //         .finallyDo(
+    //             (interrupted) -> new PivotCommand(botContainer.pivotSubsystem,
+    // AnglePreset.Park)));
 
     driverController.leftBumper.whileTrue(
         new DriveWithZTargeting(driveTrain, driverController, CameraTarget.AprilTag2D));
@@ -198,11 +200,12 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     operatorController.povDown.onTrue(
         new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
-    operatorController.leftTriggerAsButton.whileTrue(
-        new IntakeSubsystem.RunIntakeAtSpeed(
-            botContainer.intakeSubsystem, IntakePreset.IntakeRing));
-    operatorController.rightTriggerAsButton.whileTrue(
-        new IntakeSubsystem.RunIntakeAtSpeed(botContainer.intakeSubsystem, IntakePreset.ShootRing));
+    // operatorController.leftTriggerAsButton.whileTrue(
+    //     new RunIndexerAtSpeed.RunIntakeAtSpeed(
+    //         botContainer.intakeSubsystem, IntakePreset.IntakeRing));
+    // operatorController.rightTriggerAsButton.whileTrue(
+    //     new RunIndexerAtSpeed.RunIntakeAtSpeed(botContainer.intakeSubsystem,
+    // IntakePreset.ShootRing));
 
     // Map bumpers
     operatorController.leftBumper.whileTrue(kDoNothing);

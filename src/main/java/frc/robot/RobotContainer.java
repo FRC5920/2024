@@ -60,6 +60,7 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.LED.ColorConstants;
+import frc.robot.Constants.CANDevice;
 import frc.robot.autos.AutoDashboardTab;
 import frc.robot.commands.TeleopSwerveCTRE;
 import frc.robot.commands.autoCommands.ShootAmpClose;
@@ -71,10 +72,14 @@ import frc.robot.subsystems.climber.ClimberSubsystemIO;
 import frc.robot.subsystems.climber.ClimberSubsystemIOReal;
 import frc.robot.subsystems.climber.ClimberSubsystemIOSim;
 import frc.robot.subsystems.dashboard.DashboardSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsystem;
-import frc.robot.subsystems.intake.IntakeSubsystemIO;
-import frc.robot.subsystems.intake.IntakeSubsystemIOReal;
-import frc.robot.subsystems.intake.IntakeSubsystemIOSim;
+import frc.robot.subsystems.flywheel.FlywheelSubsystem;
+import frc.robot.subsystems.flywheel.FlywheelSubsystemIO;
+import frc.robot.subsystems.flywheel.FlywheelSubsystemIOReal;
+import frc.robot.subsystems.flywheel.FlywheelSubsystemIOSim;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.indexer.IndexerSubsystemIO;
+import frc.robot.subsystems.indexer.IndexerSubsystemIOReal;
+import frc.robot.subsystems.indexer.IndexerSubsystemIOSim;
 import frc.robot.subsystems.pivot.PivotSubsystem;
 import frc.robot.subsystems.pivot.PivotSubsystemIO;
 import frc.robot.subsystems.pivot.PivotSubsystemIOReal;
@@ -96,8 +101,11 @@ public class RobotContainer {
   /** Climber subsystem */
   public final ClimberSubsystem climberSubsystem;
 
-  /** Intake subsystem */
-  public final IntakeSubsystem intakeSubsystem;
+  /** Flywheel subsystem */
+  public final FlywheelSubsystem flywheelSubsystem;
+
+  /** Indexer subsystem */
+  public final IndexerSubsystem indexerSubsystem;
 
   // Subsystem facilitating display of dashboard tabs
   public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
@@ -124,26 +132,35 @@ public class RobotContainer {
     autoDashboardTab = new AutoDashboardTab();
 
     ClimberSubsystemIO climberIO = null;
-    IntakeSubsystemIO intakeIO = null;
+    FlywheelSubsystemIO flywheelIO = null;
+    IndexerSubsystemIO indexerIO = null;
     PivotSubsystemIO pivotIO = null;
 
     switch (Constants.getMode()) {
       case REAL:
         climberIO = new ClimberSubsystemIOReal(new ClimberSubsystemIO.Config());
-        intakeIO = new IntakeSubsystemIOReal(new IntakeSubsystemIO.Config());
+        flywheelIO = new FlywheelSubsystemIOReal(CANDevice.IntakeFlywheelMotor);
+        indexerIO =
+            new IndexerSubsystemIOReal(
+                CANDevice.IntakeIndexerMotor, CANDevice.IntakeGamepieceSensor);
         pivotIO = new PivotSubsystemIOReal(new PivotSubsystemIO.Config());
         break;
 
       case SIM:
         climberIO = new ClimberSubsystemIOSim(new ClimberSubsystemIO.Config());
-        intakeIO = new IntakeSubsystemIOSim(new IntakeSubsystemIO.Config());
+        flywheelIO = new FlywheelSubsystemIOSim(CANDevice.IntakeFlywheelMotor);
+        indexerIO =
+            new IndexerSubsystemIOSim(
+                CANDevice.IntakeIndexerMotor, CANDevice.IntakeGamepieceSensor);
         pivotIO = new PivotSubsystemIOSim(new PivotSubsystemIO.Config());
         break;
 
       case REPLAY:
         // Create empty implementations for log replay
         climberIO = new ClimberSubsystemIO() {};
-        intakeIO = new IntakeSubsystemIO() {};
+        flywheelIO = new FlywheelSubsystemIO() {};
+        indexerIO = new IndexerSubsystemIO() {};
+        pivotIO = new PivotSubsystemIO() {};
         break;
     }
 
@@ -153,8 +170,11 @@ public class RobotContainer {
         new ClimberSubsystem.ClimberJoystickTeleOp(
             climberSubsystem, joystickSubsystem.getOperatorController()));
 
-    // Create the intake subsystem
-    intakeSubsystem = new IntakeSubsystem(intakeIO);
+    // Create the flywheel subsystem
+    flywheelSubsystem = new FlywheelSubsystem(flywheelIO);
+
+    // Create the indexer subsystem
+    indexerSubsystem = new IndexerSubsystem(indexerIO);
 
     // Create the pivot subsystem
     pivotSubsystem = new PivotSubsystem(pivotIO);

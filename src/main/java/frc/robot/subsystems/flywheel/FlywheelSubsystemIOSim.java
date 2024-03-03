@@ -51,22 +51,16 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.flywheel;
 
-import edu.wpi.first.math.system.plant.DCMotor;
+import frc.lib.logging.LoggableMotorInputs;
+import frc.robot.Constants.CANDevice;
 import frc.robot.sim.ctreSim.SimulatedDevice;
 import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
 
 /** Add your docs here. */
 public class FlywheelSubsystemIOSim extends FlywheelSubsystemIOReal {
 
-  /** Simulated rotor inertia used for the indexer motor */
-  private static final double kIndexerRotorInertia = 0.001;
-
   /** Simulated rotor inertia used for the flywheel motor */
   private static final double kFlywheelRotorInertia = 0.001;
-
-  /** Simulated indexer motor */
-  private final SimulatedDevice m_simIndexer;
 
   /** Simulated flywheel motor */
   private final SimulatedDevice m_simFlywheel;
@@ -77,13 +71,9 @@ public class FlywheelSubsystemIOSim extends FlywheelSubsystemIOReal {
    *
    * @param config Configuration values for the I/O implementation
    */
-  public FlywheelSubsystemIOSim(FlywheelSubsystemIO.Config config) {
-    super(config);
+  public FlywheelSubsystemIOSim(CANDevice flywheelMotorDevice) {
+    super(flywheelMotorDevice);
     m_simFlywheel = new SimulatedDevice(new TalonFXProfile(m_flywheelMotor, kFlywheelRotorInertia));
-    m_simIndexer =
-        new SimulatedDevice(
-            new TalonSRXSimProfile(
-                m_indexerMotor, DCMotor.getAndymarkRs775_125(1), kIndexerRotorInertia));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,10 +82,10 @@ public class FlywheelSubsystemIOSim extends FlywheelSubsystemIOReal {
    *
    * @param inputs Object to populate with subsystem input values to be logged
    */
-  public void processInputs(FlywheelSubsystemInputs inputs) {
+  @Override
+  public void processInputs(LoggableMotorInputs inputs) {
     // Update device simulations
     m_simFlywheel.calculate();
-    m_simIndexer.calculate();
 
     // Process inputs
     super.processInputs(inputs);

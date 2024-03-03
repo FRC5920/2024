@@ -51,11 +51,9 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.flywheel;
 
-import au.grapplerobotics.LaserCan;
-import au.grapplerobotics.LaserCan.RegionOfInterest;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.logging.LoggableMotorInputs;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
 import org.littletonrobotics.junction.Logger;
@@ -63,7 +61,7 @@ import org.littletonrobotics.junction.Logger;
 // Reference Phoenix6 example:
 
 /**
- * Subsystem for controlling the extension/retraction of climber mechanisms
+ * Subsystem for controlling the flywheel portion of the intake assembly
  *
  * @remarks Motor config is based on the CTRE Phoenix 5 library PositionClosedLoop example
  *     https://github.com/CrossTheRoadElec/Phoenix5-Examples/blob/master/Java%20General/PositionClosedLoop/src/main/java/frc/robot/Robot.java
@@ -93,45 +91,11 @@ public class FlywheelSubsystem extends SubsystemBase {
   /** Maximum velocity (rotations per second) that the flywheel motor should run at */
   public static final double kMaxFlywheelMotorVelocity = 4000.0;
 
-  ////////////////////////////////////
-  // Indexer Motor Configuration
-  ////////////////////////////////////
-
-  /** CAN device ID of the flywheel motor */
-  public static final CANDevice kIndexerMotorCANDevice = CANDevice.IntakeIndexerMotor;
-
-  /** Gear ratio between the indexer motor and the indexer mechanism */
-  public static final double kIndexerMotorGearRatio = 10.0 / 1.0;
-
-  /** Set to true if the direction of the indexer motor should be reversed */
-  public static final boolean kIndexerMotorInverted = false;
-
-  /** Maximum speed (0.0 to 1.0) that the indexer should run at */
-  public static final double kMaxIndexerSpeed = 1.0;
-
-  ////////////////////////////////////
-  // LaserCAN Configuration
-  ////////////////////////////////////
-
-  /** CAN device ID of the LaserCAN module */
-  public static final CANDevice kGamepieceSensorCANDevice = CANDevice.IntakeGamepieceSensor;
-
-  /** LaserCAN ranging mode */
-  public static final LaserCan.RangingMode kLaserCANRangingMode = LaserCan.RangingMode.SHORT;
-
-  /** LaserCAN Region of Interest */
-  public static final RegionOfInterest kLaserCANRegionOfInterest =
-      new LaserCan.RegionOfInterest(8, 8, 16, 16);
-
-  /** LaserCAN Timing budget */
-  public static final LaserCan.TimingBudget kLaserCANTimingBudget =
-      LaserCan.TimingBudget.TIMING_BUDGET_33MS;
-
   /** Subsystem I/O to use */
   private final FlywheelSubsystemIO m_io;
 
   /** Logged subsystem inputs */
-  private final FlywheelSubsystemInputs m_inputs = new FlywheelSubsystemInputs("");
+  private final LoggableMotorInputs m_inputs = new LoggableMotorInputs("");
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -146,35 +110,13 @@ public class FlywheelSubsystem extends SubsystemBase {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired speed of the indexer mechanism as a normalized percentage of full scale
-   *
-   * @param percent Normalized percentage of full speed (0.0 to 1.0)
-   */
-  public void setIndexerSpeed(double percent) {
-    m_inputs.indexer.targetVelocity = percent;
-    m_io.setIndexerSpeed(percent);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
    * Sets the desired velocity of the flywheel mechanism
    *
    * @param rotPerSec Desired velocity in rotations per second
    */
   public void setFlywheelVelocity(double rotPerSec) {
-    m_inputs.flywheel.targetVelocity = rotPerSec;
+    m_inputs.targetVelocity = rotPerSec;
     m_io.setFlywheelVelocity(rotPerSec);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current speed of the indexer mechanism as a percentage of full speed
-   *
-   * @return Normalized percentage of full speed (0.0 to 1.0)
-   */
-  public double getIndexerSpeed() {
-    double percent = m_io.getIndexerSpeed();
-    return percent;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,18 +126,7 @@ public class FlywheelSubsystem extends SubsystemBase {
    * @return The velocity of the flywheel mechanism in rotations per second
    */
   public double getFlywheelVelocity() {
-    double rotPerSec = m_io.getFlywheelVelocity();
-    return rotPerSec;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the distance measured by the gamepiece sensor
-   *
-   * @return The distance measured by the gamepiece sensor in meters
-   */
-  public double getGamepieceDistance() {
-    return m_io.getGamepieceDistance();
+    return m_inputs.velocity;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -205,64 +136,10 @@ public class FlywheelSubsystem extends SubsystemBase {
     m_io.processInputs(m_inputs);
 
     // Send input data to the logging framework (or update from the log during replay)
-    Logger.processInputs("Intake", m_inputs);
+    Logger.processInputs("Flywheel", m_inputs);
 
     // Display velocities on dashboard
-    SmartDashboard.putNumber("intake/flywheel/setVelocity", m_inputs.flywheel.targetVelocity);
-    SmartDashboard.putNumber("intake/flywheel/velocity", m_inputs.flywheel.velocity);
-    SmartDashboard.putNumber("intake/indexer/setSpeed", m_inputs.indexer.targetVelocity);
-    SmartDashboard.putNumber("intake/indexer/speed", m_inputs.indexer.velocity);
-    SmartDashboard.putNumber("intake/laserCAN/distance", m_inputs.laserCAN.distanceMeters);
-    SmartDashboard.putString("intake/laserCAN/status", m_inputs.laserCAN.status);
-  }
-
-  public enum IntakePreset {
-    IntakeRing(10.0, 0.5),
-    ShootRing(-3000.0, -0.5);
-
-    public final double flywheelRPS;
-    public final double indexerSpeed;
-
-    private IntakePreset(double flywheelRPS, double indexerSpeed) {
-      this.flywheelRPS = flywheelRPS;
-      this.indexerSpeed = indexerSpeed;
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  public static class RunIntakeAtSpeed extends Command {
-    private final FlywheelSubsystem m_intakeSubsystem;
-    private final IntakePreset m_preset;
-
-    /** Creates a new ClimberJoystickTeleOp. */
-    public RunIntakeAtSpeed(FlywheelSubsystem intakeSubsystem, IntakePreset preset) {
-      m_intakeSubsystem = intakeSubsystem;
-      m_preset = preset;
-      addRequirements(m_intakeSubsystem);
-    }
-
-    // Called when the command is initially scheduled.
-    @Override
-    public void initialize() {
-      m_intakeSubsystem.setFlywheelVelocity(m_preset.flywheelRPS);
-      m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
-    }
-
-    // Called every time the scheduler runs while the command is scheduled.
-    @Override
-    public void execute() {}
-
-    // Called once the command ends or is interrupted.
-    @Override
-    public void end(boolean interrupted) {
-      m_intakeSubsystem.setFlywheelVelocity(0.0);
-      m_intakeSubsystem.setIndexerSpeed(0.0);
-    }
-
-    // Returns true when the command should end.
-    @Override
-    public boolean isFinished() {
-      return false;
-    }
+    SmartDashboard.putNumber("Flywheel/setVelocity", m_inputs.targetVelocity);
+    SmartDashboard.putNumber("Flywheel/velocity", m_inputs.velocity);
   }
 }

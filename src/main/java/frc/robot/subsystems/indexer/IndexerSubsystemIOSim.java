@@ -52,8 +52,8 @@
 package frc.robot.subsystems.indexer;
 
 import edu.wpi.first.math.system.plant.DCMotor;
+import frc.robot.Constants.CANDevice;
 import frc.robot.sim.ctreSim.SimulatedDevice;
-import frc.robot.sim.ctreSim.TalonFXProfile;
 import frc.robot.sim.ctreSim.TalonSRXSimProfile;
 
 /** Add your docs here. */
@@ -62,24 +62,18 @@ public class IndexerSubsystemIOSim extends IndexerSubsystemIOReal {
   /** Simulated rotor inertia used for the indexer motor */
   private static final double kIndexerRotorInertia = 0.001;
 
-  /** Simulated rotor inertia used for the flywheel motor */
-  private static final double kFlywheelRotorInertia = 0.001;
-
   /** Simulated indexer motor */
   private final SimulatedDevice m_simIndexer;
-
-  /** Simulated flywheel motor */
-  private final SimulatedDevice m_simFlywheel;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
    * Creates an instance of the I/O implementation
    *
-   * @param config Configuration values for the I/O implementation
+   * @param indexerMotorDevice CAN device associated with the indexer motor
+   * @param indexerMotorDevice CAN device associated with the LaserCAN gamepiece sensor
    */
-  public IndexerSubsystemIOSim(IndexerSubsystemIO.Config config) {
-    super(config);
-    m_simFlywheel = new SimulatedDevice(new TalonFXProfile(m_flywheelMotor, kFlywheelRotorInertia));
+  public IndexerSubsystemIOSim(CANDevice indexerMotorDevice, CANDevice laserCANDevice) {
+    super(indexerMotorDevice, laserCANDevice);
     m_simIndexer =
         new SimulatedDevice(
             new TalonSRXSimProfile(
@@ -92,9 +86,9 @@ public class IndexerSubsystemIOSim extends IndexerSubsystemIOReal {
    *
    * @param inputs Object to populate with subsystem input values to be logged
    */
+  @Override
   public void processInputs(IndexerSubsystemInputs inputs) {
     // Update device simulations
-    m_simFlywheel.calculate();
     m_simIndexer.calculate();
 
     // Process inputs

@@ -80,11 +80,15 @@ public class LoggableLaserCANInputs implements LoggableInputs {
           TimingBudget.TIMING_BUDGET_100MS, 0.100);
 
   // Log keys for measurements
+  private String isValidKey;
   private String statusKey;
   private String distanceKey;
   private String ambientLevelKey;
   private String isLongKey;
   private String timingBudgetKey;
+
+  /** true if a valid measurement is present; else false */
+  public boolean isValid = false;
 
   /** String-ified representation of LaserCAN status */
   public String status = "";
@@ -110,6 +114,7 @@ public class LoggableLaserCANInputs implements LoggableInputs {
    * @param prefix Prefix the inputs will be logged under
    */
   public LoggableLaserCANInputs(String prefix) {
+    isValidKey = prefix + "/isValid";
     statusKey = prefix + "/status";
     distanceKey = prefix + "/distanceMeters";
     ambientLevelKey = prefix + "/ambientLevel";
@@ -119,11 +124,27 @@ public class LoggableLaserCANInputs implements LoggableInputs {
   }
 
   /** Creates an instance of the loggable object during clone() calls */
-  private LoggableLaserCANInputs() {}
+  private LoggableLaserCANInputs(LoggableLaserCANInputs other) {
+    // Copy log keys
+    this.statusKey = other.statusKey;
+    this.distanceKey = other.distanceKey;
+    this.ambientLevelKey = other.ambientLevelKey;
+    this.isLongKey = other.isLongKey;
+    this.timingBudgetKey = other.timingBudgetKey;
+
+    // Copy measurements
+    this.status = other.status;
+    this.distanceMeters = other.distanceMeters;
+    this.ambientLevel = other.ambientLevel;
+    this.isLongDistance = other.isLongDistance;
+    this.timingBudgetSec = other.timingBudgetSec;
+    this.roi = other.roi;
+  }
 
   /** Copies values from a LaserCAN measurement */
   public void fromMeasurement(Measurement measurement) {
     if (measurement != null) {
+      isValid = (measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT);
       status = kStatusMap.getOrDefault(measurement.status, String.format("%d", measurement.status));
       distanceMeters = measurement.distance_mm * 0.001;
       ambientLevel = measurement.ambient;
@@ -134,6 +155,7 @@ public class LoggableLaserCANInputs implements LoggableInputs {
       roi.w = measurement.roi.w;
       roi.h = measurement.roi.h;
     } else {
+      isValid = false;
       status = "None";
       distanceMeters = -1.0;
       ambientLevel = -1;
@@ -147,6 +169,7 @@ public class LoggableLaserCANInputs implements LoggableInputs {
   }
 
   public void toLog(LogTable table) {
+    table.put(isValidKey, isValid);
     table.put(statusKey, status);
     table.put(distanceKey, distanceMeters);
     table.put(ambientLevelKey, ambientLevel);
@@ -156,6 +179,7 @@ public class LoggableLaserCANInputs implements LoggableInputs {
   }
 
   public void fromLog(LogTable table) {
+    isValid = table.get(isValidKey, isValid);
     status = table.get(statusKey, status);
     distanceMeters = table.get(distanceKey, distanceMeters);
     ambientLevel = table.get(ambientLevelKey, ambientLevel);
@@ -165,23 +189,7 @@ public class LoggableLaserCANInputs implements LoggableInputs {
   }
 
   public LoggableLaserCANInputs clone() {
-    LoggableLaserCANInputs copy = new LoggableLaserCANInputs();
-    // Copy log keys
-    copy.statusKey = this.statusKey;
-    copy.distanceKey = this.distanceKey;
-    copy.ambientLevelKey = this.ambientLevelKey;
-    copy.isLongKey = this.isLongKey;
-    copy.timingBudgetKey = this.timingBudgetKey;
-
-    // Copy measurements
-    copy.status = this.status;
-    copy.distanceMeters = this.distanceMeters;
-    copy.ambientLevel = this.ambientLevel;
-    copy.isLongDistance = this.isLongDistance;
-    copy.timingBudgetSec = this.timingBudgetSec;
-    copy.roi = this.roi;
-
-    return copy;
+    return new LoggableLaserCANInputs(this);
   }
 
   /** A loggable RegionOfInterest object */
