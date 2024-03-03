@@ -78,9 +78,6 @@ import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
 /** Implementation of the PivotSubsystemIO interface using real hardware */
 public class PivotSubsystemIOReal implements PivotSubsystemIO {
 
-  /** I/O configuration */
-  protected final PivotSubsystemIO.Config m_config;
-
   /** Master motor used to control the pivot angle */
   protected final TalonFX m_pivotLeader;
 
@@ -124,11 +121,12 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
    *
    * @config I/O configuration
    */
-  public PivotSubsystemIOReal(PivotSubsystemIO.Config config) {
-    m_config = config;
-    m_pivotLeader = new TalonFX(config.leaderMotorDevice.id(), config.canBus.name);
-    m_pivotFollower = new TalonFX(config.followerMotorDevice.id(), config.canBus.name);
-    m_canCoder = new CANcoder(config.cancoderDevice.id(), config.canBus.name);
+  public PivotSubsystemIOReal() {
+    m_pivotLeader =
+        new TalonFX(PivotSubsystem.kLeaderMotorDevice.id(), PivotSubsystem.kCANBus.name);
+    m_pivotFollower =
+        new TalonFX(PivotSubsystem.kFollowerMotorDevice.id(), PivotSubsystem.kCANBus.name);
+    m_canCoder = new CANcoder(PivotSubsystem.kCANcoderDevice.id(), PivotSubsystem.kCANBus.name);
 
     m_leaderPositionSignal = m_pivotLeader.getPosition();
     m_leaderVoltageSignal = m_pivotLeader.getMotorVoltage();
@@ -230,7 +228,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
     cancoderConfig.MagnetSensor.AbsoluteSensorRange = AbsoluteSensorRangeValue.Unsigned_0To1;
     cancoderConfig.MagnetSensor.SensorDirection = SensorDirectionValue.Clockwise_Positive;
-    cancoderConfig.MagnetSensor.MagnetOffset = m_config.cancoderOffsetRot;
+    cancoderConfig.MagnetSensor.MagnetOffset = PivotSubsystem.kCANcoderMagnetOffsetRot;
 
     m_canCoder.getConfigurator().apply(cancoderConfig);
   }

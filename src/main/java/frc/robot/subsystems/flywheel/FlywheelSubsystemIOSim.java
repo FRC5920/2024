@@ -52,7 +52,6 @@
 package frc.robot.subsystems.flywheel;
 
 import frc.lib.logging.LoggableMotorInputs;
-import frc.robot.Constants.CANDevice;
 import frc.robot.sim.ctreSim.SimulatedDevice;
 import frc.robot.sim.ctreSim.TalonFXProfile;
 
@@ -66,13 +65,9 @@ public class FlywheelSubsystemIOSim extends FlywheelSubsystemIOReal {
   private final SimulatedDevice m_simFlywheel;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Creates an instance of the I/O implementation
-   *
-   * @param config Configuration values for the I/O implementation
-   */
-  public FlywheelSubsystemIOSim(CANDevice flywheelMotorDevice) {
-    super(flywheelMotorDevice);
+  /** Creates an instance of the I/O implementation */
+  public FlywheelSubsystemIOSim() {
+    super();
     m_simFlywheel = new SimulatedDevice(new TalonFXProfile(m_flywheelMotor, kFlywheelRotorInertia));
   }
 

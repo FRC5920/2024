@@ -56,6 +56,7 @@ import au.grapplerobotics.LaserCan.RegionOfInterest;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
 import org.littletonrobotics.junction.Logger;
 
@@ -80,6 +81,9 @@ public class IndexerSubsystem extends SubsystemBase {
   // Indexer Motor Configuration
   ////////////////////////////////////
 
+  /** CAN device ID of the flywheel motor */
+  public static final CANDevice kIndexerMotorDevice = CANDevice.IntakeIndexerMotor;
+
   /** Gear ratio between the indexer motor and the indexer mechanism */
   public static final double kIndexerMotorGearRatio = 10.0 / 1.0;
 
@@ -92,6 +96,9 @@ public class IndexerSubsystem extends SubsystemBase {
   ////////////////////////////////////
   // LaserCAN Configuration
   ////////////////////////////////////
+
+  /** CAN device ID of the flywheel motor */
+  public static final CANDevice kLaserCANDevice = CANDevice.IntakeGamepieceSensor;
 
   /** LaserCAN ranging mode */
   public static final LaserCan.RangingMode kLaserCANRangingMode = LaserCan.RangingMode.SHORT;

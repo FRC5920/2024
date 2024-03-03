@@ -51,8 +51,6 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.pivot;
 
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
 import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
 
 /** Interface implemented by subsystem I/O */
@@ -88,24 +86,5 @@ public interface PivotSubsystemIO {
    */
   default double getMotorAngleDeg(PivotMotorID motorID) {
     return 0.0;
-  }
-
-  /** Parameters used to configure the subsystem I/O */
-  public static class Config {
-    public final RobotCANBus canBus;
-    public final CANDevice leaderMotorDevice;
-    public final CANDevice followerMotorDevice;
-    public final CANDevice cancoderDevice;
-    public final double pivotGearRatio;
-    public final double cancoderOffsetRot;
-
-    public Config() {
-      this.canBus = PivotSubsystem.kCANBus;
-      this.leaderMotorDevice = PivotSubsystem.kLeaderMotorDevice;
-      this.followerMotorDevice = PivotSubsystem.kFollowerMotorDevice;
-      this.cancoderDevice = PivotSubsystem.kCANcoderDevice;
-      this.pivotGearRatio = PivotSubsystem.kFalconToPivotGearRatio;
-      this.cancoderOffsetRot = PivotSubsystem.kCANcoderMagnetOffsetRot;
-    }
   }
 }

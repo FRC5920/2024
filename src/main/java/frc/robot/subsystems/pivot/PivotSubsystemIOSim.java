@@ -73,12 +73,15 @@ public class PivotSubsystemIOSim extends PivotSubsystemIOReal {
    *
    * @param config Configuration values for the I/O implementation
    */
-  public PivotSubsystemIOSim(PivotSubsystemIO.Config config) {
-    super(config);
+  public PivotSubsystemIOSim() {
+    super();
     m_simLeader =
         new SimulatedDevice(
             new TalonFXFusedCANcoderProfile(
-                m_pivotLeader, m_canCoder, (1.0 / config.pivotGearRatio), kRotorInertia));
+                m_pivotLeader,
+                m_canCoder,
+                (1.0 / PivotSubsystem.kFalconToPivotGearRatio),
+                kRotorInertia));
 
     m_simFollower = new SimulatedDevice(new TalonFXProfile(m_pivotFollower, kRotorInertia));
   }

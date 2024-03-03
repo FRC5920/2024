@@ -60,7 +60,6 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.LED.ColorConstants;
-import frc.robot.Constants.CANDevice;
 import frc.robot.autos.AutoDashboardTab;
 import frc.robot.commands.TeleopSwerveCTRE;
 import frc.robot.commands.autoCommands.ShootAmpClose;
@@ -138,21 +137,17 @@ public class RobotContainer {
 
     switch (Constants.getMode()) {
       case REAL:
-        climberIO = new ClimberSubsystemIOReal(new ClimberSubsystemIO.Config());
-        flywheelIO = new FlywheelSubsystemIOReal(CANDevice.IntakeFlywheelMotor);
-        indexerIO =
-            new IndexerSubsystemIOReal(
-                CANDevice.IntakeIndexerMotor, CANDevice.IntakeGamepieceSensor);
-        pivotIO = new PivotSubsystemIOReal(new PivotSubsystemIO.Config());
+        climberIO = new ClimberSubsystemIOReal();
+        flywheelIO = new FlywheelSubsystemIOReal();
+        indexerIO = new IndexerSubsystemIOReal();
+        pivotIO = new PivotSubsystemIOReal();
         break;
 
       case SIM:
-        climberIO = new ClimberSubsystemIOSim(new ClimberSubsystemIO.Config());
-        flywheelIO = new FlywheelSubsystemIOSim(CANDevice.IntakeFlywheelMotor);
-        indexerIO =
-            new IndexerSubsystemIOSim(
-                CANDevice.IntakeIndexerMotor, CANDevice.IntakeGamepieceSensor);
-        pivotIO = new PivotSubsystemIOSim(new PivotSubsystemIO.Config());
+        climberIO = new ClimberSubsystemIOSim();
+        flywheelIO = new FlywheelSubsystemIOSim();
+        indexerIO = new IndexerSubsystemIOSim();
+        pivotIO = new PivotSubsystemIOSim();
         break;
 
       case REPLAY:

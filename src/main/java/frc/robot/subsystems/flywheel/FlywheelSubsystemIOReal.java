@@ -62,7 +62,6 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.logging.BotLog;
 import frc.lib.logging.LoggableMotorInputs;
 import frc.lib.utility.Alert;
-import frc.robot.Constants.CANDevice;
 
 /** Implementation of the IntakeSubsystemIO interface using real hardware */
 public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
@@ -97,13 +96,10 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
       new Alert("Failed to configure flywheel motor", Alert.AlertType.ERROR);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Creates an instance of the I/O implementation
-   *
-   * @param flywheelMotorDevice CAN device used for the flywheel motor
-   */
-  public FlywheelSubsystemIOReal(CANDevice flywheelMotorDevice) {
-    m_flywheelMotor = new TalonFX(flywheelMotorDevice.id(), FlywheelSubsystem.kCANBus.name);
+  /** Creates an instance of the I/O implementation */
+  public FlywheelSubsystemIOReal() {
+    m_flywheelMotor =
+        new TalonFX(FlywheelSubsystem.kFlywheelMotorDevice.id(), FlywheelSubsystem.kCANBus.name);
     m_flywheelVelocitySignal = m_flywheelMotor.getVelocity();
     m_flywheelVoltageSignal = m_flywheelMotor.getMotorVoltage();
     m_flywheelCurrentSignal = m_flywheelMotor.getStatorCurrent();

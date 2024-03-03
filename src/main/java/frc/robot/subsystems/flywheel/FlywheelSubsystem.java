@@ -80,7 +80,7 @@ public class FlywheelSubsystem extends SubsystemBase {
   ////////////////////////////////////
 
   /** CAN device ID of the flywheel motor */
-  public static final CANDevice kFlywheelMotorCANDevice = CANDevice.IntakeFlywheelMotor;
+  public static final CANDevice kFlywheelMotorDevice = CANDevice.IntakeFlywheelMotor;
 
   /** Gear ratio between the flywheel motor and the flywheel mechanism */
   public static final double kFlywheelMotorGearRatio = 1.0 / 1.0;

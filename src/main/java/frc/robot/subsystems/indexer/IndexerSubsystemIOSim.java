@@ -52,7 +52,6 @@
 package frc.robot.subsystems.indexer;
 
 import edu.wpi.first.math.system.plant.DCMotor;
-import frc.robot.Constants.CANDevice;
 import frc.robot.sim.ctreSim.SimulatedDevice;
 import frc.robot.sim.ctreSim.TalonSRXSimProfile;
 
@@ -66,14 +65,9 @@ public class IndexerSubsystemIOSim extends IndexerSubsystemIOReal {
   private final SimulatedDevice m_simIndexer;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Creates an instance of the I/O implementation
-   *
-   * @param indexerMotorDevice CAN device associated with the indexer motor
-   * @param indexerMotorDevice CAN device associated with the LaserCAN gamepiece sensor
-   */
-  public IndexerSubsystemIOSim(CANDevice indexerMotorDevice, CANDevice laserCANDevice) {
-    super(indexerMotorDevice, laserCANDevice);
+  /** Creates an instance of the I/O implementation */
+  public IndexerSubsystemIOSim() {
+    super();
     m_simIndexer =
         new SimulatedDevice(
             new TalonSRXSimProfile(

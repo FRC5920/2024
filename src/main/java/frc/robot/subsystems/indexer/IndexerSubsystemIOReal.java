@@ -58,7 +58,6 @@ import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import frc.lib.logging.BotLog;
 import frc.lib.utility.Alert;
-import frc.robot.Constants.CANDevice;
 import java.util.ArrayList;
 
 /** Implementation of the IntakeSubsystemIO interface using real hardware */
@@ -83,15 +82,10 @@ public class IndexerSubsystemIOReal implements IndexerSubsystemIO {
       new Alert("Failed to configure intake LaserCAN sensor", Alert.AlertType.ERROR);
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Creates an instance of the I/O implementation
-   *
-   * @param indexerMotorDevice CAN device associated with the indexer motor
-   * @param indexerMotorDevice CAN device associated with the LaserCAN gamepiece sensor
-   */
-  public IndexerSubsystemIOReal(CANDevice indexerMotorDevice, CANDevice laserCANDevice) {
-    m_indexerMotor = new WPI_TalonSRX(indexerMotorDevice.id());
-    m_gamepieceSensor = new LaserCan(laserCANDevice.id());
+  /** Creates an instance of the I/O implementation */
+  public IndexerSubsystemIOReal() {
+    m_indexerMotor = new WPI_TalonSRX(IndexerSubsystem.kIndexerMotorDevice.id());
+    m_gamepieceSensor = new LaserCan(IndexerSubsystem.kLaserCANDevice.id());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
