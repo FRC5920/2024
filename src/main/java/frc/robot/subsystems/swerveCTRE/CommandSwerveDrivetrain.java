@@ -57,6 +57,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -70,11 +71,26 @@ import org.littletonrobotics.junction.Logger;
  * in command-based projects easily.
  */
 public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsystem {
+
+  /** Default maximum linear speed the swerve drive should move at in meters per second */
+  public static final double kMaxSpeed = 6.0;
+
+  /** Default maximum rate the swerve drive should rotate in radians per second */
+  public static final double kMaxAngularRate = Math.PI;
+
+  /** Deadband applied to linear motion */
+  public static final double kSpeedDeadband = 0.1;
+
+  /** Deadband applied to angular rotation */
+  public static final double kAngularRateDeadband = 0.1;
+
   private static final double kSimLoopPeriod = 0.005; // 5 ms
 
-  private static final String kLogPrefix = "CommandSwerveDrivetrain/";
+  public static final String kLogPrefix = "CommandSwerveDrivetrain/";
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
+
+  private SwerveRequest.RobotCentric m_botCentricSwerveReq = new SwerveRequest.RobotCentric();
 
   /** Instance of an object used to log inputs fed to the swerve drive base */
   private SwerveInputsAutoLogged m_swerveInputs = new SwerveInputsAutoLogged();
@@ -117,12 +133,16 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
   @Override
   public void periodic() {
     Logger.processInputs(kLogPrefix + "swerveInputs", m_swerveInputs);
-    Logger.recordOutput(kLogPrefix + "pose", this.getPose());
   }
 
   // Returns the current estimated pose of the robot
   public Pose2d getPose() {
     return this.getState().Pose;
+  }
+
+  // Returns the current estimated pose of the robot
+  public ChassisSpeeds getChassisSpeeds() {
+    return this.getState().speeds;
   }
 
   /**
@@ -140,8 +160,39 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     this.setControl(request);
   }
 
+  /**
+   * Applies a robot-centric control request to the swerve drivetrain.
+   *
+   * @param velocityX Velocity requested along the robot's X-axis
+   * @param velocityY Velocity requested along the robot's Y-axis
+   * @param velocityRot Rotational velocity requested about the robot's Z-axis
+   * @details This method logs robot-centric control values issued to the swerve drive
+   */
+  public void driveRobotCentric(double velocityX, double velocityY, double velocityRot) {
+    m_botCentricSwerveReq
+        .withVelocityX(velocityX)
+        .withVelocityY(velocityY)
+        .withRotationalRate(velocityRot);
+    m_swerveInputs.requestType = SwerveRequest.FieldCentric.class.getName();
+    m_swerveInputs.xVelocity = m_botCentricSwerveReq.VelocityX;
+    m_swerveInputs.yVelocity = m_botCentricSwerveReq.VelocityY;
+    m_swerveInputs.angularRate = m_botCentricSwerveReq.RotationalRate;
+
+    this.setControl(m_botCentricSwerveReq);
+  }
+
   public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
     return run(() -> this.setControl(requestSupplier.get()));
+  }
+
+  /** Returns the radius of the drive base */
+  public double getDriveBaseRadius() {
+    double driveBaseRadius = 0;
+    for (var moduleLocation : m_moduleLocations) {
+      driveBaseRadius = Math.max(driveBaseRadius, moduleLocation.getNorm());
+    }
+
+    return driveBaseRadius;
   }
 
   /** Inner class used to log input values issued to the swerve drive */

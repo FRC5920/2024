@@ -53,15 +53,19 @@ package frc.robot.commands;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.joystick.ProcessedXboxController;
+import frc.lib.utility.ZTargeter;
+import frc.robot.Constants.CameraInfo.GamePieceCamera;
+import frc.robot.Constants.CameraTarget;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
+import org.photonvision.PhotonCamera;
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * Command class used to control a CTRE swerve drive in Teleoperated mode using an XBox Controller
- */
-public class TeleopSwerveCTRE extends Command {
+public class DriveWithZTargeting extends Command {
+
+  public final PhotonCamera ArmCamera = new PhotonCamera(GamePieceCamera.cameraName);
+
   /** Default maximum linear speed the swerve drive should move at in meters per second */
   public static final double kMaxSpeed = 6.0;
 
@@ -83,28 +87,39 @@ public class TeleopSwerveCTRE extends Command {
   /** Request object used to control the swerve drive */
   private final SwerveRequest.FieldCentric m_swerveRequest;
 
+  /** Request object for target */
+  private final CameraTarget m_Target;
+
+  /** ZTargeting Library */
+  private final ZTargeter m_zTargeter;
+
   /**
    * Creates an instance of the command
    *
    * @param swerve Swerve drive to be controlled
    * @param controller XBox controller used to control the swerve drive
    */
-  public TeleopSwerveCTRE(CommandSwerveDrivetrain swerve, ProcessedXboxController controller) {
+  public DriveWithZTargeting(
+      CommandSwerveDrivetrain swerve, ProcessedXboxController controller, CameraTarget target) {
     addRequirements(swerve);
     m_swerve = swerve;
     m_controller = controller;
-
+    m_Target = target;
     // Set up for driving open-loop using field-centric motion
     m_swerveRequest =
         new SwerveRequest.FieldCentric()
             .withDeadband(kMaxSpeed * kSpeedDeadband)
             .withRotationalDeadband(kMaxAngularRate * kAngularRateDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+    m_zTargeter = new ZTargeter(m_Target, ArmCamera);
   }
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+    m_zTargeter.initialize(); // Initialize Z-targeting
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
@@ -112,6 +127,29 @@ public class TeleopSwerveCTRE extends Command {
     double xVelocity = -m_controller.getLeftY() * kMaxSpeed;
     double yVelocity = -m_controller.getLeftX() * kMaxSpeed;
     double angularRate = -m_controller.getRightX() * kMaxAngularRate;
+
+    // Get the rotation to a target.  Returns null if no target is found
+    Rotation2d zRotation = m_zTargeter.getRotationToTarget();
+    boolean targetExists = (zRotation != null);
+    if (targetExists) {
+      angularRate = zRotation.getRadians() * kMaxAngularRate;
+
+      if (m_Target == CameraTarget.GameNote) {
+        // TODO: Set LEDs Orange
+      }
+      /* Code for bot relative drive.
+      if ((m_Target == CameraTarget.GameNote)
+        && ((Math.abs(m_controller.getRightY()) > 0.1)
+              || (Math.abs(m_controller.getRightX()) > 0.1))) {
+        translation =
+            new Translation2d(-m_controller.getRightY(), m_controller.getRightX())
+                .times(RobotContainer.MaxSpeed);
+        isFieldRelative = false;
+      } else {
+        translation = new Translation2d(yAxis, xAxis).times(RobotContainer.MaxSpeed);
+        isFieldRelative = true;
+      } */
+    }
 
     // Update our SwerveRequest with the requested velocities and apply them to the swerve drive
     m_swerveRequest

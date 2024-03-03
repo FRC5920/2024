@@ -63,6 +63,7 @@ import frc.robot.Constants.CameraID;
 import frc.robot.commands.LEDCommands.LEDsToPattern;
 import frc.robot.commands.LEDCommands.LEDsToSolidColor;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
+import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 
@@ -77,8 +78,8 @@ public class Robot extends LoggedRobot {
       new CanBusErrorAlert("CAN errors detected.", AlertType.ERROR);
 
   /** Alert displayed if a low battery is detected */
-  private final Alert lowBatteryAlert =
-      new Alert("Low battery voltage detected.", AlertType.WARNING);
+  // private final Alert lowBatteryAlert =
+  //     new Alert("Low battery voltage detected.", AlertType.WARNING);
 
   /** Container of subsystems and other components that make up the robot */
   private final RobotContainer m_robotContainer = new RobotContainer();
@@ -89,15 +90,16 @@ public class Robot extends LoggedRobot {
   /** The present selected auto command */
   private Command m_autonomousCommand;
 
-  /** Time when the present auto command was started */
-  private double m_autoStartTime;
+  // /** Time when the present auto command was started */
+  // private double m_autoStartTime;
 
-  /** True after the autonomous command duration has been printed */
-  private boolean m_autoCompletionIsPrinted;
+  // /** True after the autonomous command duration has been printed */
+  // private boolean m_autoCompletionIsPrinted;
 
-  /** Alert displayed when a logging error occurs */
-  private static Alert s_logReceiverQueueAlert =
-      new Alert("Logging queue exceeded capacity, data will NOT be logged.", Alert.AlertType.ERROR);
+  // /** Alert displayed when a logging error occurs */
+  // private static Alert s_logReceiverQueueAlert =
+  //     new Alert("Logging queue exceeded capacity, data will NOT be logged.",
+  // Alert.AlertType.ERROR);
 
   /** Command scheduled to change the LEDs for teleop mode */
   private Command m_teleOpLEDCommand;
@@ -141,6 +143,8 @@ public class Robot extends LoggedRobot {
   public void robotPeriodic() {
     RobotContainer bc = m_robotContainer;
 
+    Logger.recordOutput(CommandSwerveDrivetrain.kLogPrefix + "pose", bc.driveTrain.getPose());
+
     // Calculate vision-based robot pose estimates for each of the tag cameras, sending poses to
     // the swerve drivebase as vision measurements
     bc.visionSubsystem.processPoseUpdate(
@@ -151,6 +155,9 @@ public class Robot extends LoggedRobot {
         (est) -> bc.driveTrain.addVisionMeasurement(est.pose, est.timestamp, est.stddevs));
 
     // Process active command(s)
+    Logger.recordOutput(
+        CommandSwerveDrivetrain.kLogPrefix + "pose", m_robotContainer.driveTrain.getPose());
+
     CommandScheduler.getInstance().run();
 
     // Alert if a logging fault is detected

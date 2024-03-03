@@ -1,0 +1,63 @@
+{
+  "version": 1.0,
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 5.0,
+        "y": 0.75
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.7574475059168293,
+        "y": 0.7500000000000002
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 0.835578900960505,
+        "y": 4.435323324161686
+      },
+      "prevControl": {
+        "x": 1.4101323300433977,
+        "y": 3.5258462108328055
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [],
+  "constraintZones": [],
+  "eventMarkers": [
+    {
+      "name": "ShootSpeakerClose",
+      "waypointRelativePos": 1.0,
+      "command": {
+        "type": "sequential",
+        "data": {
+          "commands": []
+        }
+      }
+    }
+  ],
+  "globalConstraints": {
+    "maxVelocity": 3.0,
+    "maxAcceleration": 3.0,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 119.77,
+    "rotateFast": false
+  },
+  "reversed": false,
+  "folder": "Clackamas",
+  "previewStartingState": {
+    "rotation": 179.12797143718277,
+    "velocity": 0
+  },
+  "useDefaultConstraints": true
+}

@@ -106,6 +106,7 @@ public class CandyCanePattern extends LEDPattern {
     for (int i = 0; i < strip.getNumLEDs(); ++i) {
       Color pixelColor = (counter < kNumPrimarySegmentLEDs) ? m_primaryColor : m_secondaryColor;
       strip.setLED(i, pixelColor);
+      // https://github.com/Mechanical-Advantage/RobotCode2023/blob/9884d13b2220b76d430e82248fd837adbc4a10bc/src/main/java/org/littletonrobotics/frc2023/Robot.java#L37
       counter = (counter + 1) % kNumPatternLEDs;
     }
   }

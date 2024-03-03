@@ -54,6 +54,7 @@ package frc.robot.subsystems.intake;
 import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.LaserCan.RegionOfInterest;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
@@ -100,7 +101,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public static final CANDevice kIndexerMotorCANDevice = CANDevice.IntakeIndexerMotor;
 
   /** Gear ratio between the indexer motor and the indexer mechanism */
-  public static final double kIndexerMotorGearRatio = 5.0 / 1.0;
+  public static final double kIndexerMotorGearRatio = 10.0 / 1.0;
 
   /** Set to true if the direction of the indexer motor should be reversed */
   public static final boolean kIndexerMotorInverted = false;
@@ -213,5 +214,55 @@ public class IntakeSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("intake/indexer/speed", m_inputs.indexer.velocity);
     SmartDashboard.putNumber("intake/laserCAN/distance", m_inputs.laserCAN.distanceMeters);
     SmartDashboard.putString("intake/laserCAN/status", m_inputs.laserCAN.status);
+  }
+
+  public enum IntakePreset {
+    IntakeRing(10.0, 0.5),
+    ShootRing(-3000.0, -0.5);
+
+    public final double flywheelRPS;
+    public final double indexerSpeed;
+
+    private IntakePreset(double flywheelRPS, double indexerSpeed) {
+      this.flywheelRPS = flywheelRPS;
+      this.indexerSpeed = indexerSpeed;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  public static class RunIntakeAtSpeed extends Command {
+    private final IntakeSubsystem m_intakeSubsystem;
+    private final IntakePreset m_preset;
+
+    /** Creates a new ClimberJoystickTeleOp. */
+    public RunIntakeAtSpeed(IntakeSubsystem intakeSubsystem, IntakePreset preset) {
+      m_intakeSubsystem = intakeSubsystem;
+      m_preset = preset;
+      addRequirements(m_intakeSubsystem);
+    }
+
+    // Called when the command is initially scheduled.
+    @Override
+    public void initialize() {
+      m_intakeSubsystem.setFlywheelVelocity(m_preset.flywheelRPS);
+      m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
+    }
+
+    // Called every time the scheduler runs while the command is scheduled.
+    @Override
+    public void execute() {}
+
+    // Called once the command ends or is interrupted.
+    @Override
+    public void end(boolean interrupted) {
+      m_intakeSubsystem.setFlywheelVelocity(0.0);
+      m_intakeSubsystem.setIndexerSpeed(0.0);
+    }
+
+    // Returns true when the command should end.
+    @Override
+    public boolean isFinished() {
+      return false;
+    }
   }
 }

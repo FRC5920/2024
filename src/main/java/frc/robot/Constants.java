@@ -56,7 +56,6 @@ import edu.wpi.first.wpilibj.RobotBase;
 import frc.lib.utility.RobotRunMode;
 import frc.lib.utility.RobotType;
 import frc.robot.subsystems.swerveCTRE.TunerConstants;
-import java.util.Map;
 import org.littletonrobotics.junction.LoggedRobot;
 
 public final class Constants {
@@ -74,10 +73,6 @@ public final class Constants {
 
   /** This constant should be set to true when tuning or characterizing the robot */
   public static final boolean kTuningMode = false;
-
-  /** A map of directories where log files should be stored */
-  private static final Map<RobotRunMode, String> logDirectories =
-      Map.of(RobotRunMode.REAL, "/frclogs/", RobotRunMode.SIM, "AKitBotLogs/");
 
   /** Returns the current mode the robot is executing in */
   public static RobotRunMode getRobotMode() {
@@ -140,29 +135,41 @@ public final class Constants {
     SwerveBackRightEncoder(TunerConstants.kBackRightEncoderId),
     Pigeon(TunerConstants.kPigeonId),
 
-    ClimberLeaderMotor(11),
-    ClimberFollowerMotor(12),
+    ClimberLeaderMotor(12, 50),
+    ClimberFollowerMotor(11, 51),
 
-    IntakeFlywheelMotor(25),
-    IntakeIndexerMotor(27),
-    IntakeGamepieceSensor(29),
+    IntakeFlywheelMotor(25, 52),
+    IntakeIndexerMotor(27, 53),
+    IntakeGamepieceSensor(41, 54),
 
-    PivotLeaderMotor(21),
-    PivotFollowerMotor(22),
-    PivotCANcoder(23);
+    PivotLeaderMotor(21, 55),
+    PivotFollowerMotor(22, 56),
+    PivotCANcoder(23, 57);
 
-    /** CAN bus ID */
-    public final int id;
+    /** CAN bus ID used when running for reelz */
+    private final int realID;
+    /** CAN bus ID used when running in simulation */
+    private final int simID;
 
     private CANDevice(int id) {
-      this.id = id;
+      this.realID = this.simID = id;
+    }
+
+    private CANDevice(int realID, int simID) {
+      this.realID = realID;
+      this.simID = simID;
+    }
+
+    public int id() {
+      return RobotBase.isReal() ? realID : simID;
     }
   }
 
   /** ID's used to specify a camera/estimator in the subsystem */
   public enum CameraID {
     FrontCamera,
-    RearCamera;
+    RearCamera,
+    GamePieceCamera;
   }
 
   /** Camera info */
@@ -204,6 +211,25 @@ public final class Constants {
     public static class TagCameraResolution {
       public static final int widthPx = 1280;
       public static final int heightPx = 720;
+    }
+
+    public static class GamePieceCamera {
+      public static final String cameraName = "MLGamePiece";
+    }
+  }
+
+  public enum CameraTarget {
+    GameNote(0),
+    AprilTag2D(1);
+
+    public final int PVIndex;
+
+    private CameraTarget(int PipelineIndex) {
+      this.PVIndex = PipelineIndex;
+    }
+
+    public int PVIndex() {
+      return PVIndex;
     }
   }
 }

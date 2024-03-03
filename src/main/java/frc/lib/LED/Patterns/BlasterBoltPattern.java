@@ -104,10 +104,6 @@ public class BlasterBoltPattern extends LEDPattern {
   public BlasterBoltPattern(LEDStrip ledStrip, Color color, int cyclesPerPixel) {
     super(ledStrip);
     m_direction = Direction.kForward;
-
-    // TODO: m_startIndex and m_arraySize can be removed and replaced since the
-    // LEDStrip class automatically translates zero-based start and end addresses
-    // into their absolute addresses in the LED strip.
     m_startIndex = 0;
     m_arraySize = ledStrip.getNumLEDs();
 

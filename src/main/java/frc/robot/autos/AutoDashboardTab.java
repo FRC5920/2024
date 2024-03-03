@@ -51,23 +51,28 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.autos;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathPlannerPath;
 import com.pathplanner.lib.path.PathPlannerTrajectory;
-import com.pathplanner.lib.path.PathPlannerTrajectory.State;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.Trajectory.State;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.dashboard.ChangeDetector;
 import frc.lib.dashboard.IDashboardTab;
 import frc.lib.dashboard.LoggedSendableChooser;
 import frc.robot.RobotContainer;
-import frc.robot.autos.AutoConstants.AutoPreset;
-import frc.robot.autos.preset.PresetAutoBuilder;
-import frc.robot.autos.preset.PresetAutoFactory;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import java.util.*;
 
@@ -98,15 +103,14 @@ public class AutoDashboardTab implements IDashboardTab {
   /** Height (in cells) of the pose value display */
   static final int kPoseHeightCells = 2;
 
-  /** Empty PathPlannerTrajectory used to clear trajectories displayed on the field */
-  private static final PathPlannerTrajectory kEmptyTrajectory =
-      new PathPlannerTrajectory(new ArrayList<State>());
+  /** Empty Trajectory used to clear trajectories displayed on the field */
+  private static final Trajectory kEmptyTrajectory = new Trajectory();
 
   /** Builder used to generate commands for preset auto routines */
-  private PresetAutoFactory m_presetAutoFactory;
+  // private PresetAutoFactory m_presetAutoFactory;
 
   /** The current auto command */
-  private Command m_currentAutoCommand;
+  // private Command m_currentAutoCommand;
 
   /** The Shuffleboard tab */
   private ShuffleboardTab m_tab;
@@ -115,21 +119,24 @@ public class AutoDashboardTab implements IDashboardTab {
   private Field2d m_field2d;
 
   /* Auto type Chooser used to select between generated and preset autos */
-  private final LoggedSendableChooser<AutoPreset> m_autoPresetChooser =
-      new LoggedSendableChooser<AutoPreset>("presetAuto");
+  private final LoggedSendableChooser<Command> m_autoPresetChooser;
 
   /** Used to detect when the present alliance changes */
   private ChangeDetector<Optional<Alliance>> m_allianceChangeDetector;
 
   /** Used to maintain a set of displayed Trajectories */
-  private HashMap<String, PathPlannerTrajectory> m_fieldTrajectories = new HashMap<>();
+  private HashMap<String, Trajectory> m_fieldTrajectories = new HashMap<>();
 
   /** Creates an instance of the tab */
   public AutoDashboardTab() {
-    m_presetAutoFactory = new PresetAutoFactory();
+    // m_presetAutoFactory = new PresetAutoFactory();
     m_field2d = new Field2d();
     m_allianceChangeDetector =
         new ChangeDetector<Optional<Alliance>>(() -> DriverStation.getAlliance());
+
+    // Load all deployed auto paths and construct an auto preset chooser with them
+    final SendableChooser<Command> ppAutoChooser = AutoBuilder.buildAutoChooser();
+    m_autoPresetChooser = new LoggedSendableChooser<Command>("presetAuto", ppAutoChooser);
   }
 
   /**
@@ -139,14 +146,11 @@ public class AutoDashboardTab implements IDashboardTab {
    */
   @Override
   public void initDashboard(RobotContainer botContainer) {
-    // Initialize PathPlanner auto builder
-    initializePPAutoBuilder(botContainer);
-
     m_tab = Shuffleboard.getTab(kTabTitle);
 
     // Set up the auto type chooser
-    m_autoPresetChooser.addOptions(
-        AutoPreset.getNames(), AutoPreset.values(), AutoPreset.Example.id);
+    // m_autoPresetChooser.addOptions(
+    //     AutoPreset.getNames(), AutoPreset.values(), AutoPreset.Example.id);
     m_tab
         .add("Auto Preset", m_autoPresetChooser.getSendableChooser())
         .withSize(kChooserWidth, kChooserHeight)
@@ -160,15 +164,18 @@ public class AutoDashboardTab implements IDashboardTab {
         .withPosition(0, 0)
         .withProperties(Map.of("Label position", "HIDDEN"));
 
-    // Add display of the robot pose
-    m_tab
-        .addString("Swerve Pose (m)", () -> formatPose2d(botContainer.driveTrain.getPose(), false))
-        .withSize(kPoseWidthCells, kPoseHeightCells)
-        .withPosition(kPoseWidthCells * 1, kFieldHeightCells);
-    m_tab
-        .addString("Swerve Pose (in)", () -> formatPose2d(botContainer.driveTrain.getPose(), true))
-        .withSize(kPoseWidthCells, kPoseHeightCells)
-        .withPosition(kPoseWidthCells * 1, kFieldHeightCells + kPoseHeightCells);
+    // // Add display of the robot pose
+    // m_tab
+    //     .addString("Swerve Pose (m)", () -> formatPose2d(botContainer.driveTrain.getPose(),
+    // false))
+    //     .withSize(kPoseWidthCells, kPoseHeightCells)
+    //     .withPosition(kPoseWidthCells * 1, kFieldHeightCells);
+    // m_tab
+    //     .addString("Swerve Pose (in)", () -> formatPose2d(botContainer.driveTrain.getPose(),
+    // true))
+    //     .withSize(kPoseWidthCells, kPoseHeightCells)
+    //     .withPosition(kPoseWidthCells * 1, kFieldHeightCells + kPoseHeightCells);
+
   }
 
   /** Service dashboard tab widgets */
@@ -179,48 +186,86 @@ public class AutoDashboardTab implements IDashboardTab {
     boolean autoPresetChanged = m_autoPresetChooser.hasChanged();
 
     if (allianceHasChanged || autoPresetChanged) {
+      String autoName = m_autoPresetChooser.getChoiceName();
+      if (autoName != "None") {
+        boolean shouldFlipPath = false;
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+        if (alliance.isPresent()) {
+          shouldFlipPath = (alliance.get() == Alliance.Red);
+        }
 
-      // Clear trajectories displayed on the field by giving all field objects an empty trajectory
-      PathPlannerTrajectory emptyTrajectory = kEmptyTrajectory;
-      for (String name : m_fieldTrajectories.keySet()) {
-        m_fieldTrajectories.put(name, emptyTrajectory);
+        List<Trajectory> trajectories = getAutoTrajectoryList(autoName, shouldFlipPath);
+
+        // Clear trajectories displayed on the field by giving all FieldObjects an empty trajectory
+        for (String name : m_fieldTrajectories.keySet()) {
+          m_fieldTrajectories.put(name, kEmptyTrajectory);
+        }
+
+        // Add current auto trajectories to the map of field objects
+        for (int idx = 0; idx < trajectories.size(); ++idx) {
+          String trajectoryName = String.format("AutoTrajectory%d", idx);
+          m_fieldTrajectories.put(trajectoryName, trajectories.get(idx));
+        }
+
+        // Send all trajectories to the field
+        m_fieldTrajectories.forEach(
+            (String name, Trajectory traj) -> m_field2d.getObject(name).setTrajectory(traj));
+
+        // Set the current robot pose
+        Pose2d initialPose = trajectories.get(0).getInitialPose();
+        driveBase.seedFieldRelative(initialPose);
       }
-
-      // Build an auto command for the selected auto preset.
-      // Get its trajectories and initial pose
-      AutoPreset selectedPreset = m_autoPresetChooser.getSelectedValue();
-      PresetAutoBuilder presetBuilder = m_presetAutoFactory.getAutoBuilder(selectedPreset);
-      m_currentAutoCommand = presetBuilder.getCommand(botContainer);
-      Pose2d initialPose = presetBuilder.getInitialPose();
-      List<PathPlannerTrajectory> trajectories = presetBuilder.getTrajectories();
-
-      // Add trajectories to the map of field objects
-      for (int idx = 0; idx < trajectories.size(); ++idx) {
-        String trajectoryName = String.format("AutoTrajectory%d", idx);
-        m_fieldTrajectories.put(trajectoryName, trajectories.get(idx));
-      }
-
-      // Send all trajectories to the field
-      // m_fieldTrajectories.forEach(
-      //     (String name, PathPlannerTrajectory traj) ->
-      //         m_field2d.getObject(name).setTrajectory(TrajectoryUtil.getWPITrajectory(traj)));
 
       // Reset the drivebase Gyro and set odometry to the initial pose
-      driveBase.getPigeon2().setYaw(initialPose.getRotation().getDegrees());
-      driveBase.seedFieldRelative(initialPose);
+      // driveBase.getPigeon2().setYaw(initialPose.getRotation().getDegrees());
+      // driveBase.seedFieldRelative(initialPose);
     }
 
-    // m_field2d.setRobotPose(driveBase.getPose());
+    Pose2d pose = botContainer.driveTrain.getPose();
+    FieldObject2d robotObject = m_field2d.getRobotObject();
+    robotObject.setPose(pose);
+    SmartDashboard.putString("CurrentPose", formatPose2d(pose, false));
   }
 
   /** Returns the current auto routine builder */
   public Command getCurrentAutoRoutine() {
-    return m_currentAutoCommand;
+    return m_autoPresetChooser.getSelectedValue();
   }
 
   /** Returns the field displayed in the dashboard tab */
   public Field2d getField2d() {
     return m_field2d;
+  }
+
+  private static List<Trajectory> getAutoTrajectoryList(String autoName, boolean shouldFlipPath) {
+    List<Trajectory> trajectories = new ArrayList<>();
+    List<PathPlannerPath> paths = PathPlannerAuto.getPathGroupFromAutoFile(autoName);
+    for (PathPlannerPath path : paths) {
+      PathPlannerPath allianceAdjustedPath = shouldFlipPath ? path.flipPath() : path;
+      Pose2d startingPose = allianceAdjustedPath.getPreviewStartingHolonomicPose();
+
+      ChassisSpeeds speeds = new ChassisSpeeds();
+      PathPlannerTrajectory ppTrajectory =
+          allianceAdjustedPath.getTrajectory(speeds, startingPose.getRotation());
+      trajectories.add(ppToWPILibTrajectory(ppTrajectory));
+    }
+    return trajectories;
+  }
+
+  private static Trajectory ppToWPILibTrajectory(PathPlannerTrajectory ppTrajectory) {
+    ArrayList<State> wpiLibStates = new ArrayList<>();
+
+    for (PathPlannerTrajectory.State ppState : ppTrajectory.getStates()) {
+      wpiLibStates.add(
+          new State(
+              ppState.timeSeconds,
+              ppState.velocityMps,
+              ppState.accelerationMpsSq,
+              ppState.getTargetHolonomicPose(),
+              ppState.curvatureRadPerMeter));
+    }
+
+    return new Trajectory(wpiLibStates);
   }
 
   private static String formatPose2d(Pose2d pose, boolean asInches) {
@@ -235,45 +280,5 @@ public class AutoDashboardTab implements IDashboardTab {
           "(%.2f m, %.2f m) %.2f degrees",
           pose.getX(), pose.getY(), pose.getRotation().getDegrees());
     }
-  }
-
-  private static void initializePPAutoBuilder(RobotContainer botContainer) {
-    CommandSwerveDrivetrain driveBase = botContainer.driveTrain;
-
-    // TODO: initialize the PathPlanner auto builder using directions provided at
-    // https://pathplanner.dev/pplib-build-an-auto.html#configure-autobuilder
-
-    // // Configure AutoBuilder last
-    // AutoBuilder.configureHolonomic(
-    //         this::getPose, // Robot pose supplier
-    //         this::resetPose, // Method to reset odometry (will be called if your auto has a
-    // starting pose)
-    //         this::getRobotRelativeSpeeds, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-    //         this::driveRobotRelative, // Method that will drive the robot given ROBOT RELATIVE
-    // ChassisSpeeds
-    //         new HolonomicPathFollowerConfig( // HolonomicPathFollowerConfig, this should likely
-    // live in your Constants class
-    //                 new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
-    //                 new PIDConstants(5.0, 0.0, 0.0), // Rotation PID constants
-    //                 4.5, // Max module speed, in m/s
-    //                 0.4, // Drive base radius in meters. Distance from robot center to furthest
-    // module.
-    //                 new ReplanningConfig() // Default path replanning config. See the API for the
-    // options here
-    //         ),
-    //         () -> {
-    //           // Boolean supplier that controls when the path will be mirrored for the red
-    // alliance
-    //           // This will flip the path being followed to the red side of the field.
-    //           // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
-
-    //           var alliance = DriverStation.getAlliance();
-    //           if (alliance.isPresent()) {
-    //             return alliance.get() == DriverStation.Alliance.Red;
-    //           }
-    //           return false;
-    //         },
-    //         this // Reference to this subsystem to set requirements
-    // );
   }
 }
