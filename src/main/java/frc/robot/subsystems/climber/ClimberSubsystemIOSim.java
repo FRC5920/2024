@@ -73,8 +73,8 @@ public class ClimberSubsystemIOSim extends ClimberSubsystemIOReal {
    *
    * @param config Configuration values for the I/O implementation
    */
-  public ClimberSubsystemIOSim(ClimberSubsystemIO.Config config) {
-    super(config);
+  public ClimberSubsystemIOSim() {
+    super();
     m_simLeader =
         new SimulatedDevice(
             new TalonSRXSimProfile(m_climberLeader, DCMotor.getCIM(1), kRotorInertia));

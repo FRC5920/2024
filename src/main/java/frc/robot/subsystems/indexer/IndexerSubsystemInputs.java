@@ -49,42 +49,50 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.pivot;
+package frc.robot.subsystems.indexer;
 
-import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
+import frc.lib.logging.LoggableLaserCANInputs;
+import frc.lib.logging.LoggableMotorInputs;
+import org.littletonrobotics.junction.LogTable;
+import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-/** Interface implemented by subsystem I/O */
-public interface PivotSubsystemIO {
+/** Logged inputs for the IntakeSubsystem */
+public class IndexerSubsystemInputs implements LoggableInputs {
+  /** Indexer motor inputs */
+  public LoggableMotorInputs indexer;
+  /** Gamepiece sensor inputs */
+  public LoggableLaserCANInputs laserCAN;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Initializes and configures the I/O implementation */
-  default void initialize() {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Update logged input quantities */
-  default void processInputs(PivotSubsystemInputs inputs) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired pivot angle in degrees
+   * Creates an instance of the inputs and sets the prefix to log them under
    *
-   * @param degrees The desired pivot angle in degrees
+   * @param prefix Prefix the inputs will be logged under
    */
-  default void setAngleDeg(double degrees) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the current pivot angle in degrees */
-  default double getAngleDeg() {
-    return 0.0;
+  public IndexerSubsystemInputs(String prefix) {
+    indexer = new LoggableMotorInputs("Indexer");
+    laserCAN = new LoggableLaserCANInputs("LaserCAN");
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current angle of a pivot motor in degrees
-   *
-   * @motorID Pivot motor whose angle is to be returned
-   */
-  default double getMotorAngleDeg(PivotMotorID motorID) {
-    return 0.0;
+  /** Creates an instance of the loggable object during clone() calls */
+  private IndexerSubsystemInputs() {}
+
+  /** Write input values to log */
+  public void toLog(LogTable table) {
+    indexer.toLog(table);
+    laserCAN.toLog(table);
+  }
+
+  /** Read input values from log */
+  public void fromLog(LogTable table) {
+    indexer.fromLog(table);
+    laserCAN.fromLog(table);
+  }
+
+  /** Create a clone of input values */
+  public IndexerSubsystemInputs clone() {
+    IndexerSubsystemInputs copy = new IndexerSubsystemInputs();
+    copy.indexer = this.indexer;
+    copy.laserCAN = this.laserCAN;
+    return copy;
   }
 }

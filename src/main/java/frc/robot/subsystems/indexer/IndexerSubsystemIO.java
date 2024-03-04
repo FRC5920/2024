@@ -49,54 +49,24 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.indexer;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.joystick.ProcessedXboxController;
-import frc.robot.subsystems.JoystickSubsystem;
+/** I/O abstraction for the IntakeSubsystem */
+public interface IndexerSubsystemIO {
 
-public class TeleopIntakeTest extends Command {
-  /** Maximum flywheel velocity in rotations per second */
-  private static final double kMaxFlywheelVelocity = 4000.0;
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Initializes and configures the I/O implementation */
+  default void initialize() {}
 
-  /** Intake subsystem to operate on */
-  private final IntakeSubsystem m_intakeSubsystem;
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Update logged input quantities */
+  default void processInputs(IndexerSubsystemInputs inputs) {}
 
-  /** Controller used to operate the intake */
-  private final ProcessedXboxController m_controller;
-
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Creates an instance of the comman
+   * Sets the desired speed of the indexer mechanism as a normalized percentage of full scale
    *
-   * @param intakeSubsystem Intake subsystem to operate on
-   * @param joystickSubsystem Joystick subsystem used to control the intake
+   * @param percent Normalized percentage of full speed (0.0 to 1.0)
    */
-  public TeleopIntakeTest(IntakeSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
-    addRequirements(intakeSubsystem);
-    m_intakeSubsystem = intakeSubsystem;
-    m_controller = joystickSubsystem.getOperatorController();
-  }
-
-  // Called when the command is initially scheduled.
-  @Override
-  public void initialize() {}
-
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    double indexerSpeed = -1.0 * m_controller.getRightY();
-    double flywheelVelocity = -1.0 * m_controller.getLeftY() * kMaxFlywheelVelocity;
-    m_intakeSubsystem.setIndexerSpeed(indexerSpeed);
-    m_intakeSubsystem.setFlywheelVelocity(flywheelVelocity);
-  }
-
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {}
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return false;
-  }
+  default void setIndexerSpeed(double percent) {}
 }

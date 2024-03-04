@@ -51,10 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.climber;
 
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
 import frc.robot.subsystems.climber.ClimberSubsystem.ClimberMotorID;
-import frc.robot.subsystems.intake.IntakeSubsystem;
 
 /** Interface implemented by subsystem I/O */
 public interface ClimberSubsystemIO {
@@ -93,25 +90,4 @@ public interface ClimberSubsystemIO {
    * @param degrees Normalized percentage (-1.0 to 1.0)
    */
   default void setMotorOutputPercent(double percent) {}
-
-  /** Parameters used to configure the subsystem I/O */
-  public static class Config {
-    public final RobotCANBus canBus;
-    public final CANDevice leaderMotorDevice;
-    public final CANDevice followerMotorDevice;
-    public final double climberGearRatio;
-    public final boolean invertMotors;
-    public final double maxRotations;
-    public final double maxMotorOutputPercent;
-
-    public Config() {
-      this.canBus = IntakeSubsystem.kCANBus;
-      this.leaderMotorDevice = ClimberSubsystem.kLeaderMotorDevice;
-      this.followerMotorDevice = ClimberSubsystem.kFollowerMotorDevice;
-      this.climberGearRatio = ClimberSubsystem.kClimberMotorGearRatio;
-      this.invertMotors = ClimberSubsystem.kInvertMotors;
-      this.maxRotations = ClimberSubsystem.kMaxRotations;
-      this.maxMotorOutputPercent = ClimberSubsystem.kMaxMotorOutputPercent;
-    }
-  }
 }

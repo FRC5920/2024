@@ -49,41 +49,26 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.flywheel;
 
-import edu.wpi.first.math.system.plant.DCMotor;
+import frc.lib.logging.LoggableMotorInputs;
 import frc.robot.sim.ctreSim.SimulatedDevice;
 import frc.robot.sim.ctreSim.TalonFXProfile;
-import frc.robot.sim.ctreSim.TalonSRXSimProfile;
 
 /** Add your docs here. */
-public class IntakeSubsystemIOSim extends IntakeSubsystemIOReal {
-
-  /** Simulated rotor inertia used for the indexer motor */
-  private static final double kIndexerRotorInertia = 0.001;
+public class FlywheelSubsystemIOSim extends FlywheelSubsystemIOReal {
 
   /** Simulated rotor inertia used for the flywheel motor */
   private static final double kFlywheelRotorInertia = 0.001;
-
-  /** Simulated indexer motor */
-  private final SimulatedDevice m_simIndexer;
 
   /** Simulated flywheel motor */
   private final SimulatedDevice m_simFlywheel;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Creates an instance of the I/O implementation
-   *
-   * @param config Configuration values for the I/O implementation
-   */
-  public IntakeSubsystemIOSim(IntakeSubsystemIO.Config config) {
-    super(config);
+  /** Creates an instance of the I/O implementation */
+  public FlywheelSubsystemIOSim() {
+    super();
     m_simFlywheel = new SimulatedDevice(new TalonFXProfile(m_flywheelMotor, kFlywheelRotorInertia));
-    m_simIndexer =
-        new SimulatedDevice(
-            new TalonSRXSimProfile(
-                m_indexerMotor, DCMotor.getAndymarkRs775_125(1), kIndexerRotorInertia));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,10 +77,10 @@ public class IntakeSubsystemIOSim extends IntakeSubsystemIOReal {
    *
    * @param inputs Object to populate with subsystem input values to be logged
    */
-  public void processInputs(IntakeSubsystemInputs inputs) {
+  @Override
+  public void processInputs(LoggableMotorInputs inputs) {
     // Update device simulations
     m_simFlywheel.calculate();
-    m_simIndexer.calculate();
 
     // Process inputs
     super.processInputs(inputs);

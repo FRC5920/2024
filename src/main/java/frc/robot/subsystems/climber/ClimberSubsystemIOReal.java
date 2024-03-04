@@ -63,6 +63,7 @@ import frc.lib.utility.Alert;
 import frc.lib.utility.Phoenix5Util;
 import frc.lib.utility.Phoenix5Util.Sensor;
 import frc.lib.utility.Phoenix5Util.SensorMeasurement;
+import frc.robot.Constants.CANDevice;
 import frc.robot.subsystems.climber.ClimberSubsystem.ClimberMotorID;
 import java.util.ArrayList;
 
@@ -74,9 +75,6 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
 
   // Timeout used when configuring motor controllers
   private static final int kTimeoutMs = 30;
-
-  /** I/O configuration */
-  protected final ClimberSubsystemIO.Config m_config;
 
   /** Master motor used to control climber extension */
   protected final WPI_TalonSRX m_climberLeader;
@@ -97,10 +95,9 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
    *
    * @config I/O configuration
    */
-  public ClimberSubsystemIOReal(ClimberSubsystemIO.Config config) {
-    m_config = config;
-    m_climberLeader = new WPI_TalonSRX(config.leaderMotorDevice.id());
-    m_climberFollower = new WPI_TalonSRX(config.followerMotorDevice.id());
+  public ClimberSubsystemIOReal() {
+    m_climberLeader = new WPI_TalonSRX(CANDevice.ClimberLeaderMotor.id());
+    m_climberFollower = new WPI_TalonSRX(CANDevice.ClimberFollowerMotor.id());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -135,7 +132,7 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
    * @param degrees Normalized percentage of full climber extension (0.0 to 1.0)
    */
   public void setExtensionPercent(double percent) {
-    double targetRotations = percent * m_config.maxRotations;
+    double targetRotations = percent * ClimberSubsystem.kMaxRotations;
     double sensorUnits = m_sensorConverter.rotationsToSensorUnits(targetRotations);
     m_climberLeader.set(ControlMode.Position, sensorUnits);
   }
@@ -153,7 +150,7 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
             ? m_climberLeader.getSelectedSensorPosition(0)
             : m_climberFollower.getSelectedSensorPosition(0);
     double rotations = m_sensorConverter.sensorUnitsToRotations(sensorUnits);
-    double percent = rotations / m_config.maxRotations;
+    double percent = rotations / ClimberSubsystem.kMaxRotations;
 
     return percent;
   }
@@ -198,8 +195,11 @@ public class ClimberSubsystemIOReal implements ClimberSubsystemIO {
       /* Config the peak and nominal outputs, 12V means full */
       errors.add(motor.configNominalOutputForward(0, kTimeoutMs));
       errors.add(motor.configNominalOutputReverse(0, kTimeoutMs));
-      errors.add(motor.configPeakOutputForward(m_config.maxMotorOutputPercent, kTimeoutMs));
-      errors.add(motor.configPeakOutputReverse(-1.0 * m_config.maxMotorOutputPercent, kTimeoutMs));
+      errors.add(
+          motor.configPeakOutputForward(ClimberSubsystem.kMaxMotorOutputPercent, kTimeoutMs));
+      errors.add(
+          motor.configPeakOutputReverse(
+              -1.0 * ClimberSubsystem.kMaxMotorOutputPercent, kTimeoutMs));
 
       // Configure the SRX controller to use an attached CTRE magnetic encoder's absolute
       // position measurement

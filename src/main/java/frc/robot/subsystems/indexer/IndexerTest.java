@@ -49,42 +49,49 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.pivot;
+package frc.robot.subsystems.indexer;
 
-import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.joystick.ProcessedXboxController;
+import frc.robot.subsystems.JoystickSubsystem;
 
-/** Interface implemented by subsystem I/O */
-public interface PivotSubsystemIO {
+public class IndexerTest extends Command {
+  /** Indexer subsystem to operate on */
+  private final IndexerSubsystem m_indexerSubsystem;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Initializes and configures the I/O implementation */
-  default void initialize() {}
+  /** Controller used to operate the indexer */
+  private final ProcessedXboxController m_controller;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Update logged input quantities */
-  default void processInputs(PivotSubsystemInputs inputs) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired pivot angle in degrees
+   * Creates an instance of the comman
    *
-   * @param degrees The desired pivot angle in degrees
+   * @param indexerSubsystem indexer subsystem to operate on
+   * @param joystickSubsystem Joystick subsystem used to control the indexer
    */
-  default void setAngleDeg(double degrees) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the current pivot angle in degrees */
-  default double getAngleDeg() {
-    return 0.0;
+  public IndexerTest(IndexerSubsystem indexerSubsystem, JoystickSubsystem joystickSubsystem) {
+    addRequirements(indexerSubsystem);
+    m_indexerSubsystem = indexerSubsystem;
+    m_controller = joystickSubsystem.getOperatorController();
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current angle of a pivot motor in degrees
-   *
-   * @motorID Pivot motor whose angle is to be returned
-   */
-  default double getMotorAngleDeg(PivotMotorID motorID) {
-    return 0.0;
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {}
+
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+    double indexerSpeed = -1.0 * m_controller.getRightY();
+    m_indexerSubsystem.setIndexerSpeed(indexerSpeed);
+  }
+
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {}
+
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
   }
 }
