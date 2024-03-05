@@ -58,16 +58,23 @@ import frc.lib.LED.ColorConstants;
 import frc.lib.utility.AdvantageKitLogInitializer;
 import frc.lib.utility.Alert;
 import frc.lib.utility.Alert.AlertType;
+import frc.lib.utility.BatteryTracker;
 import frc.lib.utility.CanBusErrorAlert;
+import frc.lib.utility.RobotRunMode;
 import frc.robot.commands.LEDCommands.LEDsToPattern;
 import frc.robot.commands.LEDCommands.LEDsToSolidColor;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 
 public class Robot extends LoggedRobot {
-
+  private static final String batteryNameFile = "/home/lvuser/battery-name.txt";
   /** Alert displayed if AdvantageKit Logger can't keep up with the amount of data being logged */
   private final Alert m_logReceiverQueueAlert =
       new Alert("Logging queue exceeded capacity.  Data will NOT be logged.", AlertType.ERROR);
@@ -79,6 +86,10 @@ public class Robot extends LoggedRobot {
   /** Alert displayed if a low battery is detected */
   // private final Alert lowBatteryAlert =
   //     new Alert("Low battery voltage detected.", AlertType.WARNING);
+
+  /** Alert displayed if duplicate battery is present */
+  private final Alert sameBatteryAlert =
+      new Alert("The battery has not been changed since the last match.", AlertType.WARNING);
 
   /** Container of subsystems and other components that make up the robot */
   private final RobotContainer m_robotContainer = new RobotContainer();
@@ -128,7 +139,35 @@ public class Robot extends LoggedRobot {
 
     logInit.initializeLogging(Constants.kLoggingIsEnabled, Constants.getLogDirectory());
 
-    // TODO: log battery name and info
+    // Scan Battery
+    System.out.println("[Init] Scanning Battery");
+    Logger.recordMetadata("BatteryName", "BAT-" + BatteryTracker.scanBattery(1.5));
+
+    // Check for battery alert
+    if (Constants.getMode() == RobotRunMode.REAL
+        && !BatteryTracker.getName().equals(BatteryTracker.defaultName)) {
+      File file = new File(batteryNameFile);
+      if (file.exists()) {
+        // Read previous battery name
+        String previousBatteryName = "";
+        try {
+          previousBatteryName =
+              new String(Files.readAllBytes(Paths.get(batteryNameFile)), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+
+        if (previousBatteryName.equals(BatteryTracker.getName())) {
+          // Same battery, set alert
+          sameBatteryAlert.set(true);
+          // TODO: Make LEDs Angry
+          // Leds.getInstance().sameBattery = true;
+        } else {
+          // New battery, delete file
+          file.delete();
+        }
+      }
+    }
   }
 
   /**
