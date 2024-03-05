@@ -54,7 +54,7 @@ package frc.robot.subsystems.vision;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import frc.robot.Constants.CameraInfo.TagCameraResolution;
+import frc.robot.subsystems.vision.CameraConstants.TagCameraResolution;
 import java.util.function.Supplier;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.PhotonCameraSim;

@@ -60,7 +60,7 @@ import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.LED.ColorConstants;
-import frc.robot.Constants.CameraInfo;
+import frc.robot.Constants.CameraID;
 import frc.robot.autos.AutoDashboardTab;
 import frc.robot.commands.TeleopSwerveCTRE;
 import frc.robot.commands.autoCommands.ShootAmpClose;
@@ -99,8 +99,8 @@ public class RobotContainer {
   public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
 
   /* Cameras */
-  public final PhotonCamera frontTagCamera = new PhotonCamera(CameraInfo.FrontCamera.cameraName);
-  public final PhotonCamera rearTagCamera = new PhotonCamera(CameraInfo.RearCamera.cameraName);
+  public final PhotonCamera frontTagCamera = new PhotonCamera(CameraID.FrontCamera.name);
+  public final PhotonCamera rearTagCamera = new PhotonCamera(CameraID.RearCamera.name);
 
   /** Swerve drive subsystem */
   public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
