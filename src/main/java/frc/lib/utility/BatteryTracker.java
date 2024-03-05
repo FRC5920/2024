@@ -1,23 +1,65 @@
-// Copyright (c) 2023 FRC 6328
-// http://github.com/Mechanical-Advantage
-//
-// Use of this source code is governed by an MIT-style
-// license that can be found in the LICENSE file at
-// the root directory of this project.
+////////////////////////////////////////////////////////////////////////////////
+// Copyright (c) 2023-6328 FIRST and other WPILib contributors.
+// http://github.com/FRC5920
+// Open Source Software; you can modify and/or share it under the terms of the
+// license given in WPILib-License.md in the root directory of this project.
+////////////////////////////////////////////////////////////////////////////////
 
+/*-----------------------------------------------------------------------------\
+|                                                                              |
+|                       ================================                       |
+|                       **    TEAM 5920 - Vikotics    **                       |
+|                       ================================                       |
+|                                                                              |
+|                            °        #°                                       |
+|                            *O       °@o                                      |
+|                            O@ °o@@#° o@@                                     |
+|                           #@@@@@@@@@@@@@@                                    |
+|                           @@@@@@@@@@@@@@@                                    |
+|                           @@@@@@@@@@@@@@°                                    |
+|                             #@@@@@@@@@@@@@O....   .                          |
+|                             o@@@@@@@@@@@@@@@@@@@@@o                          |
+|                             O@@@@@@@@@@@@@@@@@@@#°                    *      |
+|                             O@@@@@@@@@@@@@@@@@@@@@#O                O@@    O |
+|                            .@@@@@@@@°@@@@@@@@@@@@@@@@#            °@@@    °@@|
+|                            #@@O°°°°  @@@@@@@@@@@@@@@@@@°          @@@#*   @@@|
+|                         .#@@@@@  o#oo@@@@@@@@@@@@@@@@@@@@@.       O@@@@@@@@@@|
+|                        o@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@°     @@@@@@@@@°|
+|                        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@   .@@@@@o°   |
+|          °***          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@  @@@@@o     |
+|     o#@@@@@@@@@@@@.   *@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@o@@@@@@      |
+|OOo°@@@@@@@@@@@@O°#@#   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@       |
+|@@@@@@@@@@@@@@@@    o°  .@@@@@@@@@@@@@@@@@@@@@@@@#*@@@@@@@@@@@@@@@@@@@@       |
+|@@@@@@@@@@@@@@@*         O@@@@@@@@@@@@@@@@@@@@@@@   °@@@@@@@@@@@@@@@@@@o      |
+|@@@@#@@@@@@@@@            @@@@@@@@@@@@@@@@@@@@@@       .*@@@@@@@@@@@@@@.      |
+|@@@°      @@@@O           @@@@@@@@@@@@@@@@@@@@o           °@@@@@@@@@@@o       |
+|          @@@@@          .@@@@@@@@@@@@@@@@@@@*               O@@@@@@@*        |
+|           @@@@@        o@@@@@@@@@@@@@@@@@@@@.               #@@@@@O          |
+|           *@@@@@@@*  o@@@@@@@@@@@@@@@@@@@@@@°              o@@@@@            |
+|           @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@.              @@@@@#            |
+|          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@O             #@@@@@             |
+|          .@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#           .@@@@@°             |
+|           @@@@@@@@@@O*    @@@@@@@@@@@@@@@@@@@@@°         °O@@@°              |
+|            °O@@@@@@       @@@@@@@@@@@@@@@@@@@@@@@                            |
+|              o@@@@@°      @@@@@@@@@@@@@@@@@@@@@@@@                           |
+|               @@@@@@.     @@@@@@@@@@@@@@@@@@@@@@@@@o                         |
+|                @@@@@@*    @@@@@@@@@@@@@@@@@@@@@@@@@@                         |
+|                o@@@@@@.  o@@@@@@@@@@@@@@@@@@@@@@@@@@@                        |
+|                 #@@@@@@  *@@@@@@@@@@@@@@@@@@@@@@@@@@@@                       |
+|                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
+|                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
+\-----------------------------------------------------------------------------*/
 package frc.lib.utility;
 
 import edu.wpi.first.wpilibj.SerialPort;
 import frc.robot.Constants;
-
 import java.util.Arrays;
-import java.util.List;
 // import org.littletonrobotics.frc2023.Constants;
 // import org.littletonrobotics.frc2023.Constants.Mode;
 // import org.littletonrobotics.frc2023.Constants.RobotType;
 
 public class BatteryTracker {
-  //private static final List<RobotType> supportedRobots = List.of(RobotType.ROBOT_2023C);
+  // private static final List<RobotType> supportedRobots = List.of(RobotType.ROBOT_2023C);
   public static final String defaultName = "0000-000";
 
   private static final int nameLength = 8;
@@ -36,47 +78,47 @@ public class BatteryTracker {
    */
   public static String scanBattery(double timeout) {
     if (Constants.getMode() == RobotRunMode.REAL) {
-      //if (supportedRobots.contains(Constants.getRobot())) {
-        // Only scan on supported robots and in real mode
+      // if (supportedRobots.contains(Constants.getRobot())) {
+      // Only scan on supported robots and in real mode
 
-        try (SerialPort port = new SerialPort(9600, SerialPort.Port.kUSB)) {
-          port.setTimeout(timeout);
-          port.setWriteBufferSize(scanCommand.length);
-          port.setReadBufferSize(fullResponseLength);
+      try (SerialPort port = new SerialPort(9600, SerialPort.Port.kUSB)) {
+        port.setTimeout(timeout);
+        port.setWriteBufferSize(scanCommand.length);
+        port.setReadBufferSize(fullResponseLength);
 
-          port.write(scanCommand, scanCommand.length);
-          byte[] response = port.read(fullResponseLength);
+        port.write(scanCommand, scanCommand.length);
+        byte[] response = port.read(fullResponseLength);
 
-          // Ensure response is correct length
-          if (response.length != fullResponseLength) {
-            System.out.println(
-                "[BatteryTracker] Expected "
-                    + fullResponseLength
-                    + " bytes from scanner, got "
-                    + response.length);
+        // Ensure response is correct length
+        if (response.length != fullResponseLength) {
+          System.out.println(
+              "[BatteryTracker] Expected "
+                  + fullResponseLength
+                  + " bytes from scanner, got "
+                  + response.length);
+          return name;
+        }
+
+        // Ensure response starts with prefix
+        for (int i = 0; i < responsePrefix.length; i++) {
+          if (response[i] != responsePrefix[i]) {
+            System.out.println("[BatteryTracker] Invalid prefix from scanner.  Got data:");
+            System.out.println("[BatteryTracker] " + Arrays.toString(response));
             return name;
           }
-
-          // Ensure response starts with prefix
-          for (int i = 0; i < responsePrefix.length; i++) {
-            if (response[i] != responsePrefix[i]) {
-              System.out.println("[BatteryTracker] Invalid prefix from scanner.  Got data:");
-              System.out.println("[BatteryTracker] " + Arrays.toString(response));
-              return name;
-            }
-          }
-
-          // Read name from data
-          byte[] batteryNameBytes = new byte[nameLength];
-          System.arraycopy(response, responsePrefix.length, batteryNameBytes, 0, nameLength);
-          name = new String(batteryNameBytes);
-          System.out.println("[BatteryTracker] Scanned battery " + name);
-
-        } catch (Exception e) {
-          System.out.println("[BatteryTracker] Exception while trying to scan battery");
-          e.printStackTrace();
         }
-      //}
+
+        // Read name from data
+        byte[] batteryNameBytes = new byte[nameLength];
+        System.arraycopy(response, responsePrefix.length, batteryNameBytes, 0, nameLength);
+        name = new String(batteryNameBytes);
+        System.out.println("[BatteryTracker] Scanned battery " + name);
+
+      } catch (Exception e) {
+        System.out.println("[BatteryTracker] Exception while trying to scan battery");
+        e.printStackTrace();
+      }
+      // }
     }
 
     return name;
