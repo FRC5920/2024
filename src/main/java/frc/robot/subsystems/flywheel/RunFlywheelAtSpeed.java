@@ -49,94 +49,52 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.flywheel;
 
-import frc.robot.Constants.CANDevice;
-import frc.robot.Constants.RobotCANBus;
+import edu.wpi.first.wpilibj2.command.Command;
 
-/** I/O abstraction for the IntakeSubsystem */
-public interface IntakeSubsystemIO {
+//////////////////////////////////////////////////////////////////////////////////////////////////
+public class RunFlywheelAtSpeed extends Command {
+  private final FlywheelSubsystem m_intakeSubsystem;
+  private final FlywheelPreset m_preset;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Initializes and configures the I/O implementation */
-  default void initialize() {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Update logged input quantities */
-  default void processInputs(IntakeSubsystemInputs inputs) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Sets the desired speed of the indexer mechanism as a normalized percentage of full scale
-   *
-   * @param percent Normalized percentage of full speed (0.0 to 1.0)
-   */
-  default void setIndexerSpeed(double percent) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Sets the desired velocity of the flywheel mechanism
-   *
-   * @param rotPerSec Desired velocity in rotations per second
-   */
-  default void setFlywheelVelocity(double rotPerSec) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current speed of the indexer mechanism as a percentage of full speed
-   *
-   * @return Normalized percentage of full speed (0.0 to 1.0)
-   */
-  default double getIndexerSpeed() {
-    return 0.0;
+  /** Creates a new ClimberJoystickTeleOp. */
+  public RunFlywheelAtSpeed(FlywheelSubsystem intakeSubsystem, FlywheelPreset preset) {
+    m_intakeSubsystem = intakeSubsystem;
+    m_preset = preset;
+    addRequirements(m_intakeSubsystem);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current velocity of the flywheel mechanism
-   *
-   * @return The velocity of the flywheel mechanism in rotations per second
-   */
-  default double getFlywheelVelocity() {
-    return 0.0;
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {
+    m_intakeSubsystem.setFlywheelVelocity(m_preset.flywheelRPS);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the distance measured by the gamepiece sensor
-   *
-   * @return The distance measured by the gamepiece sensor in meters
-   */
-  default double getGamepieceDistance() {
-    return 0.0;
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {}
+
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {
+    m_intakeSubsystem.setFlywheelVelocity(0.0);
   }
 
-  /** Parameters used to configure the subsystem I/O */
-  public static class Config {
-    public final RobotCANBus canBus;
-    public final CANDevice flywheelMotorDevice;
-    public final double flywheelGearRatio;
-    public final boolean invertFlywheelMotor;
-    public final double maxFlywheelVelocity;
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
+  }
 
-    public final CANDevice indexerMotorDevice;
-    public final double indexerGearRatio;
-    public final boolean invertIndexerMotor;
-    public final double maxIndexerSpeed;
+  public enum FlywheelPreset {
+    IntakeRing(10.0),
+    ShootRing(-3000.0);
 
-    public final CANDevice gamepieceSensorDevice;
+    public final double flywheelRPS;
 
-    public Config() {
-      this.canBus = IntakeSubsystem.kCANBus;
-      this.flywheelMotorDevice = IntakeSubsystem.kFlywheelMotorCANDevice;
-      this.flywheelGearRatio = IntakeSubsystem.kFlywheelMotorGearRatio;
-      this.invertFlywheelMotor = IntakeSubsystem.kFlywheelMotorInverted;
-      this.maxFlywheelVelocity = IntakeSubsystem.kMaxFlywheelMotorVelocity;
-      this.indexerMotorDevice = IntakeSubsystem.kIndexerMotorCANDevice;
-      this.indexerGearRatio = IntakeSubsystem.kIndexerMotorGearRatio;
-      this.invertIndexerMotor = IntakeSubsystem.kIndexerMotorInverted;
-      this.maxIndexerSpeed = IntakeSubsystem.kMaxIndexerSpeed;
-      this.gamepieceSensorDevice = IntakeSubsystem.kGamepieceSensorCANDevice;
+    private FlywheelPreset(double flywheelRPS) {
+      this.flywheelRPS = flywheelRPS;
     }
   }
 }

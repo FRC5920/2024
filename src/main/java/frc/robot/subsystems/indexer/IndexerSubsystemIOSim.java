@@ -49,42 +49,43 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.pivot;
+package frc.robot.subsystems.indexer;
 
-import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
+import edu.wpi.first.math.system.plant.DCMotor;
+import frc.robot.sim.ctreSim.SimulatedDevice;
+import frc.robot.sim.ctreSim.TalonSRXSimProfile;
 
-/** Interface implemented by subsystem I/O */
-public interface PivotSubsystemIO {
+/** Add your docs here. */
+public class IndexerSubsystemIOSim extends IndexerSubsystemIOReal {
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Initializes and configures the I/O implementation */
-  default void initialize() {}
+  /** Simulated rotor inertia used for the indexer motor */
+  private static final double kIndexerRotorInertia = 0.001;
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Update logged input quantities */
-  default void processInputs(PivotSubsystemInputs inputs) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Sets the desired pivot angle in degrees
-   *
-   * @param degrees The desired pivot angle in degrees
-   */
-  default void setAngleDeg(double degrees) {}
+  /** Simulated indexer motor */
+  private final SimulatedDevice m_simIndexer;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the current pivot angle in degrees */
-  default double getAngleDeg() {
-    return 0.0;
+  /** Creates an instance of the I/O implementation */
+  public IndexerSubsystemIOSim() {
+    super();
+    m_simIndexer =
+        new SimulatedDevice(
+            new TalonSRXSimProfile(
+                m_indexerMotor, DCMotor.getAndymarkRs775_125(1), kIndexerRotorInertia));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Returns the current angle of a pivot motor in degrees
+   * This method is called each robot cycle to process inputs to the subsystem
    *
-   * @motorID Pivot motor whose angle is to be returned
+   * @param inputs Object to populate with subsystem input values to be logged
    */
-  default double getMotorAngleDeg(PivotMotorID motorID) {
-    return 0.0;
+  @Override
+  public void processInputs(IndexerSubsystemInputs inputs) {
+    // Update device simulations
+    m_simIndexer.calculate();
+
+    // Process inputs
+    super.processInputs(inputs);
   }
 }

@@ -49,56 +49,53 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.intake;
+package frc.robot.subsystems.flywheel;
 
-import frc.lib.logging.LoggableLaserCANInputs;
-import frc.lib.logging.LoggableMotorInputs;
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.joystick.ProcessedXboxController;
+import frc.robot.subsystems.JoystickSubsystem;
 
-/** Logged inputs for the IntakeSubsystem */
-public class IntakeSubsystemInputs implements LoggableInputs {
-  /** Flywheel motor inputs */
-  public LoggableMotorInputs flywheel;
-  /** Indexer motor inputs */
-  public LoggableMotorInputs indexer;
-  /** Gamepiece sensor inputs */
-  public LoggableLaserCANInputs laserCAN;
+public class FlywheelTestCommand extends Command {
+  /** Maximum flywheel velocity in rotations per second */
+  private static final double kMaxFlywheelVelocity = 4000.0;
+
+  /** Intake subsystem to operate on */
+  private final FlywheelSubsystem m_intakeSubsystem;
+
+  /** Controller used to operate the intake */
+  private final ProcessedXboxController m_controller;
 
   /**
-   * Creates an instance of the inputs and sets the prefix to log them under
+   * Creates an instance of the comman
    *
-   * @param prefix Prefix the inputs will be logged under
+   * @param intakeSubsystem Intake subsystem to operate on
+   * @param joystickSubsystem Joystick subsystem used to control the intake
    */
-  public IntakeSubsystemInputs(String prefix) {
-    flywheel = new LoggableMotorInputs("Flywheel");
-    indexer = new LoggableMotorInputs("Indexer");
-    laserCAN = new LoggableLaserCANInputs("LaserCAN");
+  public FlywheelTestCommand(
+      FlywheelSubsystem intakeSubsystem, JoystickSubsystem joystickSubsystem) {
+    addRequirements(intakeSubsystem);
+    m_intakeSubsystem = intakeSubsystem;
+    m_controller = joystickSubsystem.getOperatorController();
   }
 
-  /** Creates an instance of the loggable object during clone() calls */
-  private IntakeSubsystemInputs() {}
+  // Called when the command is initially scheduled.
+  @Override
+  public void initialize() {}
 
-  /** Write input values to log */
-  public void toLog(LogTable table) {
-    flywheel.toLog(table);
-    indexer.toLog(table);
-    laserCAN.toLog(table);
+  // Called every time the scheduler runs while the command is scheduled.
+  @Override
+  public void execute() {
+    double flywheelVelocity = -1.0 * m_controller.getLeftY() * kMaxFlywheelVelocity;
+    m_intakeSubsystem.setFlywheelVelocity(flywheelVelocity);
   }
 
-  /** Read input values from log */
-  public void fromLog(LogTable table) {
-    flywheel.fromLog(table);
-    indexer.fromLog(table);
-    laserCAN.fromLog(table);
-  }
+  // Called once the command ends or is interrupted.
+  @Override
+  public void end(boolean interrupted) {}
 
-  /** Create a clone of input values */
-  public IntakeSubsystemInputs clone() {
-    IntakeSubsystemInputs copy = new IntakeSubsystemInputs();
-    copy.flywheel = this.flywheel;
-    copy.indexer = this.indexer;
-    copy.laserCAN = this.laserCAN;
-    return copy;
+  // Returns true when the command should end.
+  @Override
+  public boolean isFinished() {
+    return false;
   }
 }

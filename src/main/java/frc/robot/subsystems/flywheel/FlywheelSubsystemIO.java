@@ -49,12 +49,12 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.pivot;
+package frc.robot.subsystems.flywheel;
 
-import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
+import frc.lib.logging.LoggableMotorInputs;
 
-/** Interface implemented by subsystem I/O */
-public interface PivotSubsystemIO {
+/** I/O abstraction for the IntakeSubsystem */
+public interface FlywheelSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Initializes and configures the I/O implementation */
@@ -62,29 +62,13 @@ public interface PivotSubsystemIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Update logged input quantities */
-  default void processInputs(PivotSubsystemInputs inputs) {}
+  default void processInputs(LoggableMotorInputs inputs) {}
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Sets the desired pivot angle in degrees
+   * Sets the desired velocity of the flywheel mechanism
    *
-   * @param degrees The desired pivot angle in degrees
+   * @param rotPerSec Desired velocity in rotations per second
    */
-  default void setAngleDeg(double degrees) {}
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns the current pivot angle in degrees */
-  default double getAngleDeg() {
-    return 0.0;
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Returns the current angle of a pivot motor in degrees
-   *
-   * @motorID Pivot motor whose angle is to be returned
-   */
-  default double getMotorAngleDeg(PivotMotorID motorID) {
-    return 0.0;
-  }
+  default void setFlywheelVelocity(double rotPerSec) {}
 }
