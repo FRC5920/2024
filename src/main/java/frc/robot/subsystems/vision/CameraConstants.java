@@ -51,69 +51,47 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.Vector;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.numbers.N3;
-import org.littletonrobotics.junction.Logger;
+import edu.wpi.first.math.util.Units;
+import frc.robot.Constants.CameraID;
 
-/** Logged outputs produced by the Heimdall vision subsystem */
-public class HeimdallSubsystemOutputs {
+/** Add your docs here. */
+public class CameraConstants {
+  /** FRONT-looking camera mounted on the RIGHT side of the robot */
+  public static class FrontCamera {
 
-  public final PoseEstimateOutputs frontCam;
-  public final PoseEstimateOutputs rearCam;
+    /** PhotonVision camera */
+    public static final CameraID kCamera = CameraID.FrontCamera;
 
-  /**
-   * Creates an instance of the outputs
-   *
-   * @param prefix Prefix to apply to logged data
-   */
-  public HeimdallSubsystemOutputs(String prefix) {
-    frontCam = new PoseEstimateOutputs(prefix + "/frontCam");
-    rearCam = new PoseEstimateOutputs(prefix + "/rearCam");
+    /** Location of the camera relative to the center of the bot (meters, radians) */
+    public static class Location {
+      // Camera points toward the front RIGHT corner
+      public static final double xOffset = 0.115378; // Taken from CAD model 2/25/2024
+      public static final double yOffset = -0.282293; // Taken from CAD model 2/25/2024
+      public static final double zOffset = 0.1;
+      /** Rotation of the camera about its Z-axis */
+      public static final double yaw = Units.degreesToRadians(-45.0);
+    }
   }
 
-  /** Write output values to log */
-  public void toLog() {
-    frontCam.toLog();
-    rearCam.toLog();
+  /** REAR-looking camera mounted on the LEFT side of the robot */
+  public static class RearCamera {
+    /** PhotonVision camera */
+    public static final CameraID kCamera = CameraID.RearCamera;
+
+    /** Location of the camera relative to the center of the bot (meters, radians) */
+    public static class Location {
+      // Camera points toward the rear left corner
+      public static final double xOffset = 0.075053; // Taken from CAD model 2/25/2024
+      public static final double yOffset = 0.280637; // Taken from CAD model 2/25/2024
+      public static final double zOffset = 0.1; // Measured 2/25/2024
+      /** Rotation of the camera about its Z-axis */
+      public static final double yaw = Units.degreesToRadians(135.0);
+    }
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** An object containing a PhotonVision-based pose estimate and associated output data */
-  public static class PoseEstimateOutputs {
-
-    private final String m_keyNoEstimate;
-    private final String m_keyPose;
-    private final String m_keyStdDevs;
-    private final String m_keyTagIDs;
-
-    /** true when an empty estimate was produced by the pose estimator; else false */
-    public boolean noEstimate = false;
-    /** Estimated robot pose produced from vision data */
-    public Pose3d pose = new Pose3d();
-    /** Standard deviations associated with the pose estimate */
-    public Vector<N3> stdDevs = PoseEstimateProcessor.kUntrustedPoseStdDevs;
-    /** Sorted array of tag ID's indicating the tags used to calculate the estimate */
-    public int[] tagIDs = new int[] {};
-
-    /**
-     * Creates a new instance of the inputs with a given log prefix
-     *
-     * @param prefix Prefix to use when logging data fields
-     */
-    public PoseEstimateOutputs(String prefix) {
-      m_keyNoEstimate = prefix + "/noEstimate";
-      m_keyPose = prefix + "/pose";
-      m_keyStdDevs = prefix + "/stdDevs";
-      m_keyTagIDs = prefix + "/tagIDs";
-    }
-
-    /** Writes outputs to the log */
-    public void toLog() {
-      Logger.recordOutput(m_keyNoEstimate, noEstimate);
-      Logger.recordOutput(m_keyPose, pose);
-      Logger.recordOutput(m_keyStdDevs, stdDevs.getData());
-      Logger.recordOutput(m_keyTagIDs, tagIDs);
-    }
+  /** Resolution of a tag cameras in pixels */
+  public static class TagCameraResolution {
+    public static final int widthPx = 1280;
+    public static final int heightPx = 720;
   }
 }

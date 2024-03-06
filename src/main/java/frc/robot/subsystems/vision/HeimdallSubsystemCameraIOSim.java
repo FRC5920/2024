@@ -53,16 +53,19 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import frc.robot.Constants.CameraID;
 import frc.robot.subsystems.vision.CameraConstants.TagCameraResolution;
 import java.util.function.Supplier;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.targeting.PhotonPipelineResult;
 
 /** Add your docs here. */
-public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
+public class HeimdallSubsystemCameraIOSim implements HeimdallSubsystemCameraIO {
 
   /** Enable a raw camera stream for the simulated cameras */
   private static final boolean kEnableRawSimCameraStream = true;
@@ -94,9 +97,6 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
   /** Front tag camera simulation */
   private final PhotonCameraSim m_frontCameraSim;
 
-  /** Rear tag camera simulation */
-  private final PhotonCameraSim m_rearCameraSim;
-
   /** Supplier from which the simulated robot pose is obtained */
   private final Supplier<Pose2d> m_poseSupplier;
 
@@ -104,14 +104,11 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
   /**
    * Creates an instance of the I/O
    *
-   * @param frontCamera Camera pointing toward the front side of the robot
-   * @param rearCamera Camera pointing toward the rear side of the robot
-   * @param poseSupplier Routine that will be called to obtain the present robot pose for updating
-   *     the vision simulation
+   * @param cameraID Camera to use
+   * @param poseSupplier Supplier used to obtain the present robot pose for updating the vision simulation
+   * @param bot2CameraXform Transform used to describe the location of the simulated camera relative to the robot
    */
-  public HeimdallSubsystemIOSim(
-      PhotonCamera leftCamera, PhotonCamera rightCamera, Supplier<Pose2d> poseSupplier) {
-    super(leftCamera, rightCamera);
+  public HeimdallSubsystemCameraIOSim(CameraID cameraID, Supplier<Pose2d> poseSupplier, Transform3d bot2CameraXform) {
 
     m_poseSupplier = poseSupplier;
 
@@ -156,12 +153,28 @@ public class HeimdallSubsystemIOSim extends HeimdallSubsystemIOReal {
    * @param outputs Outputs to update
    */
   @Override
-  public void update(HeimdallSubsystemInputs inputs, HeimdallSubsystemOutputs outputs) {
+  public void updateInputs(HeimdallCameraInputs inputs) {}
+    // Get the latest result from the tag camera
+    PhotonPipelineResult pipelineResult = m_camera.getLatestResult();
+    double latestTimestamp = pipelineResult.getTimestampSeconds();
+
+    inputs.cameraIsConnected = m_camera.isConnected();
+    inputs.isFresh = Math.abs(latestTimestamp - m_lastTimestamp) > 1e-5;
+
+    // Only log pipeline result data if a new PipelineResult was received
+    if (inputs.isFresh) {
+      inputs.pipelineResult = pipelineResult;
+      inputs.timestamp = latestTimestamp;
+      m_lastTimestamp = latestTimestamp; // Store the timestamp of the latest pipeline result
+    }
+    
+  }
+
+  // Update simulation
+  void updateSim() {
 
     // Update the vision simulation with the current simulated pose
     m_visionSim.update(m_poseSupplier.get());
-
-    super.update(inputs, outputs);
 
     // Update the estimated poses on the dashboard field when new estimates are calculated
     Field2d debugField = m_visionSim.getDebugField();

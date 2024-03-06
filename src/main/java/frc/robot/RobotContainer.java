@@ -87,9 +87,9 @@ import frc.robot.subsystems.pivot.PivotSubsystemIOSim;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerveCTRE.TunerConstants;
 import frc.robot.subsystems.vision.HeimdallSubsystem;
-import frc.robot.subsystems.vision.HeimdallSubsystemIO;
-import frc.robot.subsystems.vision.HeimdallSubsystemIOReal;
-import frc.robot.subsystems.vision.HeimdallSubsystemIOSim;
+import frc.robot.subsystems.vision.HeimdallSubsystemCameraIO;
+import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOReal;
+import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOSim;
 import frc.robot.subsystems.vision.PoseEstimateProcessor;
 import org.photonvision.PhotonCamera;
 
@@ -152,7 +152,8 @@ public class RobotContainer {
     FlywheelSubsystemIO flywheelIO = null;
     IndexerSubsystemIO indexerIO = null;
     PivotSubsystemIO pivotIO = null;
-    HeimdallSubsystemIO visionIO = null;
+    HeimdallSubsystemCameraIO visionIOFront = null;
+    HeimdallSubsystemCameraIO visionIORear = null;
 
     switch (Constants.getMode()) {
       case REAL:
@@ -160,7 +161,8 @@ public class RobotContainer {
         flywheelIO = new FlywheelSubsystemIOReal();
         indexerIO = new IndexerSubsystemIOReal();
         pivotIO = new PivotSubsystemIOReal();
-        visionIO = new HeimdallSubsystemIOReal(frontTagCamera, rearTagCamera);
+        visionIOFront = new HeimdallSubsystemCameraIOReal(CameraID.FrontCamera);
+        visionIORear = new HeimdallSubsystemCameraIOReal(CameraID.RearCamera);
         break;
 
       case SIM:
@@ -168,8 +170,7 @@ public class RobotContainer {
         flywheelIO = new FlywheelSubsystemIOSim();
         indexerIO = new IndexerSubsystemIOSim();
         pivotIO = new PivotSubsystemIOSim();
-        visionIO =
-            new HeimdallSubsystemIOSim(frontTagCamera, rearTagCamera, () -> driveTrain.getPose());
+        visionIO = new HeimdallSubsystemCameraIOSim(driveTrain::getPose);
         break;
 
       case REPLAY:
@@ -178,7 +179,8 @@ public class RobotContainer {
         flywheelIO = new FlywheelSubsystemIO() {};
         indexerIO = new IndexerSubsystemIO() {};
         pivotIO = new PivotSubsystemIO() {};
-        visionIO = new HeimdallSubsystemIO() {};
+        visionIOFront = new HeimdallSubsystemCameraIO() {};
+        visionIORear = new HeimdallSubsystemCameraIO() {};
         break;
     }
 
@@ -199,7 +201,8 @@ public class RobotContainer {
 
     // Create a vision pose estimator subsystem and set the processor used to
     // assign standard deviations to its estimated poses
-    visionSubsystem = new HeimdallSubsystem(visionIO, visionPoseProcessor, visionPoseProcessor);
+    visionSubsystem = new HeimdallSubsystem(visionIOFront, visionIORear, 
+        (update) -> driveTrain.addVisionMeasurement(update.pose, update.timestamp, update.stddevs));
 
     joystickSubsystem.configureButtonBindings(this);
 

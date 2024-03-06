@@ -52,24 +52,56 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import frc.robot.Constants.CameraID;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.PhotonCamera;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
-/** I/O interface for the Heimdall vision subsystem */
-public interface HeimdallSubsystemIO {
+/** HeimdallSubsystem I/O implementation using real PhotonVision cameras */
+public class HeimdallSubsystemCameraIOReal implements HeimdallSubsystemCameraIO {
+
+  /** Tag camera accessed by this I/O implementation */
+  private final PhotonCamera m_camera;
+
+  /** Timestamp when the last good PipelineResult was received from the camera */
+  private double m_lastTimestamp;
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Creates an instance of the I/O
+   *
+   */
+  public HeimdallSubsystemCameraIOReal(CameraID camera) {
+    m_camera = new PhotonCamera(camera.name);
+  }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Updates input and output measurements
+   * Updates subsystem input and output measurements
    *
    * @param inputs Inputs to update
    * @param outputs Outputs to update
    */
-  default void update(HeimdallSubsystemInputs inputs, HeimdallSubsystemOutputs outputs) {}
+  @Override
+  public void updateInputs(HeimdallCameraInputs inputs) {
+    // Get the latest result from the tag camera
+    PhotonPipelineResult pipelineResult = m_camera.getLatestResult();
+    double latestTimestamp = pipelineResult.getTimestampSeconds();
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Resets the estimated pose to a given value
-   *
-   * @param pose Pose to set to
-   */
-  default void setPose(Pose2d pose) {}
+    inputs.cameraIsConnected = m_camera.isConnected();
+    inputs.isFresh = Math.abs(latestTimestamp - m_lastTimestamp) > 1e-5;
+
+    // Only log pipeline result data if a new PipelineResult was received
+    if (inputs.isFresh) {
+      inputs.pipelineResult = pipelineResult;
+      inputs.timestamp = latestTimestamp;
+      m_lastTimestamp = latestTimestamp; // Store the timestamp of the latest pipeline result
+    }
+  }
+  
 }
