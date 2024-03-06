@@ -64,6 +64,8 @@ import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.PivotCommand;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
 import frc.robot.commands.DriveWithZTargeting;
+import frc.robot.commands.autoCommands.ShootAmpClose;
+import frc.robot.commands.autoCommands.ShootSpeakerClose;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 
 /** A subsystem providing Xbox controllers for driving the robot manually */
@@ -123,8 +125,10 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     driverController.povDown.onTrue(
         new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
-    driverController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
-    driverController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
+    // driverController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
+    // driverController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
+    driverController.X.onTrue(new ShootAmpClose(botContainer));
+    driverController.Y.onTrue(new ShootSpeakerClose(botContainer));
 
     // // Map right bumper
     // driverController.rightBumper.whileTrue(kDoNothing);

@@ -97,7 +97,7 @@ public class PivotCommand extends Command {
     ShootForward(100.0),
     ShootBackward(45.0),
     ShootAmp(90),
-    ShootSpeaker(5),
+    ShootSpeaker(100.0),
     Intake(176.5),
     Park(1.8),
 

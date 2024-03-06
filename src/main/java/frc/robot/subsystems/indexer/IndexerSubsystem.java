@@ -53,6 +53,7 @@ package frc.robot.subsystems.indexer;
 
 import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.LaserCan.RegionOfInterest;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -180,7 +181,7 @@ public class IndexerSubsystem extends SubsystemBase {
 
   public enum IndexerPreset {
     IntakeRing(-0.5),
-    ShootRing(0.5);
+    ShootRing(1.0);
 
     public final double indexerSpeed;
 
@@ -191,20 +192,26 @@ public class IndexerSubsystem extends SubsystemBase {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   public static class RunIndexerAtSpeed extends Command {
-    private final IndexerSubsystem m_intakeSubsystem;
-    private final IndexerPreset m_preset;
+    private final IndexerSubsystem m_indexer;
+    private final double m_targetSpeed;
+    private final double m_timeoutSec;
+    private final Timer m_timer;
 
     /** Creates a new ClimberJoystickTeleOp. */
-    public RunIndexerAtSpeed(IndexerSubsystem intakeSubsystem, IndexerPreset preset) {
-      m_intakeSubsystem = intakeSubsystem;
-      m_preset = preset;
-      addRequirements(m_intakeSubsystem);
+    public RunIndexerAtSpeed(IndexerSubsystem indexer, IndexerPreset preset, double timeoutSec) {
+      m_indexer = indexer;
+      m_targetSpeed = preset.indexerSpeed;
+      m_timeoutSec = timeoutSec;
+      m_timer = new Timer();
+      addRequirements(m_indexer);
     }
 
     // Called when the command is initially scheduled.
     @Override
     public void initialize() {
-      m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
+      m_indexer.setIndexerSpeed(m_targetSpeed);
+      m_timer.reset();
+      m_timer.start();
     }
 
     // Called every time the scheduler runs while the command is scheduled.
@@ -214,13 +221,13 @@ public class IndexerSubsystem extends SubsystemBase {
     // Called once the command ends or is interrupted.
     @Override
     public void end(boolean interrupted) {
-      m_intakeSubsystem.setIndexerSpeed(0.0);
+      m_indexer.setIndexerSpeed(0.0);
     }
 
     // Returns true when the command should end.
     @Override
     public boolean isFinished() {
-      return false;
+      return m_timer.hasElapsed(m_timeoutSec);
     }
   }
 }

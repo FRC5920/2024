@@ -69,6 +69,8 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
   /** PID slot used for Flywheel voltage control requests */
   private static final int kFlywheelVoltsPIDSlot = 0;
 
+  private static final double kMotorInvert = -1.0;
+
   /** Motor used to drive the flywheels at the entrnce of the intake */
   protected final TalonFX m_flywheelMotor;
 
@@ -123,7 +125,8 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
     // Get input measurements for flywheel
     inputs.velocity =
         m_flywheelVelocitySignal.refresh().getValueAsDouble()
-            / FlywheelSubsystem.kFlywheelMotorGearRatio;
+            / FlywheelSubsystem.kFlywheelMotorGearRatio
+            * kMotorInvert;
     inputs.voltage = m_flywheelVoltageSignal.refresh().getValueAsDouble();
     inputs.current = m_flywheelCurrentSignal.refresh().getValueAsDouble();
     inputs.tempCelsius = m_flywheelTempSignal.refresh().getValueAsDouble();
@@ -139,7 +142,8 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
   public void setFlywheelVelocity(double rotPerSec) {
     if (rotPerSec != 0.0) {
       m_flywheelMotor.setControl(
-          m_voltsVelocityReq.withVelocity(rotPerSec * FlywheelSubsystem.kFlywheelMotorGearRatio));
+          m_voltsVelocityReq.withVelocity(
+              rotPerSec * FlywheelSubsystem.kFlywheelMotorGearRatio * kMotorInvert));
     } else {
       m_flywheelMotor.setControl(m_coast);
     }
@@ -160,9 +164,9 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
 
     // Torque-based velocity does not require a feed forward, as torque will accelerate the rotor up
     // to the desired velocity by itself
-    configs.Slot1.kP = 5;
+    configs.Slot1.kP = 20;
     configs.Slot1.kI = 0.1;
-    configs.Slot1.kD = 0.001;
+    configs.Slot1.kD = 0.01;
 
     // Might want to set peak output of torque-based commands using measured values
     configs.TorqueCurrent.PeakForwardTorqueCurrent = 40;

@@ -52,6 +52,7 @@
 package frc.robot.commands.ArmCommands;
 
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.lib.logging.BotLog;
 import frc.lib.logging.BotLog.DebugPrintCommand;
@@ -70,6 +71,9 @@ import frc.robot.subsystems.pivot.PivotSubsystem;
 // information, see:
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class ShootNote extends SequentialCommandGroup {
+  /** Maximum time to run the indexer */
+  private static final double kIndexerTimeoutSec = 2.0;
+
   /** Creates a new ShootNote. */
   public ShootNote(
       ScoringTarget target,
@@ -79,26 +83,33 @@ public class ShootNote extends SequentialCommandGroup {
     switch (target) {
       case Amp:
         addCommands(
-            new InfoPrintCommand("ShootAtAmp"),
-            new PivotCommand(pivot, AnglePreset.ShootAmp),
-            new DebugPrintCommand("Spin up the Flywheel"),
-            new RunFlywheelAtSpeed(flywheel, FlywheelPreset.ShootNoteAmp),
+            new ParallelCommandGroup(
+                new SequentialCommandGroup(
+                    new InfoPrintCommand("ShootAtAmp"),
+                    new PivotCommand(pivot, AnglePreset.ShootAmp)),
+                new SequentialCommandGroup(
+                    new DebugPrintCommand("Spin up the Flywheel"),
+                    new RunFlywheelAtSpeed(flywheel, FlywheelPreset.ShootNoteAmp))),
             new DebugPrintCommand("Run the indexer"),
-            new RunIndexerAtSpeed(indexer, IndexerPreset.ShootRing),
+            new RunIndexerAtSpeed(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
             new DebugPrintCommand("Stop the flywheel"),
-            new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)));
+            new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)),
+            new PivotCommand(pivot, AnglePreset.Park));
         break;
       case Speaker:
         addCommands(
-            new BotLog.InfoPrintCommand("ShootAtSpeaker"),
-            new BotLog.DebugPrintCommand("Pivot to shooting position"),
-            new PivotCommand(pivot, AnglePreset.ShootSpeaker),
-            new DebugPrintCommand("Spin up the Flywheel"),
-            new RunFlywheelAtSpeed(flywheel, FlywheelPreset.ShootNoteSpeaker),
+            new ParallelCommandGroup(
+                new SequentialCommandGroup(
+                    new InfoPrintCommand("ShootAtSpeaker"),
+                    new PivotCommand(pivot, AnglePreset.ShootSpeaker)),
+                new SequentialCommandGroup(
+                    new DebugPrintCommand("Spin up the Flywheel"),
+                    new RunFlywheelAtSpeed(flywheel, FlywheelPreset.ShootNoteSpeaker))),
             new DebugPrintCommand("Run the indexer"),
-            new RunIndexerAtSpeed(indexer, IndexerPreset.ShootRing),
+            new RunIndexerAtSpeed(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
             new DebugPrintCommand("Stop the flywheel"),
-            new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)));
+            new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)),
+            new PivotCommand(pivot, AnglePreset.Park));
         break;
       case Trap:
         addCommands(new BotLog.InfoPrintCommand("ShootAtTrap"));
