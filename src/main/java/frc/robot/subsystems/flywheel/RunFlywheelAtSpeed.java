@@ -55,20 +55,20 @@ import edu.wpi.first.wpilibj2.command.Command;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 public class RunFlywheelAtSpeed extends Command {
-  private final FlywheelSubsystem m_intakeSubsystem;
-  private final FlywheelPreset m_preset;
+  private final FlywheelSubsystem m_flywheel;
+  private final double m_targetVelocityRPS;
 
   /** Creates a new ClimberJoystickTeleOp. */
   public RunFlywheelAtSpeed(FlywheelSubsystem intakeSubsystem, FlywheelPreset preset) {
-    m_intakeSubsystem = intakeSubsystem;
-    m_preset = preset;
-    addRequirements(m_intakeSubsystem);
+    m_flywheel = intakeSubsystem;
+    m_targetVelocityRPS = preset.flywheelRPM / 60.0;
+    addRequirements(m_flywheel);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_intakeSubsystem.setFlywheelVelocity(m_preset.flywheelRPS);
+    m_flywheel.setFlywheelVelocity(m_targetVelocityRPS);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -78,24 +78,25 @@ public class RunFlywheelAtSpeed extends Command {
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    m_intakeSubsystem.setFlywheelVelocity(0.0);
+    // m_intakeSubsystem.setFlywheelVelocity(0.0);
   }
 
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
-    return false;
+    double velocity = m_flywheel.getFlywheelVelocity();
+    return Math.abs(velocity) >= Math.abs(m_targetVelocityRPS);
   }
 
   public enum FlywheelPreset {
     IntakeRing(10.0),
-    ShootNoteAmp(500.0),
-    ShootNoteSpeaker(3000.0);
+    ShootNoteAmp(1000.0),
+    ShootNoteSpeaker(4500.0);
 
-    public final double flywheelRPS;
+    public final double flywheelRPM;
 
     private FlywheelPreset(double flywheelRPS) {
-      this.flywheelRPS = flywheelRPS;
+      this.flywheelRPM = flywheelRPS;
     }
   }
 }

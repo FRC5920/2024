@@ -63,6 +63,8 @@ import java.util.ArrayList;
 /** Implementation of the IntakeSubsystemIO interface using real hardware */
 public class IndexerSubsystemIOReal implements IndexerSubsystemIO {
 
+  private static final double kMotorInvert = -1.0;
+
   /** Motor used to drive the indexer (internal) wheels of the intake assembly */
   protected final WPI_TalonSRX m_indexerMotor;
 
@@ -104,7 +106,7 @@ public class IndexerSubsystemIOReal implements IndexerSubsystemIO {
   @Override
   public void processInputs(IndexerSubsystemInputs inputs) {
     // Get input measurements for indexer
-    inputs.indexer.velocity = m_indexerMotor.getMotorOutputPercent();
+    inputs.indexer.velocity = m_indexerMotor.getMotorOutputPercent() * kMotorInvert;
     inputs.indexer.voltage = m_indexerMotor.getMotorOutputVoltage();
     inputs.indexer.current = m_indexerMotor.getStatorCurrent();
     inputs.indexer.tempCelsius = m_indexerMotor.getTemperature();
@@ -121,7 +123,7 @@ public class IndexerSubsystemIOReal implements IndexerSubsystemIO {
    */
   @Override
   public void setIndexerSpeed(double percent) {
-    m_indexerMotor.set(percent);
+    m_indexerMotor.set(percent * kMotorInvert);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

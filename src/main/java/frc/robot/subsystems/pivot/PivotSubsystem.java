@@ -65,7 +65,7 @@ public class PivotSubsystem extends SubsystemBase {
   ////////////////////////////////////
 
   /** Set this to true to publish values to the dashboard */
-  public static final boolean kPublishToDashboard = false;
+  public static final boolean kPublishToDashboard = true;
 
   /** CAN bus used to communicate with the subsystem */
   public static final RobotCANBus kCANBus = RobotCANBus.Rio;
