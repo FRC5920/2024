@@ -125,11 +125,6 @@ public class RobotContainer {
   /** Called to create the robot container */
   public RobotContainer() {
 
-    // Configure the PathPlanner AutoBuilder, the set up the auto dashboard tab.
-    // NOTE: these must occur in this order
-    configureAutoBuilder();
-    autoDashboardTab = new AutoDashboardTab();
-
     ClimberSubsystemIO climberIO = null;
     FlywheelSubsystemIO flywheelIO = null;
     IndexerSubsystemIO indexerIO = null;
@@ -182,6 +177,12 @@ public class RobotContainer {
 
     // Tell the swerve drive subsystem to update our telemetry from its odometry thread
     // driveTrain.registerTelemetry(swerveTelemetry::update);
+
+    // Configure the PathPlanner AutoBuilder, the set up the auto dashboard tab.
+    // NOTE: these must occur in this order
+    configureAutoBuilder();
+    setupNamedCommands();
+    autoDashboardTab = new AutoDashboardTab();
 
     // Add the field dashboard tab
     dashboardSubsystem.add(autoDashboardTab);
@@ -240,9 +241,11 @@ public class RobotContainer {
         },
         driveTrain // Reference to this subsystem to set requirements
         );
+  }
 
+  private void setupNamedCommands() {
     // Register named commands
-    NamedCommands.registerCommand("ShootAmpClose", new ShootAmpClose());
-    NamedCommands.registerCommand("ShootSpeakerClose", new ShootSpeakerClose());
+    NamedCommands.registerCommand("ShootAmpClose", new ShootAmpClose(this));
+    NamedCommands.registerCommand("ShootSpeakerClose", new ShootSpeakerClose(this));
   }
 }

@@ -178,13 +178,13 @@ public class IndexerSubsystem extends SubsystemBase {
     SmartDashboard.putString("Indexer/laserCAN/status", m_inputs.laserCAN.status);
   }
 
-  public enum IntakePreset {
+  public enum IndexerPreset {
     IntakeRing(-0.5),
     ShootRing(0.5);
 
     public final double indexerSpeed;
 
-    private IntakePreset(double indexerSpeed) {
+    private IndexerPreset(double indexerSpeed) {
       this.indexerSpeed = indexerSpeed;
     }
   }
@@ -192,10 +192,10 @@ public class IndexerSubsystem extends SubsystemBase {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   public static class RunIndexerAtSpeed extends Command {
     private final IndexerSubsystem m_intakeSubsystem;
-    private final IntakePreset m_preset;
+    private final IndexerPreset m_preset;
 
     /** Creates a new ClimberJoystickTeleOp. */
-    public RunIndexerAtSpeed(IndexerSubsystem intakeSubsystem, IntakePreset preset) {
+    public RunIndexerAtSpeed(IndexerSubsystem intakeSubsystem, IndexerPreset preset) {
       m_intakeSubsystem = intakeSubsystem;
       m_preset = preset;
       addRequirements(m_intakeSubsystem);
