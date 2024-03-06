@@ -56,7 +56,6 @@ import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.numbers.N3;
-import java.util.function.BiConsumer;
 
 /** An object used to evaluate estimated poses produced by PhotonVision */
 public class PoseEstimateProcessor {
@@ -72,9 +71,6 @@ public class PoseEstimateProcessor {
       VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 
   private final AprilTagFieldLayout m_fieldLayout;
-
-  /** Routine called when a new robot pose is evaluated */
-  private BiConsumer<Pose2d, Vector<N3>> m_poseConsumer;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
@@ -136,9 +132,6 @@ public class PoseEstimateProcessor {
         estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
       }
     }
-
-    // Notify the registered consumer of the new pose and its standard deviations
-    m_poseConsumer.accept(estimatedPose, estStdDevs);
 
     return estStdDevs;
   }

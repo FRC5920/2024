@@ -74,7 +74,7 @@ public class HeimdallSubsystemCameraIOSim implements HeimdallSubsystemCameraIO {
   private static final boolean kEnableProcessedSimCameraStream = true;
 
   /** Draw a wire frame to the simulated camera stream (dramatically increases loop time) */
-  private static final boolean kDrawWireFrameToVideoStream = false;
+  private static final boolean kDrawWireFrameToVideoStream = true;
 
   /** Average camera latency to simulate */
   private static final double kLatencyAverageMs = 31.5;
