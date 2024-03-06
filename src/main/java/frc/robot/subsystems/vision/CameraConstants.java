@@ -93,5 +93,6 @@ public class CameraConstants {
   public static class TagCameraResolution {
     public static final int widthPx = 1280;
     public static final int heightPx = 720;
+    public static final double FOVDegrees = 70;
   }
 }

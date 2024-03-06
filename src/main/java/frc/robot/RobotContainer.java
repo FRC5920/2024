@@ -170,7 +170,8 @@ public class RobotContainer {
         flywheelIO = new FlywheelSubsystemIOSim();
         indexerIO = new IndexerSubsystemIOSim();
         pivotIO = new PivotSubsystemIOSim();
-        visionIO = new HeimdallSubsystemCameraIOSim(driveTrain::getPose);
+        visionIOFront = new HeimdallSubsystemCameraIOSim(CameraID.FrontCamera, driveTrain::getPose);
+        visionIORear = new HeimdallSubsystemCameraIOSim(CameraID.RearCamera, driveTrain::getPose);
         break;
 
       case REPLAY:
@@ -201,8 +202,13 @@ public class RobotContainer {
 
     // Create a vision pose estimator subsystem and set the processor used to
     // assign standard deviations to its estimated poses
-    visionSubsystem = new HeimdallSubsystem(visionIOFront, visionIORear, 
-        (update) -> driveTrain.addVisionMeasurement(update.pose, update.timestamp, update.stddevs));
+    visionSubsystem =
+        new HeimdallSubsystem(
+            visionIOFront,
+            visionIORear,
+            (update) ->
+                driveTrain.addVisionMeasurement(update.pose, update.timestamp, update.stddevs),
+            driveTrain::getPose);
 
     joystickSubsystem.configureButtonBindings(this);
 

@@ -108,6 +108,6 @@ public class HeimdallCameraInputs implements LoggableInputs {
 
   /** Create a clone of input values */
   public HeimdallCameraInputs clone() {
-    return  new HeimdallCameraInputs(this);
+    return new HeimdallCameraInputs(this);
   }
 }

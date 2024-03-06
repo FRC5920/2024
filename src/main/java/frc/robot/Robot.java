@@ -59,7 +59,6 @@ import frc.lib.utility.AdvantageKitLogInitializer;
 import frc.lib.utility.Alert;
 import frc.lib.utility.Alert.AlertType;
 import frc.lib.utility.CanBusErrorAlert;
-import frc.robot.Constants.CameraID;
 import frc.robot.commands.LEDCommands.LEDsToPattern;
 import frc.robot.commands.LEDCommands.LEDsToSolidColor;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
@@ -144,15 +143,6 @@ public class Robot extends LoggedRobot {
     RobotContainer bc = m_robotContainer;
 
     Logger.recordOutput(CommandSwerveDrivetrain.kLogPrefix + "pose", bc.driveTrain.getPose());
-
-    // Calculate vision-based robot pose estimates for each of the tag cameras, sending poses to
-    // the swerve drivebase as vision measurements
-    bc.visionSubsystem.processPoseUpdate(
-        CameraID.FrontCamera,
-        (est) -> bc.driveTrain.addVisionMeasurement(est.pose, est.timestamp, est.stddevs));
-    bc.visionSubsystem.processPoseUpdate(
-        CameraID.RearCamera,
-        (est) -> bc.driveTrain.addVisionMeasurement(est.pose, est.timestamp, est.stddevs));
 
     // Process active command(s)
     Logger.recordOutput(

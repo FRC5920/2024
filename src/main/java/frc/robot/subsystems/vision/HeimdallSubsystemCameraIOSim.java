@@ -53,8 +53,8 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import frc.robot.Constants.CameraID;
 import frc.robot.subsystems.vision.CameraConstants.TagCameraResolution;
 import java.util.function.Supplier;
@@ -91,69 +91,79 @@ public class HeimdallSubsystemCameraIOSim implements HeimdallSubsystemCameraIO {
   /** Calibration error standard deviation */
   private static final double kCalibrationErrorStdDev = 0.1;
 
+  /** Photon camera used for the simulation */
+  private final PhotonCamera m_camera;
+
   /** Simulated PhotonVision system */
-  private final VisionSystemSim m_visionSim;
+  private static VisionSystemSim m_visionSim;
 
   /** Front tag camera simulation */
-  private final PhotonCameraSim m_frontCameraSim;
+  private final PhotonCameraSim m_cameraSim;
 
   /** Supplier from which the simulated robot pose is obtained */
   private final Supplier<Pose2d> m_poseSupplier;
+
+  /** Timestamp of the last pipeline result received from the simulated camera */
+  private double m_lastTimestamp = 0.0;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
    * Creates an instance of the I/O
    *
    * @param cameraID Camera to use
-   * @param poseSupplier Supplier used to obtain the present robot pose for updating the vision simulation
-   * @param bot2CameraXform Transform used to describe the location of the simulated camera relative to the robot
+   * @param poseSupplier Supplier used to obtain the present robot pose for updating the vision
+   *     simulation
    */
-  public HeimdallSubsystemCameraIOSim(CameraID cameraID, Supplier<Pose2d> poseSupplier, Transform3d bot2CameraXform) {
-
+  public HeimdallSubsystemCameraIOSim(CameraID cameraID, Supplier<Pose2d> poseSupplier) {
+    m_camera = new PhotonCamera(cameraID.name);
     m_poseSupplier = poseSupplier;
-
-    // Create the vision system simulation which handles cameras and targets on the field.
-    m_visionSim = new VisionSystemSim("TagCameras");
-    // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
-    m_visionSim.addAprilTags(HeimdallSubsystem.kTagLayout);
 
     // Create simulated camera properties. These can be set to mimic your actual camera.
     var camProps = new SimCameraProperties();
     camProps.setCalibration(
-        TagCameraResolution.widthPx, TagCameraResolution.heightPx, Rotation2d.fromDegrees(0));
+        TagCameraResolution.widthPx,
+        TagCameraResolution.heightPx,
+        Rotation2d.fromDegrees(TagCameraResolution.FOVDegrees));
     camProps.setCalibError(kAverageCalibrationErrorPx, kCalibrationErrorStdDev);
     camProps.setFPS(kAverageFramesPerSecond);
     camProps.setAvgLatencyMs(kLatencyAverageMs);
     camProps.setLatencyStdDevMs(kLatencyStdDevMs);
 
     // Set up a simulated front camera
-    m_frontCameraSim = new PhotonCameraSim(m_frontVision.m_camera, camProps);
+    m_cameraSim = new PhotonCameraSim(m_camera, camProps);
     // Add the simulated camera to view the targets on this simulated field.
-    m_visionSim.addCamera(m_frontCameraSim, HeimdallSubsystem.kFrontCameraLocationTransform);
+    getVisionSim().addCamera(m_cameraSim, HeimdallSubsystem.kFrontCameraLocationTransform);
 
-    // Set up a simulated rear camera
-    m_rearCameraSim = new PhotonCameraSim(m_rearVision.m_camera, camProps);
-    // Add the simulated camera to view the targets on this simulated field.
-    m_visionSim.addCamera(m_rearCameraSim, HeimdallSubsystem.kRearCameraLocationTransform);
+    m_cameraSim.enableRawStream(kEnableRawSimCameraStream);
+    m_cameraSim.enableProcessedStream(kEnableProcessedSimCameraStream);
+    m_cameraSim.enableDrawWireframe(kDrawWireFrameToVideoStream);
+  }
 
-    m_frontCameraSim.enableRawStream(kEnableRawSimCameraStream);
-    m_frontCameraSim.enableProcessedStream(kEnableProcessedSimCameraStream);
-    m_frontCameraSim.enableDrawWireframe(kDrawWireFrameToVideoStream);
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns a handle to the tag camera vision simulation system */
+  public static VisionSystemSim getVisionSim() {
+    if (m_visionSim == null) {
+      m_visionSim = new VisionSystemSim("TagVisionSim");
 
-    m_rearCameraSim.enableRawStream(kEnableRawSimCameraStream);
-    m_rearCameraSim.enableProcessedStream(kEnableProcessedSimCameraStream);
-    m_rearCameraSim.enableDrawWireframe(kDrawWireFrameToVideoStream);
+      // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
+      m_visionSim.addAprilTags(HeimdallSubsystem.kTagLayout);
+    }
+
+    return m_visionSim;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Updates subsystem input and output measurements
+   * Updates camera input values
    *
    * @param inputs Inputs to update
-   * @param outputs Outputs to update
+   * @param io I/O implementation used to update the inputs
    */
   @Override
-  public void updateInputs(HeimdallCameraInputs inputs) {}
+  public void updateInputs(HeimdallCameraInputs inputs) {
+    // Update the vision simulation with the current robot pose
+    m_visionSim.update(m_poseSupplier.get());
+
     // Get the latest result from the tag camera
     PhotonPipelineResult pipelineResult = m_camera.getLatestResult();
     double latestTimestamp = pipelineResult.getTimestampSeconds();
@@ -165,36 +175,28 @@ public class HeimdallSubsystemCameraIOSim implements HeimdallSubsystemCameraIO {
     if (inputs.isFresh) {
       inputs.pipelineResult = pipelineResult;
       inputs.timestamp = latestTimestamp;
-      m_lastTimestamp = latestTimestamp; // Store the timestamp of the latest pipeline result
+      m_lastTimestamp = latestTimestamp;
     }
-    
   }
 
-  // Update simulation
-  void updateSim() {
-
-    // Update the vision simulation with the current simulated pose
-    m_visionSim.update(m_poseSupplier.get());
-
-    // Update the estimated poses on the dashboard field when new estimates are calculated
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Resets the estimated pose to a given value
+   *
+   * @param pose Pose to set to
+   */
+  @Override
+  public void updateSimPose(Pose2d pose) {
     Field2d debugField = m_visionSim.getDebugField();
 
-    // If the front camera produced a new pose, display it on the field
-    if (inputs.frontCam.isFresh) {
-      debugField.getObject("FrontCam").setPose(outputs.frontCam.pose.toPose2d());
-    }
-    // Otherwise, if the estimator produced no output, remove the pose from the field
-    if (outputs.frontCam.noEstimate) {
-      debugField.getObject("FrontCam").setPoses();
-    }
+    FieldObject2d camObject = debugField.getObject(m_camera.getName());
 
-    // If the rear camera produced a new pose, display it on the field
-    if (inputs.rearCam.isFresh) {
-      debugField.getObject("RearCam").setPose(outputs.rearCam.pose.toPose2d());
-    }
-    // Otherwise, if the estimator produced no output, remove the pose from the field
-    if (outputs.rearCam.noEstimate) {
-      debugField.getObject("RearCam").setPoses();
+    if (pose != null) {
+      // Update the estimated poses on the dashboard field when new estimates are calculated
+      camObject.setPose(pose);
+    } else {
+      // Otherwise, if the estimator produced no output, remove the pose from the field
+      camObject.setPoses();
     }
   }
 }

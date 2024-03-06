@@ -54,7 +54,6 @@ package frc.robot.subsystems.vision;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -66,12 +65,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CameraID;
 import frc.robot.subsystems.vision.CameraConstants.FrontCamera;
 import frc.robot.subsystems.vision.CameraConstants.RearCamera;
-import frc.robot.subsystems.vision.HeimdallEstimatorOutputs;
-
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
-import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
@@ -115,9 +111,11 @@ public class HeimdallSubsystem extends SubsystemBase {
   private final HeimdallCameraInputs m_rearCamInputs = new HeimdallCameraInputs();
 
   /** Logged outputs for the front camera estimator */
-  private final HeimdallEstimatorOutputs m_frontEstimatorOutputs = new HeimdallEstimatorOutputs("frontCam");
+  private final HeimdallEstimatorOutputs m_frontEstimatorOutputs =
+      new HeimdallEstimatorOutputs("frontCam");
   /** Logged outputs for the rear camera estimator */
-  private final HeimdallEstimatorOutputs m_rearEstimatorOutputs = new HeimdallEstimatorOutputs("rearCam");
+  private final HeimdallEstimatorOutputs m_rearEstimatorOutputs =
+      new HeimdallEstimatorOutputs("rearCam");
 
   /** Camera and estimator for the front-looking camera */
   protected final CameraEstimator m_frontVision;
@@ -126,20 +124,30 @@ public class HeimdallSubsystem extends SubsystemBase {
   protected final CameraEstimator m_rearVision;
 
   /** Routine called when a new robot pose is evaluated */
-  private Consumer<VisionPoseEstimate> m_poseConsumer;
+  private final Consumer<VisionPoseEstimate> m_poseConsumer;
+
+  /** Supplier used to obtain the current robot pose in simulation mode */
+  private final Supplier<Pose2d> m_simPoseSupplier;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
    * Creates an instance of the subsystem using specified I/O implementations
    *
+   * @param frontCameraIO I/O implementation used for the front camera
+   * @param rearCameraIO I/O implementation used for the rear camera
+   * @param poseConsumer Consumer to receive estimated pose updates from the vision system
+   * @param simPoseSupplier Pose supplier used in simulation mode only
    * @param io I/O implementation to be used by the subsystem
    */
   public HeimdallSubsystem(
       HeimdallSubsystemCameraIO frontCameraIO,
       HeimdallSubsystemCameraIO rearCameraIO,
-      Consumer<VisionPoseEstimate> poseConsumer) {
+      Consumer<VisionPoseEstimate> poseConsumer,
+      Supplier<Pose2d> simPoseSupplier) {
     m_frontCameraIO = frontCameraIO;
     m_rearCameraIO = rearCameraIO;
+    m_poseConsumer = poseConsumer;
+    m_simPoseSupplier = simPoseSupplier;
 
     // Create a pose estimator for the front camera
     PhotonPoseEstimator frontEstimator =
@@ -164,36 +172,35 @@ public class HeimdallSubsystem extends SubsystemBase {
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Returns the most recent estimated pose estimate associated with a given camera */
   public Pose2d getEstimatedPose(CameraID camID) {
-    Pose3d pose3d = (camID == CameraID.FrontCamera) ? m_frontEstimatorOutputs.pose : m_rearEstimatorOutputs.pose;
+    Pose3d pose3d =
+        (camID == CameraID.FrontCamera)
+            ? m_frontEstimatorOutputs.pose
+            : m_rearEstimatorOutputs.pose;
     return pose3d.toPose2d();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Resets the current pose of the vision estimators to a specified pose.
-   *
-   * @remarks This should ONLY be called when the robot's position on the field is known, (e.g. the
-   *     beginning of a match).
-   * @param newPose Pose to set the robot to
-   */
-  public void setPose(Pose2d newPose) {
-    m_frontCameraIO.setPose(newPose);
-    m_rearCameraIO.setPose(newPose);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Called periodically when the robot runs */
   @Override
   public void periodic() {
     // Update inputs using the I/O layer
     m_frontCameraIO.updateInputs(m_frontCamInputs);
     m_rearCameraIO.updateInputs(m_rearCamInputs);
 
+    // Log/playback inputs
+    Logger.processInputs("Heimdall/frontCam", m_frontCamInputs);
+    Logger.processInputs("Heimdall/rearCam", m_rearCamInputs);
+
     // Notify our pose consumer of a new pose estimate from the front camera
     if (m_frontCamInputs.isFresh) {
       // Process inputs and generate a new pose estimate from the front camera
       m_frontVision.process(m_frontCamInputs, m_frontEstimatorOutputs);
       // Pass the new pose estimate to the registered consumer
-      m_poseConsumer.accept(new VisionPoseEstimate(m_frontEstimatorOutputs.pose.toPose2d(), m_frontEstimatorOutputs.stdDevs, m_frontCamInputs.timestamp));
+      m_poseConsumer.accept(
+          new VisionPoseEstimate(
+              m_frontEstimatorOutputs.pose.toPose2d(),
+              m_frontEstimatorOutputs.stdDevs,
+              m_frontCamInputs.timestamp));
     }
 
     // Notify our pose consumer of a new pose estimate from the rear camera
@@ -201,15 +208,30 @@ public class HeimdallSubsystem extends SubsystemBase {
       // Process inputs and generate a new pose estimate from the rear camera
       m_rearVision.process(m_rearCamInputs, m_frontEstimatorOutputs);
       // Pass the new pose estimate to the registered consumer
-      m_poseConsumer.accept(new VisionPoseEstimate(m_frontEstimatorOutputs.pose.toPose2d(), m_frontEstimatorOutputs.stdDevs, m_rearCamInputs.timestamp));
+      m_poseConsumer.accept(
+          new VisionPoseEstimate(
+              m_frontEstimatorOutputs.pose.toPose2d(),
+              m_frontEstimatorOutputs.stdDevs,
+              m_rearCamInputs.timestamp));
     }
-
-    // Log inputs
-    Logger.processInputs("Heimdall/frontCam", m_frontCamInputs);
-    Logger.processInputs("Heimdall/rearCam", m_rearCamInputs);
 
     // Log outputs
     m_frontEstimatorOutputs.toLog();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Called periodically when the robot runs in simulation mode */
+  @Override
+  public void simulationPeriodic() {
+    if (m_frontCamInputs.isFresh) {
+      m_frontCameraIO.updateSimPose(
+          m_frontEstimatorOutputs.noEstimate ? null : m_frontEstimatorOutputs.pose.toPose2d());
+    }
+
+    if (m_rearCamInputs.isFresh) {
+      m_rearCameraIO.updateSimPose(
+          m_rearEstimatorOutputs.noEstimate ? null : m_rearEstimatorOutputs.pose.toPose2d());
+    }
   }
 
   /** Class used to communicate a vision-based pose estimate */

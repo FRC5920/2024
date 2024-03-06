@@ -51,17 +51,9 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import frc.robot.Constants.CameraID;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
-import org.photonvision.PhotonPoseEstimator;
-import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 import org.photonvision.targeting.PhotonPipelineResult;
-import org.photonvision.targeting.PhotonTrackedTarget;
 
 /** HeimdallSubsystem I/O implementation using real PhotonVision cameras */
 public class HeimdallSubsystemCameraIOReal implements HeimdallSubsystemCameraIO {
@@ -73,19 +65,16 @@ public class HeimdallSubsystemCameraIOReal implements HeimdallSubsystemCameraIO 
   private double m_lastTimestamp;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Creates an instance of the I/O
-   *
-   */
+  /** Creates an instance of the I/O */
   public HeimdallSubsystemCameraIOReal(CameraID camera) {
     m_camera = new PhotonCamera(camera.name);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Updates subsystem input and output measurements
+   * Updates camera input values
    *
    * @param inputs Inputs to update
-   * @param outputs Outputs to update
    */
   @Override
   public void updateInputs(HeimdallCameraInputs inputs) {
@@ -103,5 +92,4 @@ public class HeimdallSubsystemCameraIOReal implements HeimdallSubsystemCameraIO 
       m_lastTimestamp = latestTimestamp; // Store the timestamp of the latest pipeline result
     }
   }
-  
 }

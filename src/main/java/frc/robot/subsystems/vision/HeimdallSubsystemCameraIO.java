@@ -51,10 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
-import org.photonvision.PhotonCamera;
-
 import edu.wpi.first.math.geometry.Pose2d;
-import frc.robot.Constants.CameraID;
 
 /** I/O interface for the Heimdall vision subsystem */
 public interface HeimdallSubsystemCameraIO {
@@ -69,9 +66,9 @@ public interface HeimdallSubsystemCameraIO {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Resets the estimated pose to a given value
+   * Applies an updated pose used in simulation
    *
    * @param pose Pose to set to
    */
-  default void setPose(Pose2d pose) {}
+  default void updateSimPose(Pose2d pose) {}
 }
