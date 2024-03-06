@@ -89,7 +89,8 @@ public class RunFlywheelAtSpeed extends Command {
 
   public enum FlywheelPreset {
     IntakeRing(10.0),
-    ShootRing(-3000.0);
+    ShootNoteAmp(500.0),
+    ShootNoteSpeaker(3000.0);
 
     public final double flywheelRPS;
 
