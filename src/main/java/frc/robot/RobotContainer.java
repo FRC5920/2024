@@ -57,7 +57,9 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.LED.ColorConstants;
 import frc.robot.Constants.CameraID;
@@ -92,6 +94,7 @@ import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOReal;
 import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOSim;
 import frc.robot.subsystems.vision.PoseEstimateProcessor;
 import org.photonvision.PhotonCamera;
+import org.photonvision.simulation.VisionSystemSim;
 
 public class RobotContainer {
 
@@ -101,6 +104,9 @@ public class RobotContainer {
   /* Cameras */
   public final PhotonCamera frontTagCamera = new PhotonCamera(CameraID.FrontCamera.name);
   public final PhotonCamera rearTagCamera = new PhotonCamera(CameraID.RearCamera.name);
+
+  /** Simulated vision system (only used when running in simulation mode) */
+  public final VisionSystemSim visionSystemSim;
 
   /** Swerve drive subsystem */
   public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
@@ -143,6 +149,13 @@ public class RobotContainer {
   /** Called to create the robot container */
   public RobotContainer() {
 
+    if (RobotBase.isSimulation()) {
+      visionSystemSim = new VisionSystemSim("VisionSimulation");
+      visionSystemSim.addAprilTags(AprilTagFields.kDefaultField.loadAprilTagLayoutField());
+    } else {
+      visionSystemSim = null;
+    }
+
     // Configure the PathPlanner AutoBuilder, the set up the auto dashboard tab.
     // NOTE: these must occur in this order
     configureAutoBuilder();
@@ -170,8 +183,16 @@ public class RobotContainer {
         flywheelIO = new FlywheelSubsystemIOSim();
         indexerIO = new IndexerSubsystemIOSim();
         pivotIO = new PivotSubsystemIOSim();
-        visionIOFront = new HeimdallSubsystemCameraIOSim(CameraID.FrontCamera, driveTrain::getPose);
-        visionIORear = new HeimdallSubsystemCameraIOSim(CameraID.RearCamera, driveTrain::getPose);
+        visionIOFront =
+            new HeimdallSubsystemCameraIOSim(
+                CameraID.FrontCamera,
+                HeimdallSubsystem.kFrontCameraLocationTransform,
+                visionSystemSim);
+        visionIORear =
+            new HeimdallSubsystemCameraIOSim(
+                CameraID.RearCamera,
+                HeimdallSubsystem.kRearCameraLocationTransform,
+                visionSystemSim);
         break;
 
       case REPLAY:

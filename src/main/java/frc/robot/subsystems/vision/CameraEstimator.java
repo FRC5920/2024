@@ -136,6 +136,7 @@ public class CameraEstimator {
 
     for (PhotonTrackedTarget target : targets) {
       ids[index] = target.getFiducialId();
+      ++index;
     }
 
     Arrays.sort(ids); // Sort the array of fiducial ID's

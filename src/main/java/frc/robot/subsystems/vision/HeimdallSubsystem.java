@@ -112,10 +112,10 @@ public class HeimdallSubsystem extends SubsystemBase {
 
   /** Logged outputs for the front camera estimator */
   private final HeimdallEstimatorOutputs m_frontEstimatorOutputs =
-      new HeimdallEstimatorOutputs("frontCam");
+      new HeimdallEstimatorOutputs("Heimdall/frontCam");
   /** Logged outputs for the rear camera estimator */
   private final HeimdallEstimatorOutputs m_rearEstimatorOutputs =
-      new HeimdallEstimatorOutputs("rearCam");
+      new HeimdallEstimatorOutputs("Heimdall/rearCam");
 
   /** Camera and estimator for the front-looking camera */
   protected final CameraEstimator m_frontVision;
@@ -206,17 +206,18 @@ public class HeimdallSubsystem extends SubsystemBase {
     // Notify our pose consumer of a new pose estimate from the rear camera
     if (m_rearCamInputs.isFresh) {
       // Process inputs and generate a new pose estimate from the rear camera
-      m_rearVision.process(m_rearCamInputs, m_frontEstimatorOutputs);
+      m_rearVision.process(m_rearCamInputs, m_rearEstimatorOutputs);
       // Pass the new pose estimate to the registered consumer
       m_poseConsumer.accept(
           new VisionPoseEstimate(
-              m_frontEstimatorOutputs.pose.toPose2d(),
-              m_frontEstimatorOutputs.stdDevs,
+              m_rearEstimatorOutputs.pose.toPose2d(),
+              m_rearEstimatorOutputs.stdDevs,
               m_rearCamInputs.timestamp));
     }
 
     // Log outputs
     m_frontEstimatorOutputs.toLog();
+    m_rearEstimatorOutputs.toLog();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

@@ -53,11 +53,11 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import frc.robot.Constants.CameraID;
 import frc.robot.subsystems.vision.CameraConstants.TagCameraResolution;
-import java.util.function.Supplier;
 import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
@@ -100,9 +100,6 @@ public class HeimdallSubsystemCameraIOSim implements HeimdallSubsystemCameraIO {
   /** Front tag camera simulation */
   private final PhotonCameraSim m_cameraSim;
 
-  /** Supplier from which the simulated robot pose is obtained */
-  private final Supplier<Pose2d> m_poseSupplier;
-
   /** Timestamp of the last pipeline result received from the simulated camera */
   private double m_lastTimestamp = 0.0;
 
@@ -111,12 +108,14 @@ public class HeimdallSubsystemCameraIOSim implements HeimdallSubsystemCameraIO {
    * Creates an instance of the I/O
    *
    * @param cameraID Camera to use
-   * @param poseSupplier Supplier used to obtain the present robot pose for updating the vision
-   *     simulation
+   * @param robot2CameraTransform Transformation used to describe the camera's location relative to
+   *     the robot
+   * @param visionSystemSim Simulated vision system to add the object's camera to
    */
-  public HeimdallSubsystemCameraIOSim(CameraID cameraID, Supplier<Pose2d> poseSupplier) {
+  public HeimdallSubsystemCameraIOSim(
+      CameraID cameraID, Transform3d robot2CameraTransform, VisionSystemSim visionSystemSim) {
     m_camera = new PhotonCamera(cameraID.name);
-    m_poseSupplier = poseSupplier;
+    m_visionSim = visionSystemSim;
 
     // Create simulated camera properties. These can be set to mimic your actual camera.
     var camProps = new SimCameraProperties();
@@ -132,24 +131,11 @@ public class HeimdallSubsystemCameraIOSim implements HeimdallSubsystemCameraIO {
     // Set up a simulated front camera
     m_cameraSim = new PhotonCameraSim(m_camera, camProps);
     // Add the simulated camera to view the targets on this simulated field.
-    getVisionSim().addCamera(m_cameraSim, HeimdallSubsystem.kFrontCameraLocationTransform);
+    m_visionSim.addCamera(m_cameraSim, robot2CameraTransform);
 
     m_cameraSim.enableRawStream(kEnableRawSimCameraStream);
     m_cameraSim.enableProcessedStream(kEnableProcessedSimCameraStream);
     m_cameraSim.enableDrawWireframe(kDrawWireFrameToVideoStream);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Returns a handle to the tag camera vision simulation system */
-  public static VisionSystemSim getVisionSim() {
-    if (m_visionSim == null) {
-      m_visionSim = new VisionSystemSim("TagVisionSim");
-
-      // Add all the AprilTags inside the tag layout as visible targets to this simulated field.
-      m_visionSim.addAprilTags(HeimdallSubsystem.kTagLayout);
-    }
-
-    return m_visionSim;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,8 +147,6 @@ public class HeimdallSubsystemCameraIOSim implements HeimdallSubsystemCameraIO {
    */
   @Override
   public void updateInputs(HeimdallCameraInputs inputs) {
-    // Update the vision simulation with the current robot pose
-    m_visionSim.update(m_poseSupplier.get());
 
     // Get the latest result from the tag camera
     PhotonPipelineResult pipelineResult = m_camera.getLatestResult();

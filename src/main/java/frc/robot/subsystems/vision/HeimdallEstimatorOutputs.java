@@ -78,10 +78,10 @@ public class HeimdallEstimatorOutputs {
    * @param prefix Prefix to use when logging data fields
    */
   public HeimdallEstimatorOutputs(String prefix) {
-    m_keyNoEstimate = "/noEstimate";
-    m_keyPose = "/pose";
-    m_keyStdDevs = "/stdDevs";
-    m_keyTagIDs = "/tagIDs";
+    m_keyNoEstimate = prefix + "/noEstimate";
+    m_keyPose = prefix + "/pose";
+    m_keyStdDevs = prefix + "/stdDevs";
+    m_keyTagIDs = prefix + "/tagIDs";
   }
 
   /** Writes outputs to the log */

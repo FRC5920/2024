@@ -174,7 +174,10 @@ public class Robot extends LoggedRobot {
 
   /** This function is called every 20 ms when the robot is running in simulation mode */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    // Update the vision system simulation
+    m_robotContainer.visionSystemSim.update(m_robotContainer.driveTrain.getPose());
+  }
 
   //////////////////////////////////////
   // DISABLED MODE
