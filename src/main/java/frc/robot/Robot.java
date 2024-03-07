@@ -139,10 +139,6 @@ public class Robot extends LoggedRobot {
 
     logInit.initializeLogging(Constants.kLoggingIsEnabled, Constants.getLogDirectory());
 
-    // Scan Battery
-    System.out.println("[Init] Scanning Battery");
-    Logger.recordMetadata("BatteryName", "BAT-" + BatteryTracker.scanBattery(1.5));
-
     // Check for battery alert
     if (Constants.getMode() == RobotRunMode.REAL
         && !BatteryTracker.getName().equals(BatteryTracker.defaultName)) {

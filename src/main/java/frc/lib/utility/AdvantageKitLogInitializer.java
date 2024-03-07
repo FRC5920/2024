@@ -132,6 +132,10 @@ public class AdvantageKitLogInitializer {
     Logger.recordMetadata("GitSHA", GenBuildInfo.GIT_SHA);
     Logger.recordMetadata("GitDate", GenBuildInfo.GIT_DATE);
     Logger.recordMetadata("GitBranch", GenBuildInfo.GIT_BRANCH);
+    // Scan Battery
+    System.out.println("[Init] Scanning Battery");
+    Logger.recordMetadata("BatteryName", "BAT-" + BatteryTracker.scanBattery(1.5));
+
     switch (GenBuildInfo.DIRTY) {
       case 0:
         Logger.recordMetadata("GitDirty", "All changes committed");

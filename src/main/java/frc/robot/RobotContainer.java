@@ -161,9 +161,9 @@ public class RobotContainer {
 
     // Create the climber subsystem
     climberSubsystem = new ClimberSubsystem(climberIO);
-    climberSubsystem.setDefaultCommand(
-        new ClimberSubsystem.ClimberJoystickTeleOp(
-            climberSubsystem, joystickSubsystem.getOperatorController()));
+    // climberSubsystem.setDefaultCommand(
+    // new ClimberSubsystem.ClimberJoystickTeleOp(
+    //     climberSubsystem, joystickSubsystem.getOperatorController()));
 
     // Create the flywheel subsystem
     flywheelSubsystem = new FlywheelSubsystem(flywheelIO);
