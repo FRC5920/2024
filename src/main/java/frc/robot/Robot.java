@@ -52,6 +52,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.LED.ColorConstants;
@@ -158,6 +159,9 @@ public class Robot extends LoggedRobot {
           sameBatteryAlert.set(true);
           // TODO: Make LEDs Angry
           // Leds.getInstance().sameBattery = true;
+          LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
+          m_teleOpLEDCommand = new LEDsToSolidColor(ledSubsystem, Color.kRed);
+          m_teleOpLEDCommand.schedule();
         } else {
           // New battery, delete file
           file.delete();
