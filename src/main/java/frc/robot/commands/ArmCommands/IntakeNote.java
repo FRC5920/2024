@@ -49,48 +49,50 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.indexer;
+package frc.robot.commands.ArmCommands;
 
-import frc.lib.logging.LoggableMotorInputs;
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.lib.logging.BotLog.DebugPrintCommand;
+import frc.lib.logging.BotLog.InfoPrintCommand;
+import frc.robot.RobotContainer;
+import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.commands.subsystemCommands.RunFlywheel;
+import frc.robot.commands.subsystemCommands.RunFlywheel.FlywheelPreset;
+import frc.robot.commands.subsystemCommands.RunIndexer;
+import frc.robot.commands.subsystemCommands.RunIndexer.IndexerPreset;
+import frc.robot.subsystems.flywheel.FlywheelSubsystem;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.pivot.PivotSubsystem;
 
-/** Logged inputs for the IntakeSubsystem */
-public class IndexerSubsystemInputs implements LoggableInputs {
-  /** Indexer motor inputs */
-  public LoggableMotorInputs indexer;
-  /** Gamepiece sensor inputs */
-  public boolean limitSwitch = false;
+// NOTE:  Consider using this command inline, rather than writing a subclass.  For more
+// information, see:
+// https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
+public class IntakeNote extends SequentialCommandGroup {
+  /** Creates a new IntakeNote. */
+  public IntakeNote(RobotContainer bc) {
+    FlywheelSubsystem flywheel = bc.flywheelSubsystem;
+    IndexerSubsystem indexer = bc.indexerSubsystem;
+    PivotSubsystem pivot = bc.pivotSubsystem;
 
-  /**
-   * Creates an instance of the inputs and sets the prefix to log them under
-   *
-   * @param prefix Prefix the inputs will be logged under
-   */
-  public IndexerSubsystemInputs(String prefix) {
-    indexer = new LoggableMotorInputs("Motor");
-  }
-
-  /** Creates an instance of the loggable object during clone() calls */
-  private IndexerSubsystemInputs(IndexerSubsystemInputs other) {
-    this.indexer = other.indexer;
-    this.limitSwitch = other.limitSwitch;
-  }
-
-  /** Write input values to log */
-  public void toLog(LogTable table) {
-    indexer.toLog(table);
-    table.put("limitSwitch", limitSwitch);
-  }
-
-  /** Read input values from log */
-  public void fromLog(LogTable table) {
-    indexer.fromLog(table);
-    limitSwitch = table.get("limitSwitch", limitSwitch);
-  }
-
-  /** Create a clone of input values */
-  public IndexerSubsystemInputs clone() {
-    return new IndexerSubsystemInputs(this);
+    addCommands(
+        new InfoPrintCommand("IntakeNote start"),
+        new ParallelCommandGroup(
+            new SequentialCommandGroup(
+                new DebugPrintCommand("Pivot to intake position"),
+                new PivotCommand(pivot, AnglePreset.Intake)),
+            new SequentialCommandGroup(
+                new DebugPrintCommand("Spin the Flywheel"),
+                RunFlywheel.perpetual(flywheel, FlywheelPreset.IntakeRing))),
+        new DebugPrintCommand("Run indexer"),
+        new RunIndexer(indexer, IndexerPreset.IntakeRing)
+            .until(() -> indexer.gamepieceIsDetected()),
+        new DebugPrintCommand("Gamepiece detected - store it"),
+        new ParallelCommandGroup(
+            new SequentialCommandGroup(
+                new DebugPrintCommand("Pivot to park position"),
+                new PivotCommand(pivot, AnglePreset.Park)),
+            RunFlywheel.stop(flywheel),
+            RunIndexer.stop(indexer)));
   }
 }

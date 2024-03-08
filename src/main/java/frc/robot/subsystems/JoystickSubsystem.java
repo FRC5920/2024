@@ -61,6 +61,7 @@ import frc.robot.Constants.CameraTarget;
 import frc.robot.RobotContainer;
 import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
+import frc.robot.commands.ArmCommands.IntakeNote;
 import frc.robot.commands.ArmCommands.PivotCommand;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
 import frc.robot.commands.DriveWithZTargeting;
@@ -176,8 +177,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // driverController.start.whileTrue(kDoNothing);
 
     // // Map right trigger
-    // driverController.rightTriggerAsButton.whileTrue(kDoNothing);
-
+    driverController.rightTriggerAsButton.whileTrue(new IntakeNote(botContainer));
   }
 
   /**
