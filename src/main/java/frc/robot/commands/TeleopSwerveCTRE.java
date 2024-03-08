@@ -53,7 +53,6 @@ package frc.robot.commands;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
-
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.joystick.ProcessedXboxController;
@@ -73,15 +72,19 @@ public class TeleopSwerveCTRE extends Command {
   ////////////////////////////////////////
   // Slew rate limiting
   ////////////////////////////////////////
-  /** Maximum rate of change applied to X/Y motion (0.0 to 1.0): larger values allow faster changes */
+  /**
+   * Maximum rate of change applied to X/Y motion (0.0 to 1.0): larger values allow faster changes
+   */
   public static final double ktranslationSlewRate = 0.6;
 
-  /** Maximum rate of change applied to X/Y motion (0.0 to 1.0): larger values allow faster changes */
+  /**
+   * Maximum rate of change applied to X/Y motion (0.0 to 1.0): larger values allow faster changes
+   */
   public static final double kRotationSlewRate = 0.33;
 
   ////////////////////////////////////////
   // Motion deadbanding
-  ////////////////////////////////////////  
+  ////////////////////////////////////////
 
   /** Deadband applied to linear motion as a normalized percentage (0.0 to 1.0) */
   private static final double kSpeedDeadband = 0.1;
@@ -90,7 +93,7 @@ public class TeleopSwerveCTRE extends Command {
   private static final double kAngularRateDeadband = 0.1;
 
   ////////////////////////////////////////
-  
+
   /** The swerve drive controlled by this command */
   private final CommandSwerveDrivetrain m_swerve;
 
@@ -105,7 +108,8 @@ public class TeleopSwerveCTRE extends Command {
   /** Slew rate limiter used to smooth acceleration in the Y direction */
   private final SlewRateLimiter m_yRateLimiter = new SlewRateLimiter(1.0 / ktranslationSlewRate);
   /** Slew rate limiter used to smooth rotational acceleration */
-  private final SlewRateLimiter m_rotationRateLimiter = new SlewRateLimiter(1.0 / kRotationSlewRate);
+  private final SlewRateLimiter m_rotationRateLimiter =
+      new SlewRateLimiter(1.0 / kRotationSlewRate);
 
   /**
    * Creates an instance of the command
@@ -141,7 +145,8 @@ public class TeleopSwerveCTRE extends Command {
     m_swerveRequest
         .withVelocityX(xSpeed * kMaxSpeed) // Drive forward with negative Y (forward)
         .withVelocityY(ySpeed * kMaxSpeed) // Drive left with negative X (left)
-        .withRotationalRate(angularRate * kMaxAngularRate); // Drive counterclockwise with negative X (left)
+        .withRotationalRate(
+            angularRate * kMaxAngularRate); // Drive counterclockwise with negative X (left)
     m_swerve.driveFieldCentric(m_swerveRequest);
   }
 
