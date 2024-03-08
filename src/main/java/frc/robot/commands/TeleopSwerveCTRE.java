@@ -53,6 +53,7 @@ package frc.robot.commands;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
@@ -68,11 +69,30 @@ public class TeleopSwerveCTRE extends Command {
   /** Default maximum rate the swerve drive should rotate in radians per second */
   public static final double kMaxAngularRate = 10; // Math.PI; Math.Pi was the default
 
+  ////////////////////////////////////////
+  // Slew rate limiting
+  ////////////////////////////////////////
+  /**
+   * Maximum rate of change applied to X/Y motion (0.0 to 1.0): larger values allow faster changes
+   */
+  public static final double ktranslationSlewRate = 0.6;
+
+  /**
+   * Maximum rate of change applied to X/Y motion (0.0 to 1.0): larger values allow faster changes
+   */
+  public static final double kRotationSlewRate = 0.33;
+
+  ////////////////////////////////////////
+  // Motion deadbanding
+  ////////////////////////////////////////
+
   /** Deadband applied to linear motion as a normalized percentage (0.0 to 1.0) */
   private static final double kSpeedDeadband = 0.1;
 
   /** Deadband applied to angular rotation as a normalized percentage (0.0 to 1.0) */
   private static final double kAngularRateDeadband = 0.1;
+
+  ////////////////////////////////////////
 
   /** The swerve drive controlled by this command */
   private final CommandSwerveDrivetrain m_swerve;
@@ -82,6 +102,14 @@ public class TeleopSwerveCTRE extends Command {
 
   /** Request object used to control the swerve drive */
   private final SwerveRequest.FieldCentric m_swerveRequest;
+
+  /** Slew rate limiter used to smooth acceleration in the X direction */
+  private final SlewRateLimiter m_xRateLimiter = new SlewRateLimiter(1.0 / ktranslationSlewRate);
+  /** Slew rate limiter used to smooth acceleration in the Y direction */
+  private final SlewRateLimiter m_yRateLimiter = new SlewRateLimiter(1.0 / ktranslationSlewRate);
+  /** Slew rate limiter used to smooth rotational acceleration */
+  private final SlewRateLimiter m_rotationRateLimiter =
+      new SlewRateLimiter(1.0 / kRotationSlewRate);
 
   /**
    * Creates an instance of the command
@@ -109,15 +137,16 @@ public class TeleopSwerveCTRE extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double xVelocity = -m_controller.getLeftY() * kMaxSpeed;
-    double yVelocity = -m_controller.getLeftX() * kMaxSpeed;
-    double angularRate = -m_controller.getRightX() * kMaxAngularRate;
+    double xSpeed = m_xRateLimiter.calculate(-1.0 * m_controller.getLeftY());
+    double ySpeed = m_yRateLimiter.calculate(-1.0 * m_controller.getLeftX());
+    double angularRate = m_rotationRateLimiter.calculate(-1.0 * m_controller.getRightX());
 
     // Update our SwerveRequest with the requested velocities and apply them to the swerve drive
     m_swerveRequest
-        .withVelocityX(xVelocity) // Drive forward with negative Y (forward)
-        .withVelocityY(yVelocity) // Drive left with negative X (left)
-        .withRotationalRate(angularRate); // Drive counterclockwise with negative X (left)
+        .withVelocityX(xSpeed * kMaxSpeed) // Drive forward with negative Y (forward)
+        .withVelocityY(ySpeed * kMaxSpeed) // Drive left with negative X (left)
+        .withRotationalRate(
+            angularRate * kMaxAngularRate); // Drive counterclockwise with negative X (left)
     m_swerve.driveFieldCentric(m_swerveRequest);
   }
 
