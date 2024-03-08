@@ -51,11 +51,12 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.indexer;
 
-import au.grapplerobotics.ConfigurationFailedException;
-import au.grapplerobotics.LaserCan;
 import com.ctre.phoenix.ErrorCode;
 import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.filter.Debouncer.DebounceType;
+import edu.wpi.first.wpilibj.DigitalInput;
 import frc.lib.logging.BotLog;
 import frc.lib.utility.Alert;
 import java.util.ArrayList;
@@ -68,33 +69,33 @@ public class IndexerSubsystemIOReal implements IndexerSubsystemIO {
   /** Motor used to drive the indexer (internal) wheels of the intake assembly */
   protected final WPI_TalonSRX m_indexerMotor;
 
-  /**
-   * LaserCAN module used to detect a gamepiece in the intake
-   *
-   * @see https://github.com/GrappleRobotics/LaserCAN.git
-   */
-  protected final LaserCan m_gamepieceSensor;
+  ////////////////////////////////////
+  // Gamepiece limit switch
+  ////////////////////////////////////
+
+  /** Digital input channel connected to the gamepiece limit switch */
+  private static final int kLimitSwitchDIChannel = 9;
+
+  /** Digital input used for the intake limit switch */
+  private DigitalInput m_limitSwitchInput = new DigitalInput(kLimitSwitchDIChannel);
+
+  /** Object used to debounce the limit switch */
+  private Debouncer m_limitSwitchDebouncer = new Debouncer(0.05, DebounceType.kBoth);
 
   /** Alert displayed on failure to configure the indexer motor controller */
   private static final Alert s_indexerMotorConfigFailedAlert =
       new Alert("Failed to configure indexer motor", Alert.AlertType.ERROR);
 
-  /** Alert displayed on failure to configure the gamepiece sensor */
-  private static final Alert s_laserCANConfigFailedAlert =
-      new Alert("Failed to configure intake LaserCAN sensor", Alert.AlertType.ERROR);
-
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Creates an instance of the I/O implementation */
   public IndexerSubsystemIOReal() {
     m_indexerMotor = new WPI_TalonSRX(IndexerSubsystem.kIndexerMotorDevice.id());
-    m_gamepieceSensor = new LaserCan(IndexerSubsystem.kLaserCANDevice.id());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Initializes and configures the I/O implementation */
   public void initialize() {
     configureIndexerMotor();
-    configureLaserCAN();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,7 +113,7 @@ public class IndexerSubsystemIOReal implements IndexerSubsystemIO {
     inputs.indexer.tempCelsius = m_indexerMotor.getTemperature();
 
     // Get input measurements for LaserCAN
-    inputs.laserCAN.fromMeasurement(m_gamepieceSensor.getMeasurement());
+    inputs.limitSwitch = m_limitSwitchDebouncer.calculate(m_limitSwitchInput.get());
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,20 +175,6 @@ public class IndexerSubsystemIOReal implements IndexerSubsystemIO {
         s_indexerMotorConfigFailedAlert.set(true);
         BotLog.Errorf("Could not configure indexer. Error: " + err.toString());
       }
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /** Configure the LaserCAN gamepiece sensor */
-  private void configureLaserCAN() {
-    // Initialise the settings of the LaserCAN
-    try {
-      m_gamepieceSensor.setRangingMode(IndexerSubsystem.kLaserCANRangingMode);
-      m_gamepieceSensor.setRegionOfInterest(IndexerSubsystem.kLaserCANRegionOfInterest);
-      m_gamepieceSensor.setTimingBudget(IndexerSubsystem.kLaserCANTimingBudget);
-    } catch (ConfigurationFailedException e) {
-      s_laserCANConfigFailedAlert.set(true);
-      BotLog.Errorf("LaserCAN configuration failed. Error: " + e);
     }
   }
 }

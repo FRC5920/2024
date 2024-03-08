@@ -51,7 +51,6 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.commands.ArmCommands;
 
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.lib.logging.BotLog;
@@ -59,12 +58,12 @@ import frc.lib.logging.BotLog.DebugPrintCommand;
 import frc.lib.logging.BotLog.InfoPrintCommand;
 import frc.robot.Constants.ScoringTarget;
 import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.commands.subsystemCommands.RunFlywheel;
+import frc.robot.commands.subsystemCommands.RunFlywheel.FlywheelPreset;
+import frc.robot.commands.subsystemCommands.RunIndexer;
+import frc.robot.commands.subsystemCommands.RunIndexer.IndexerPreset;
 import frc.robot.subsystems.flywheel.FlywheelSubsystem;
-import frc.robot.subsystems.flywheel.RunFlywheelAtSpeed;
-import frc.robot.subsystems.flywheel.RunFlywheelAtSpeed.FlywheelPreset;
 import frc.robot.subsystems.indexer.IndexerSubsystem;
-import frc.robot.subsystems.indexer.IndexerSubsystem.IndexerPreset;
-import frc.robot.subsystems.indexer.IndexerSubsystem.RunIndexerAtSpeed;
 import frc.robot.subsystems.pivot.PivotSubsystem;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
@@ -89,11 +88,12 @@ public class ShootNote extends SequentialCommandGroup {
                     new PivotCommand(pivot, AnglePreset.ShootAmp)),
                 new SequentialCommandGroup(
                     new DebugPrintCommand("Spin up the Flywheel"),
-                    new RunFlywheelAtSpeed(flywheel, FlywheelPreset.ShootNoteAmp))),
+                    new RunFlywheel(flywheel, FlywheelPreset.ShootNoteAmp))),
             new DebugPrintCommand("Run the indexer"),
-            new RunIndexerAtSpeed(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
-            new DebugPrintCommand("Stop the flywheel"),
-            new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)),
+            new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
+            new DebugPrintCommand("Stop the flywheel and indexer"),
+            RunFlywheel.stop(flywheel),
+            RunIndexer.stop(indexer),
             new PivotCommand(pivot, AnglePreset.Park));
         break;
       case Speaker:
@@ -104,11 +104,13 @@ public class ShootNote extends SequentialCommandGroup {
                     new PivotCommand(pivot, AnglePreset.ShootSpeaker)),
                 new SequentialCommandGroup(
                     new DebugPrintCommand("Spin up the Flywheel"),
-                    new RunFlywheelAtSpeed(flywheel, FlywheelPreset.ShootNoteSpeaker))),
+                    new RunFlywheel(flywheel, FlywheelPreset.ShootNoteSpeaker))),
             new DebugPrintCommand("Run the indexer"),
-            new RunIndexerAtSpeed(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
+            new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
             new DebugPrintCommand("Stop the flywheel"),
-            new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)),
+            RunFlywheel.stop(flywheel),
+            new DebugPrintCommand("Stop the indexer"),
+            RunIndexer.stop(indexer),
             new PivotCommand(pivot, AnglePreset.Park));
         break;
       case Trap:

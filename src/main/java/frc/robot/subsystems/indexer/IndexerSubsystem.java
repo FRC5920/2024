@@ -51,11 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.indexer;
 
-import au.grapplerobotics.LaserCan;
-import au.grapplerobotics.LaserCan.RegionOfInterest;
-import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
@@ -93,24 +89,6 @@ public class IndexerSubsystem extends SubsystemBase {
 
   /** Set to -1.0 to invert the direction of the indexer motor */
   public static final double kMotorInvert = -1.0;
-
-  ////////////////////////////////////
-  // LaserCAN Configuration
-  ////////////////////////////////////
-
-  /** CAN device ID of the flywheel motor */
-  public static final CANDevice kLaserCANDevice = CANDevice.IntakeGamepieceSensor;
-
-  /** LaserCAN ranging mode */
-  public static final LaserCan.RangingMode kLaserCANRangingMode = LaserCan.RangingMode.SHORT;
-
-  /** LaserCAN Region of Interest */
-  public static final RegionOfInterest kLaserCANRegionOfInterest =
-      new LaserCan.RegionOfInterest(8, 8, 16, 16);
-
-  /** LaserCAN Timing budget */
-  public static final LaserCan.TimingBudget kLaserCANTimingBudget =
-      LaserCan.TimingBudget.TIMING_BUDGET_33MS;
 
   /** Subsystem I/O to use */
   private final IndexerSubsystemIO m_io;
@@ -155,12 +133,12 @@ public class IndexerSubsystem extends SubsystemBase {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Returns the distance measured by the gamepiece sensor
+   * Returns true if a gamepiece is detected inside the intake assembly
    *
-   * @return The distance measured by the gamepiece sensor in meters
+   * @return true if a gamepiece is detected inside the intake assembly; else false
    */
-  public double getGamepieceDistance() {
-    return (m_inputs.laserCAN.isValid) ? m_inputs.laserCAN.distanceMeters : -1.0;
+  public boolean gamepieceIsDetected() {
+    return m_inputs.limitSwitch;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,59 +153,6 @@ public class IndexerSubsystem extends SubsystemBase {
     // Display velocities on dashboard
     SmartDashboard.putNumber("Indexer/setSpeed", m_inputs.indexer.targetVelocity);
     SmartDashboard.putNumber("Indexer/speed", m_inputs.indexer.velocity);
-    SmartDashboard.putNumber("Indexer/laserCAN/distance", m_inputs.laserCAN.distanceMeters);
-    SmartDashboard.putString("Indexer/laserCAN/status", m_inputs.laserCAN.status);
-  }
-
-  public enum IndexerPreset {
-    IntakeRing(-0.5),
-    ShootRing(1.0);
-
-    public final double indexerSpeed;
-
-    private IndexerPreset(double indexerSpeed) {
-      this.indexerSpeed = indexerSpeed;
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  public static class RunIndexerAtSpeed extends Command {
-    private final IndexerSubsystem m_indexer;
-    private final double m_targetSpeed;
-    private final double m_timeoutSec;
-    private final Timer m_timer;
-
-    /** Creates a new ClimberJoystickTeleOp. */
-    public RunIndexerAtSpeed(IndexerSubsystem indexer, IndexerPreset preset, double timeoutSec) {
-      m_indexer = indexer;
-      m_targetSpeed = preset.indexerSpeed;
-      m_timeoutSec = timeoutSec;
-      m_timer = new Timer();
-      addRequirements(m_indexer);
-    }
-
-    // Called when the command is initially scheduled.
-    @Override
-    public void initialize() {
-      m_indexer.setIndexerSpeed(m_targetSpeed);
-      m_timer.reset();
-      m_timer.start();
-    }
-
-    // Called every time the scheduler runs while the command is scheduled.
-    @Override
-    public void execute() {}
-
-    // Called once the command ends or is interrupted.
-    @Override
-    public void end(boolean interrupted) {
-      m_indexer.setIndexerSpeed(0.0);
-    }
-
-    // Returns true when the command should end.
-    @Override
-    public boolean isFinished() {
-      return m_timer.hasElapsed(m_timeoutSec);
-    }
+    SmartDashboard.putBoolean("Indexer/limitSwitch", m_inputs.limitSwitch);
   }
 }
