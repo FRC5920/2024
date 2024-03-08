@@ -126,7 +126,6 @@ public class Robot extends LoggedRobot {
 
     logInit.initializeLogging(Constants.kLoggingIsEnabled, Constants.getLogDirectory());
 
-    // TODO: log battery name and info
   }
 
   /**

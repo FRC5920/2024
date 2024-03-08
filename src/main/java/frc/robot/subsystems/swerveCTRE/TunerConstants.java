@@ -51,6 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.swerveCTRE;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.ClosedLoopOutputType;
@@ -80,7 +81,23 @@ public class TunerConstants {
 
   // The stator current at which the wheels start to slip;
   // This needs to be tuned to your individual robot
-  private static final double kSlipCurrentA = 300.0;
+    //TODO: test this for real value.
+  private static final double kSlipCurrentA = 80.0;
+
+  // Current Limits
+  /*public static final double kDriveSupplyCurrentLimit = 50.0;
+   public static final double kDriveSupplyCurrentThreshold = 60.0;
+   public static final double kDriveSupplyTimeThreshold = 0.1;
+   public static final boolean kDriveSSupplyCurrentLimitEnable = true;
+   public static final double kDriveStatorCurrentLimit = 50.0;
+   public static final boolean kDriveStatorCurrentLimitEnable = true;
+
+   public static final double kAngleSupplyCurrentLimit = 20.0;
+   public static final double kAngleSupplyCurrentThreshold = 30.0;
+   public static final double kAngleSupplyTimeThreshold = 0.1;
+   public static final boolean kAngleSSupplyCurrentLimitEnable = true;
+   public static final double kAngleStatorCurrentLimit = 20.0;
+   public static final boolean kAngleStatorCurrentLimitEnable = true; */ 
 
   // Theoretical free speed (m/s) at 12v applied output;
   // This needs to be tuned to your individual robot
