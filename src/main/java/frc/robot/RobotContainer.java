@@ -57,9 +57,12 @@ import com.pathplanner.lib.auto.NamedCommands;
 import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.LED.ColorConstants;
+import frc.robot.Constants.CameraID;
 import frc.robot.autos.AutoDashboardTab;
 import frc.robot.commands.TeleopSwerveCTRE;
 import frc.robot.commands.autoCommands.ShootAmpClose;
@@ -85,11 +88,24 @@ import frc.robot.subsystems.pivot.PivotSubsystemIOReal;
 import frc.robot.subsystems.pivot.PivotSubsystemIOSim;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerveCTRE.TunerConstants;
+import frc.robot.subsystems.vision.HeimdallSubsystem;
+import frc.robot.subsystems.vision.HeimdallSubsystemCameraIO;
+import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOReal;
+import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOSim;
+import frc.robot.subsystems.vision.PoseEstimateProcessor;
+import org.photonvision.simulation.VisionSystemSim;
 
 public class RobotContainer {
 
   /** Subsystem providing Xbox controllers */
   public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
+
+  /* Cameras */
+  // public final PhotonCamera frontTagCamera = new PhotonCamera(CameraID.FrontCamera.name);
+  // public final PhotonCamera rearTagCamera = new PhotonCamera(CameraID.RearCamera.name);
+
+  /** Simulated vision system (only used when running in simulation mode) */
+  public final VisionSystemSim visionSystemSim;
 
   /** Swerve drive subsystem */
   public final CommandSwerveDrivetrain driveTrain = TunerConstants.DriveTrain;
@@ -106,10 +122,17 @@ public class RobotContainer {
   /** Indexer subsystem */
   public final IndexerSubsystem indexerSubsystem;
 
+  /** Vision subsystem */
+  public final HeimdallSubsystem visionSubsystem;
+
   // Subsystem facilitating display of dashboard tabs
   public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
 
   private final AutoDashboardTab autoDashboardTab;
+
+  // Vision-based pose estimate processor
+  private final PoseEstimateProcessor visionPoseProcessor =
+      new PoseEstimateProcessor(HeimdallSubsystem.kTagLayout);
 
   // Register an object to receive telemetry from the swerve drive
   // public final CTRESwerveTelemetry swerveTelemetry = new CTRESwerveTelemetry();
@@ -125,6 +148,13 @@ public class RobotContainer {
   /** Called to create the robot container */
   public RobotContainer() {
 
+    if (RobotBase.isSimulation()) {
+      visionSystemSim = new VisionSystemSim("VisionSimulation");
+      visionSystemSim.addAprilTags(AprilTagFields.kDefaultField.loadAprilTagLayoutField());
+    } else {
+      visionSystemSim = null;
+    }
+
     // Configure the PathPlanner AutoBuilder, the set up the auto dashboard tab.
     // NOTE: these must occur in this order
     configureAutoBuilder();
@@ -134,6 +164,8 @@ public class RobotContainer {
     FlywheelSubsystemIO flywheelIO = null;
     IndexerSubsystemIO indexerIO = null;
     PivotSubsystemIO pivotIO = null;
+    HeimdallSubsystemCameraIO visionIOFront = null;
+    HeimdallSubsystemCameraIO visionIORear = null;
 
     switch (Constants.getMode()) {
       case REAL:
@@ -141,6 +173,8 @@ public class RobotContainer {
         flywheelIO = new FlywheelSubsystemIOReal();
         indexerIO = new IndexerSubsystemIOReal();
         pivotIO = new PivotSubsystemIOReal();
+        visionIOFront = new HeimdallSubsystemCameraIOReal(CameraID.FrontCamera);
+        visionIORear = new HeimdallSubsystemCameraIOReal(CameraID.RearCamera);
         break;
 
       case SIM:
@@ -148,6 +182,16 @@ public class RobotContainer {
         flywheelIO = new FlywheelSubsystemIOSim();
         indexerIO = new IndexerSubsystemIOSim();
         pivotIO = new PivotSubsystemIOSim();
+        visionIOFront =
+            new HeimdallSubsystemCameraIOSim(
+                CameraID.FrontCamera,
+                HeimdallSubsystem.kFrontCameraLocationTransform,
+                visionSystemSim);
+        visionIORear =
+            new HeimdallSubsystemCameraIOSim(
+                CameraID.RearCamera,
+                HeimdallSubsystem.kRearCameraLocationTransform,
+                visionSystemSim);
         break;
 
       case REPLAY:
@@ -156,14 +200,13 @@ public class RobotContainer {
         flywheelIO = new FlywheelSubsystemIO() {};
         indexerIO = new IndexerSubsystemIO() {};
         pivotIO = new PivotSubsystemIO() {};
+        visionIOFront = new HeimdallSubsystemCameraIO() {};
+        visionIORear = new HeimdallSubsystemCameraIO() {};
         break;
     }
 
     // Create the climber subsystem
     climberSubsystem = new ClimberSubsystem(climberIO);
-    climberSubsystem.setDefaultCommand(
-        new ClimberSubsystem.ClimberJoystickTeleOp(
-            climberSubsystem, joystickSubsystem.getOperatorController()));
 
     // Create the flywheel subsystem
     flywheelSubsystem = new FlywheelSubsystem(flywheelIO);
@@ -173,6 +216,16 @@ public class RobotContainer {
 
     // Create the pivot subsystem
     pivotSubsystem = new PivotSubsystem(pivotIO);
+
+    // Create a vision pose estimator subsystem and set the processor used to
+    // assign standard deviations to its estimated poses
+    visionSubsystem =
+        new HeimdallSubsystem(
+            visionIOFront,
+            visionIORear,
+            (update) ->
+                driveTrain.addVisionMeasurement(update.pose, update.timestamp, update.stddevs),
+            driveTrain::getPose);
 
     joystickSubsystem.configureButtonBindings(this);
 

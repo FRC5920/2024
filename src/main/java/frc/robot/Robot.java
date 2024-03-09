@@ -140,8 +140,14 @@ public class Robot extends LoggedRobot {
    */
   @Override
   public void robotPeriodic() {
+    RobotContainer bc = m_robotContainer;
+
+    Logger.recordOutput(CommandSwerveDrivetrain.kLogPrefix + "pose", bc.driveTrain.getPose());
+
+    // Process active command(s)
     Logger.recordOutput(
         CommandSwerveDrivetrain.kLogPrefix + "pose", m_robotContainer.driveTrain.getPose());
+
     CommandScheduler.getInstance().run();
 
     // Alert if a logging fault is detected
@@ -153,8 +159,8 @@ public class Robot extends LoggedRobot {
     // TODO: low battery alert
 
     // Update display of robot mechanisms
-    m_botMechanisms.updatePivotAngle(m_robotContainer.pivotSubsystem.getAngleDeg());
-    m_botMechanisms.updateClimberExtension(m_robotContainer.climberSubsystem.getExtensionPercent());
+    m_botMechanisms.updatePivotAngle(bc.pivotSubsystem.getAngleDeg());
+    m_botMechanisms.updateClimberExtension(bc.climberSubsystem.getExtensionPercent());
     m_botMechanisms.sendToDashboard();
   }
 
@@ -168,7 +174,10 @@ public class Robot extends LoggedRobot {
 
   /** This function is called every 20 ms when the robot is running in simulation mode */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    // Update the vision system simulation
+    m_robotContainer.visionSystemSim.update(m_robotContainer.driveTrain.getPose());
+  }
 
   //////////////////////////////////////
   // DISABLED MODE
