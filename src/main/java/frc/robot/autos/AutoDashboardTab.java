@@ -73,7 +73,6 @@ import frc.lib.dashboard.ChangeDetector;
 import frc.lib.dashboard.IDashboardTab;
 import frc.lib.dashboard.LoggedSendableChooser;
 import frc.robot.RobotContainer;
-import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import java.util.*;
 
 /**
@@ -181,7 +180,6 @@ public class AutoDashboardTab implements IDashboardTab {
   /** Service dashboard tab widgets */
   @Override
   public void updateDashboard(RobotContainer botContainer) {
-    CommandSwerveDrivetrain driveBase = botContainer.driveTrain;
     boolean allianceHasChanged = m_allianceChangeDetector.hasChanged();
     boolean autoPresetChanged = m_autoPresetChooser.hasChanged();
 
@@ -213,7 +211,7 @@ public class AutoDashboardTab implements IDashboardTab {
 
         // Set the current robot pose
         Pose2d initialPose = trajectories.get(0).getInitialPose();
-        driveBase.seedFieldRelative(initialPose);
+        botContainer.driveTrain.seedFieldRelative(initialPose);
       }
 
       // Reset the drivebase Gyro and set odometry to the initial pose

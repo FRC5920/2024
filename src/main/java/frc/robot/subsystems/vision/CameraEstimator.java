@@ -67,7 +67,7 @@ import org.photonvision.targeting.PhotonTrackedTarget;
 public class CameraEstimator {
 
   /** Vision-based pose estimator */
-  public final PhotonPoseEstimator m_estimator;
+  private final PhotonPoseEstimator m_estimator;
 
   /** Timestamp of the last pipeline result result received from the camera */
   private double m_lastTimestamp = 0.0;
@@ -96,7 +96,6 @@ public class CameraEstimator {
    * @return true if a new pose estimate was calculated; else false
    */
   public boolean process(HeimdallCameraInputs inputs, HeimdallEstimatorOutputs outputs) {
-    boolean newPoseCalculated = false;
     double latestTimestamp = inputs.pipelineResult.getTimestampSeconds();
     inputs.isFresh = Math.abs(latestTimestamp - m_lastTimestamp) > 1e-5;
 
