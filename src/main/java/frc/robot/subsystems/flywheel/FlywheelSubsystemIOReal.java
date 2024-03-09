@@ -81,9 +81,9 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
   //   Kp - output per unit of error in position (output/rotation)
   //   Ki - output per unit of integrated error in position (output/(rotation*s))
   //   Kd - output per unit of error in velocity (output/rps)
-  private static final double kDefault_kP = 5;
+  private static final double kDefault_kP = 30;
   private static final double kDefault_kI = 0.0;
-  private static final double kDefault_kD = 0.001;
+  private static final double kDefault_kD = 0.01;
   private static final double kDefault_kV = 0.0;
   private static final double kDefault_kS = 0.0;
 
@@ -151,7 +151,8 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
     inputs.velocity =
         m_flywheelVelocitySignal.refresh().getValueAsDouble()
             / FlywheelSubsystem.kFlywheelMotorGearRatio
-            * kMotorInvert;
+            * kMotorInvert
+            * 60.0;
     inputs.voltage = m_flywheelVoltageSignal.refresh().getValueAsDouble();
     inputs.current = m_flywheelCurrentSignal.refresh().getValueAsDouble();
     inputs.tempCelsius = m_flywheelTempSignal.refresh().getValueAsDouble();
@@ -161,11 +162,11 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
   /**
    * Sets the desired velocity of the flywheel mechanism
    *
-   * @param rotPerSec Desired velocity in rotations per second
+   * @param rpm Desired velocity in rotations per minute
    */
   @Override
-  public void setFlywheelVelocity(double rotPerSec) {
-    if (rotPerSec != 0.0) {
+  public void setFlywheelVelocity(double rpm) {
+    if (rpm != 0.0) {
       TalonFXConfigurator configurator = m_flywheelMotor.getConfigurator();
 
       // Re-apply closed-loop gains
@@ -178,7 +179,7 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
 
       m_flywheelMotor.setControl(
           m_voltsVelocityReq.withVelocity(
-              rotPerSec * FlywheelSubsystem.kFlywheelMotorGearRatio * kMotorInvert));
+              rpm / 60.0 * FlywheelSubsystem.kFlywheelMotorGearRatio * kMotorInvert));
     } else {
       m_flywheelMotor.setControl(m_coast);
     }

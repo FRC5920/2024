@@ -52,9 +52,30 @@
 package frc.robot.commands.ArmCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.logging.BotLog;
 import frc.robot.subsystems.pivot.PivotSubsystem;
 
 public class PivotCommand extends Command {
+
+  public enum AnglePreset {
+    ShootForward(100.0),
+    ShootBackward(45.0),
+    ShootAmp(90),
+    ShootSpeaker(100.0),
+    Intake(175.0),
+    Park(1.8),
+
+    TestLow(176.4),
+    TestHi(90.0);
+
+    /** Pivot angle in degrees */
+    public final double angleDeg;
+
+    private AnglePreset(double deg) {
+      angleDeg = deg;
+    }
+  }
+
   /** The PivotSubsystem operated on by the command */
   private final PivotSubsystem m_pivotSubsystem;
 
@@ -76,6 +97,7 @@ public class PivotCommand extends Command {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
+    BotLog.Debugf("PivotCommand: set angle to %f deg", m_angleDegrees);
     m_pivotSubsystem.setAngleDeg(m_angleDegrees);
   }
 
@@ -85,30 +107,13 @@ public class PivotCommand extends Command {
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    BotLog.Debugf("PivotCommand %s ", (interrupted ? "was interrupted" : "finished"));
+  }
 
   // Returns true to end the command when the pivot reaches the target angle within one degree
   @Override
   public boolean isFinished() {
     return Math.abs(m_pivotSubsystem.getAngleDeg() - m_angleDegrees) < 1.0;
-  }
-
-  public enum AnglePreset {
-    ShootForward(100.0),
-    ShootBackward(45.0),
-    ShootAmp(90),
-    ShootSpeaker(100.0),
-    Intake(175.0),
-    Park(1.8),
-
-    TestLow(176.4),
-    TestHi(90.0);
-
-    /** Pivot angle in degrees */
-    public final double angleDeg;
-
-    private AnglePreset(double deg) {
-      angleDeg = deg;
-    }
   }
 }

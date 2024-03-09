@@ -62,7 +62,7 @@ public class RunFlywheel extends Command {
 
   public enum FlywheelPreset {
     Stop(0.0),
-    IntakeRing(-20.0),
+    IntakeRing(-2000.0),
     ShootNoteAmp(1000.0),
     ShootNoteSpeaker(4500.0);
 

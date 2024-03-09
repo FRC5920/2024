@@ -51,9 +51,10 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.commands.ArmCommands;
 
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.lib.logging.BotLog;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.lib.logging.BotLog.DebugPrintCommand;
 import frc.lib.logging.BotLog.InfoPrintCommand;
 import frc.robot.Constants.ScoringTarget;
@@ -71,7 +72,10 @@ import frc.robot.subsystems.pivot.PivotSubsystem;
 // https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
 public class ShootNote extends SequentialCommandGroup {
   /** Maximum time to run the indexer */
-  private static final double kIndexerTimeoutSec = 2.0;
+  private static final double kIndexerTimeoutSec = 1.0;
+
+  private final FlywheelPreset flywheelPreset;
+  private final AnglePreset pivotAngle;
 
   /** Creates a new ShootNote. */
   public ShootNote(
@@ -79,54 +83,46 @@ public class ShootNote extends SequentialCommandGroup {
       PivotSubsystem pivot,
       FlywheelSubsystem flywheel,
       IndexerSubsystem indexer) {
+
     switch (target) {
       case Amp:
-        addCommands(
-            new ParallelCommandGroup(
-                new SequentialCommandGroup(
-                    new InfoPrintCommand("ShootAtAmp"),
-                    new PivotCommand(pivot, AnglePreset.ShootAmp)),
-                new SequentialCommandGroup(
-                    new DebugPrintCommand("Spin up the Flywheel"),
-                    new RunFlywheel(flywheel, FlywheelPreset.ShootNoteAmp)
-                        .until(() -> flywheelReachedSpeed(flywheel, FlywheelPreset.ShootNoteAmp)))),
-            new DebugPrintCommand("Run the indexer"),
-            new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
-            new DebugPrintCommand("Stop the flywheel and indexer"),
-            new RunFlywheel(flywheel, FlywheelPreset.Stop),
-            RunIndexer.stop(indexer),
-            new PivotCommand(pivot, AnglePreset.Park));
+        flywheelPreset = FlywheelPreset.ShootNoteAmp;
+        pivotAngle = AnglePreset.ShootAmp;
         break;
       case Speaker:
-        addCommands(
-            new ParallelCommandGroup(
-                new SequentialCommandGroup(
-                    new InfoPrintCommand("ShootAtSpeaker"),
-                    new PivotCommand(pivot, AnglePreset.ShootSpeaker)),
-                new SequentialCommandGroup(
-                    new DebugPrintCommand("Spin up the Flywheel"),
-                    new RunFlywheel(flywheel, FlywheelPreset.ShootNoteSpeaker)
-                        .until(
-                            () ->
-                                flywheelReachedSpeed(flywheel, FlywheelPreset.ShootNoteSpeaker)))),
-            new DebugPrintCommand("Run the indexer"),
-            new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
-            new DebugPrintCommand("Stop the flywheel"),
-            new RunFlywheel(flywheel, FlywheelPreset.Stop),
-            new DebugPrintCommand("Stop the indexer"),
-            RunIndexer.stop(indexer),
-            new PivotCommand(pivot, AnglePreset.Park));
+        flywheelPreset = FlywheelPreset.ShootNoteSpeaker;
+        pivotAngle = AnglePreset.ShootSpeaker;
         break;
       case Trap:
-        addCommands(new BotLog.InfoPrintCommand("ShootAtTrap"));
-        break;
+      default:
+        flywheelPreset = FlywheelPreset.Stop;
+        pivotAngle = AnglePreset.Park;
     }
+
+    // Register subsystem requirements
+    addRequirements(pivot, flywheel, indexer);
+
+    addCommands(
+        new InfoPrintCommand("ShootNote at " + target.name()),
+        new ParallelRaceGroup(
+            new RunFlywheel(flywheel, flywheelPreset),
+            new SequentialCommandGroup(
+                new PivotCommand(pivot, pivotAngle),
+                new WaitUntilCommand(() -> flywheelReachedSpeed(flywheel, flywheelPreset))
+                    .withTimeout(5.0),
+                new DebugPrintCommand("Run the indexer"),
+                new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
+                new DebugPrintCommand("Indexer finished"))),
+        new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)),
+        new InfoPrintCommand("Pivot back to park"),
+        new PivotCommand(pivot, AnglePreset.Park));
+
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
 
   }
 
   private static boolean flywheelReachedSpeed(FlywheelSubsystem flywheel, FlywheelPreset preset) {
-    return Math.abs(flywheel.getFlywheelVelocity()) >= Math.abs(preset.flywheelRPM);
+    return Math.abs(flywheel.getFlywheelVelocity()) >= (0.9 * Math.abs(preset.flywheelRPM));
   }
 }
