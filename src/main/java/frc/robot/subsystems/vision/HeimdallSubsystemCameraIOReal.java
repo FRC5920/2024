@@ -51,6 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
+import frc.lib.utility.Alert;
 import frc.robot.Constants.CameraID;
 import org.photonvision.PhotonCamera;
 import org.photonvision.targeting.PhotonPipelineResult;
@@ -64,10 +65,16 @@ public class HeimdallSubsystemCameraIOReal implements HeimdallSubsystemCameraIO 
   /** Timestamp when the last good PipelineResult was received from the camera */
   private double m_lastTimestamp;
 
+  /** Alert displayed on failure to configure pivot motors */
+  private final Alert m_motorConfigFailedAlert;
+
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Creates an instance of the I/O */
   public HeimdallSubsystemCameraIOReal(CameraID camera) {
     m_camera = new PhotonCamera(camera.name);
+
+    String alertMsg = String.format("Tag camera %s is not connected!", camera.name);
+    m_motorConfigFailedAlert = new Alert(alertMsg, Alert.AlertType.ERROR);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +90,9 @@ public class HeimdallSubsystemCameraIOReal implements HeimdallSubsystemCameraIO 
     double latestTimestamp = pipelineResult.getTimestampSeconds();
 
     inputs.cameraIsConnected = m_camera.isConnected();
+    // Alert if the camera is not connected
+    m_motorConfigFailedAlert.set(inputs.cameraIsConnected);
+
     inputs.isFresh = Math.abs(latestTimestamp - m_lastTimestamp) > 1e-5;
 
     // Only log pipeline result data if a new PipelineResult was received
