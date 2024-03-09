@@ -53,6 +53,7 @@ package frc.robot.subsystems.indexer;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.logging.BotLog;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
 import org.littletonrobotics.junction.Logger;
@@ -105,6 +106,16 @@ public class IndexerSubsystem extends SubsystemBase {
   public IndexerSubsystem(IndexerSubsystemIO io) {
     m_io = io;
     m_io.initialize();
+
+    // By default, the subsystem will automatically stop the indexer
+    this.setDefaultCommand(
+        run(
+            () -> {
+              if (Math.abs(this.getIndexerSpeed()) > 0.0) {
+                BotLog.Debug("Flywheel auto-stop");
+                this.setIndexerSpeed(0.0);
+              }
+            }));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
