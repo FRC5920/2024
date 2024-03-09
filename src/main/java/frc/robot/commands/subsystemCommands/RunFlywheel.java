@@ -51,48 +51,17 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.commands.subsystemCommands;
 
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
-import frc.lib.logging.BotLog.DebugPrintCommand;
+import frc.lib.logging.BotLog;
+import frc.robot.commands.subsystemCommands.RunFlywheel.FlywheelPreset;
 import frc.robot.subsystems.flywheel.FlywheelSubsystem;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 public class RunFlywheel extends Command {
-  private final FlywheelSubsystem m_flywheel;
-  private final double m_targetVelocityRPS;
-
-  /** Creates a new ClimberJoystickTeleOp. */
-  public RunFlywheel(FlywheelSubsystem intakeSubsystem, FlywheelPreset preset) {
-    m_flywheel = intakeSubsystem;
-    m_targetVelocityRPS = preset.flywheelRPM / 60.0;
-    addRequirements(m_flywheel);
-  }
-
-  // Called when the command is initially scheduled.
-  @Override
-  public void initialize() {
-    m_flywheel.setFlywheelVelocity(m_targetVelocityRPS);
-  }
-
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {}
-
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-    // m_intakeSubsystem.setFlywheelVelocity(0.0);
-  }
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    double velocity = m_flywheel.getFlywheelVelocity();
-    return Math.abs(velocity) >= Math.abs(0.9 * m_targetVelocityRPS);
-  }
 
   public enum FlywheelPreset {
+    Stop(0.0),
     IntakeRing(-20.0),
     ShootNoteAmp(1000.0),
     ShootNoteSpeaker(4500.0);
@@ -104,15 +73,56 @@ public class RunFlywheel extends Command {
     }
   }
 
-  /** Returns a command that runs the flywheel perpetually at a given speed */
-  public static Command perpetual(FlywheelSubsystem flywheel, FlywheelPreset preset) {
-    return new InstantCommand(() -> flywheel.setFlywheelVelocity(preset.flywheelRPM));
+  /** The Flywheel subsystem to operate on */
+  private final FlywheelSubsystem m_flywheel;
+
+  /** Flywheel speed preset to be run */
+  private final FlywheelPreset m_preset;
+
+  private final double m_timeoutSec;
+  private final Timer m_timer = new Timer();
+
+  /** Creates a command that will run the Flywheel for a specified max number of seconds */
+  public RunFlywheel(FlywheelSubsystem flywheel, FlywheelPreset preset, double timeoutSec) {
+    m_flywheel = flywheel;
+    m_preset = preset;
+    m_timeoutSec = timeoutSec;
+    addRequirements(flywheel);
   }
 
-  /** Returns a command that stops the flywheel */
-  public static Command stop(FlywheelSubsystem flywheel) {
-    return new SequentialCommandGroup(
-        new DebugPrintCommand("Stopping the flywheel"),
-        new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)));
+  /** Creates a command that will run the Flywheel perpetually */
+  public RunFlywheel(FlywheelSubsystem flywheel, FlywheelPreset preset) {
+    this(flywheel, preset, -1.0);
+  }
+
+  @Override
+  public void initialize() {
+    BotLog.Debugf(
+        "Run Flywheel at %f RPM%s",
+        m_preset.flywheelRPM,
+        (m_timeoutSec > 0.0) ? String.format(" for %f seconds", m_timeoutSec) : " perpetually");
+
+    // Set the flywheel speed
+    m_flywheel.setFlywheelVelocity(m_preset.flywheelRPM);
+
+    m_timer.reset();
+    m_timer.start();
+  }
+
+  @Override
+  public boolean isFinished() {
+    boolean finished = false;
+    if (m_timeoutSec > 0.0) {
+      finished = m_timer.hasElapsed(m_timeoutSec);
+      if (finished) {
+        BotLog.Debugf("RunFlywheel timed out after %f sec", m_timer.get());
+      }
+    }
+    return finished;
+  }
+
+  @Override
+  public void end(boolean interrupted) {
+    BotLog.Debug("RunFlywheel " + (interrupted ? "interrupted" : "finished"));
   }
 }

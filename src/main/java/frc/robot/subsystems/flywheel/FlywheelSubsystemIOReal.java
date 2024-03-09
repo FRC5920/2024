@@ -53,7 +53,9 @@ package frc.robot.subsystems.flywheel;
 
 import com.ctre.phoenix6.StatusCode;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -61,6 +63,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import frc.lib.logging.BotLog;
 import frc.lib.logging.LoggableMotorInputs;
+import frc.lib.thirdparty.LoggedTunableNumber;
 import frc.lib.utility.Alert;
 
 /** Implementation of the IntakeSubsystemIO interface using real hardware */
@@ -70,6 +73,19 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
   private static final int kFlywheelVoltsPIDSlot = 0;
 
   private static final double kMotorInvert = -1.0;
+
+  // Default PID gains
+  //   Ks - output to overcome static friction (output)
+  //   Kv - output per unit of target velocity (output/rps)
+  //   Ka - output per unit of target acceleration (output/(rps/s))
+  //   Kp - output per unit of error in position (output/rotation)
+  //   Ki - output per unit of integrated error in position (output/(rotation*s))
+  //   Kd - output per unit of error in velocity (output/rps)
+  private static final double kDefault_kP = 5;
+  private static final double kDefault_kI = 0.0;
+  private static final double kDefault_kD = 0.001;
+  private static final double kDefault_kV = 0.0;
+  private static final double kDefault_kS = 0.0;
 
   /** Motor used to drive the flywheels at the entrnce of the intake */
   protected final TalonFX m_flywheelMotor;
@@ -92,6 +108,15 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
   private final StatusSignal<Double> m_flywheelCurrentSignal;
   /** Status signal used to read the temperature of the flywheel motor */
   private final StatusSignal<Double> m_flywheelTempSignal;
+
+  /** Closed-loop gains applied to flywheel velocity */
+  private Slot0Configs m_slot0Configs = new Slot0Configs();
+
+  LoggedTunableNumber m_kP = new LoggedTunableNumber("Flywheel/kP", kDefault_kP);
+  LoggedTunableNumber m_kI = new LoggedTunableNumber("Flywheel/kI", kDefault_kI);
+  LoggedTunableNumber m_kD = new LoggedTunableNumber("Flywheel/kD", kDefault_kD);
+  LoggedTunableNumber m_kV = new LoggedTunableNumber("Flywheel/kV", kDefault_kV);
+  LoggedTunableNumber m_kS = new LoggedTunableNumber("Flywheel/kS", kDefault_kS);
 
   /** Alert displayed on failure to configure the flywheel motor controller */
   private static final Alert s_flywheelMotorConfigFailedAlert =
@@ -141,6 +166,16 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
   @Override
   public void setFlywheelVelocity(double rotPerSec) {
     if (rotPerSec != 0.0) {
+      TalonFXConfigurator configurator = m_flywheelMotor.getConfigurator();
+
+      // Re-apply closed-loop gains
+      m_slot0Configs.kP = m_kP.get();
+      m_slot0Configs.kI = m_kI.get();
+      m_slot0Configs.kD = m_kD.get();
+      m_slot0Configs.kV = m_kV.get();
+      m_slot0Configs.kS = m_kS.get();
+      configurator.apply(m_slot0Configs);
+
       m_flywheelMotor.setControl(
           m_voltsVelocityReq.withVelocity(
               rotPerSec * FlywheelSubsystem.kFlywheelMotorGearRatio * kMotorInvert));
@@ -154,10 +189,12 @@ public class FlywheelSubsystemIOReal implements FlywheelSubsystemIO {
     TalonFXConfiguration configs = new TalonFXConfiguration();
 
     /* Voltage-based velocity requires a feed forward to account for the back-emf of the motor */
-    configs.Slot0.kP = 5.0;
-    configs.Slot0.kI = 0.0;
-    configs.Slot0.kD = 0.001;
-    configs.Slot0.kV = 0.0;
+    m_slot0Configs.kP = m_kP.get();
+    m_slot0Configs.kI = m_kI.get();
+    m_slot0Configs.kD = m_kD.get();
+    m_slot0Configs.kV = m_kV.get();
+    configs.Slot0 = m_slot0Configs;
+
     // Might want to set peak output of voltage-based commands using measured values
     configs.Voltage.PeakForwardVoltage = 12;
     configs.Voltage.PeakReverseVoltage = -12;

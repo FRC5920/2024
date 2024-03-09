@@ -53,6 +53,7 @@ package frc.robot.subsystems.flywheel;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.logging.BotLog;
 import frc.lib.logging.LoggableMotorInputs;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
@@ -106,6 +107,16 @@ public class FlywheelSubsystem extends SubsystemBase {
   public FlywheelSubsystem(FlywheelSubsystemIO io) {
     m_io = io;
     m_io.initialize();
+
+    // By default, the subsystem will automatically stop the flywheel
+    this.setDefaultCommand(
+        run(
+            () -> {
+              if (Math.abs(m_inputs.targetVelocity) > 0.0) {
+                BotLog.Debug("Flywheel auto-stop");
+                this.setFlywheelVelocity(0.0);
+              }
+            }));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////

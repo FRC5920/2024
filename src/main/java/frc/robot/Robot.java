@@ -124,7 +124,7 @@ public class Robot extends LoggedRobot {
 
     // Initialize AdvantageKit logging
     AdvantageKitLogInitializer logInit =
-        new AdvantageKitLogInitializer(this, Constants.getMode(), Constants.kTuningMode);
+        new AdvantageKitLogInitializer(this, Constants.getMode(), Constants.tuningMode);
 
     logInit.initializeLogging(Constants.kLoggingIsEnabled, Constants.getLogDirectory());
 

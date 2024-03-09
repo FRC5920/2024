@@ -88,11 +88,12 @@ public class ShootNote extends SequentialCommandGroup {
                     new PivotCommand(pivot, AnglePreset.ShootAmp)),
                 new SequentialCommandGroup(
                     new DebugPrintCommand("Spin up the Flywheel"),
-                    new RunFlywheel(flywheel, FlywheelPreset.ShootNoteAmp))),
+                    new RunFlywheel(flywheel, FlywheelPreset.ShootNoteAmp)
+                        .until(() -> flywheelReachedSpeed(flywheel, FlywheelPreset.ShootNoteAmp)))),
             new DebugPrintCommand("Run the indexer"),
             new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
             new DebugPrintCommand("Stop the flywheel and indexer"),
-            RunFlywheel.stop(flywheel),
+            new RunFlywheel(flywheel, FlywheelPreset.Stop),
             RunIndexer.stop(indexer),
             new PivotCommand(pivot, AnglePreset.Park));
         break;
@@ -104,11 +105,14 @@ public class ShootNote extends SequentialCommandGroup {
                     new PivotCommand(pivot, AnglePreset.ShootSpeaker)),
                 new SequentialCommandGroup(
                     new DebugPrintCommand("Spin up the Flywheel"),
-                    new RunFlywheel(flywheel, FlywheelPreset.ShootNoteSpeaker))),
+                    new RunFlywheel(flywheel, FlywheelPreset.ShootNoteSpeaker)
+                        .until(
+                            () ->
+                                flywheelReachedSpeed(flywheel, FlywheelPreset.ShootNoteSpeaker)))),
             new DebugPrintCommand("Run the indexer"),
             new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
             new DebugPrintCommand("Stop the flywheel"),
-            RunFlywheel.stop(flywheel),
+            new RunFlywheel(flywheel, FlywheelPreset.Stop),
             new DebugPrintCommand("Stop the indexer"),
             RunIndexer.stop(indexer),
             new PivotCommand(pivot, AnglePreset.Park));
@@ -120,5 +124,9 @@ public class ShootNote extends SequentialCommandGroup {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
 
+  }
+
+  private static boolean flywheelReachedSpeed(FlywheelSubsystem flywheel, FlywheelPreset preset) {
+    return Math.abs(flywheel.getFlywheelVelocity()) >= Math.abs(preset.flywheelRPM);
   }
 }

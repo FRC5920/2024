@@ -52,6 +52,7 @@
 package frc.robot.subsystems.pivot;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
@@ -108,10 +109,18 @@ public class PivotSubsystem extends SubsystemBase {
   /** Measured subsystem inputs */
   private final PivotSubsystemInputs m_inputs = new PivotSubsystemInputs();
 
-  /** Creates a new PivotSubsystem. */
+  /** Creates a new PivotSubsystem */
   public PivotSubsystem(PivotSubsystemIO io) {
     m_io = io;
     m_io.initialize();
+
+    this.setDefaultCommand(getAutoParkCommand());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns the pivot to the parked position in a slow manner */
+  public void park() {
+    m_io.park();
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -157,5 +166,12 @@ public class PivotSubsystem extends SubsystemBase {
       SmartDashboard.putNumber("pivot/cancoderAngleRot", m_inputs.cancoderAngleRot);
       SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
     }
+  }
+
+  private Command getAutoParkCommand() {
+    return run(
+        () -> {
+          this.park();
+        });
   }
 }

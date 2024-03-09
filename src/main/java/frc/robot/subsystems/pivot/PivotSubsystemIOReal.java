@@ -59,6 +59,7 @@ import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -71,12 +72,39 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.lib.logging.LoggableMotorInputs;
+import frc.lib.thirdparty.LoggedTunableNumber;
 import frc.lib.utility.Alert;
 import frc.robot.Constants.CANDevice;
 import frc.robot.subsystems.pivot.PivotSubsystem.PivotMotorID;
 
 /** Implementation of the PivotSubsystemIO interface using real hardware */
 public class PivotSubsystemIOReal implements PivotSubsystemIO {
+
+  // Default motion magic values
+  private static final double kDefaultMMAcceleration = 3.0;
+  private static final double kDefaultMMCruiseVelocity = 1.5;
+  private static final double kDefaultMMJerk = 30.0;
+
+  // Default PID gains
+  //   Ks - output to overcome static friction (output)
+  //   Kv - output per unit of target velocity (output/rps)
+  //   Ka - output per unit of target acceleration (output/(rps/s))
+  //   Kp - output per unit of error in position (output/rotation)
+  //   Ki - output per unit of integrated error in position (output/(rotation*s))
+  //   Kd - output per unit of error in velocity (output/rps)
+  private static final double kDefault_kP = 9;
+  private static final double kDefault_kI = 0.0;
+  private static final double kDefault_kD = 2;
+  private static final double kDefault_kV = 0.0;
+  private static final double kDefault_kS = 0.0;
+
+  /** Default angle (degrees) used for parking the pivot */
+  private static final double kDefaultParkAngleDeg = 1.8;
+
+  // Default motion magic values for parking the pivot
+  private static final double kDefaultParkMMAcceleration = 1.0;
+  private static final double kDefaultParkMMCruiseVelocity = 0.5;
+  private static final double kDefaultParkMMJerk = 30.0;
 
   /** Master motor used to control the pivot angle */
   protected final TalonFX m_pivotLeader;
@@ -110,6 +138,38 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
 
   /** Motion magic request used to set pivot position */
   private final MotionMagicVoltage m_mmReq = new MotionMagicVoltage(0.0);
+
+  /** Motion magic configuration applied to pivot motion */
+  MotionMagicConfigs m_motionMagicConfigs = new MotionMagicConfigs();
+
+  LoggedTunableNumber m_parkAngleDeg =
+      new LoggedTunableNumber("Pivot/parkDeg", kDefaultParkAngleDeg);
+
+  LoggedTunableNumber m_mmAcceleration =
+      new LoggedTunableNumber("Pivot/angle/MotionMagicAcceleration", kDefaultMMAcceleration);
+  LoggedTunableNumber m_mmCruiseVelocity =
+      new LoggedTunableNumber("Pivot/angle/MotionMagicCruiseVelocity", kDefaultMMCruiseVelocity);
+  LoggedTunableNumber m_mmJerk =
+      new LoggedTunableNumber("Pivot/angle/MotionMagicJerk", kDefaultMMJerk);
+
+  /** Closed-loop gains applied to pivot motion */
+  private Slot0Configs m_slot0Configs = new Slot0Configs();
+
+  LoggedTunableNumber m_kP = new LoggedTunableNumber("Pivot/kP", kDefault_kP);
+  LoggedTunableNumber m_kI = new LoggedTunableNumber("Pivot/kI", kDefault_kI);
+  LoggedTunableNumber m_kD = new LoggedTunableNumber("Pivot/kD", kDefault_kD);
+  LoggedTunableNumber m_kV = new LoggedTunableNumber("Pivot/kV", kDefault_kV);
+  LoggedTunableNumber m_kS = new LoggedTunableNumber("Pivot/kS", kDefault_kS);
+
+  /** Motion magic values used when parking the pivot */
+  private MotionMagicConfigs m_parkMotionMagicConfig = new MotionMagicConfigs();
+
+  LoggedTunableNumber m_mmParkAcceleration =
+      new LoggedTunableNumber("Pivot/park/MotionMagicAcceleration", kDefaultParkMMAcceleration);
+  LoggedTunableNumber m_mmParkCruiseVelocity =
+      new LoggedTunableNumber("Pivot/park/MotionMagicCruiseVelocity", kDefaultParkMMCruiseVelocity);
+  LoggedTunableNumber m_mmParkJerk =
+      new LoggedTunableNumber("Pivot/park/MotionMagicJerk", kDefaultParkMMJerk);
 
   /** Alert displayed on failure to configure pivot motors */
   private static final Alert s_motorConfigFailedAlert =
@@ -176,6 +236,31 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns the pivot motor to a parked position */
+  @Override
+  public void park() {
+    TalonFXConfigurator configurator = m_pivotLeader.getConfigurator();
+
+    // Re-apply closed-loop gains
+    m_slot0Configs.kP = m_kP.get();
+    m_slot0Configs.kI = m_kI.get();
+    m_slot0Configs.kD = m_kD.get();
+    m_slot0Configs.kV = m_kV.get();
+    m_slot0Configs.kS = m_kS.get();
+    configurator.apply(m_slot0Configs);
+
+    // Apply motion magic configs for regular angle set
+    MotionMagicConfigs mmConfig = m_parkMotionMagicConfig;
+    mmConfig.MotionMagicAcceleration = m_mmParkAcceleration.get();
+    mmConfig.MotionMagicCruiseVelocity = m_mmParkCruiseVelocity.get();
+    mmConfig.MotionMagicJerk = m_mmParkJerk.get();
+    configurator.apply(mmConfig);
+
+    m_pivotLeader.setControl(
+        m_mmReq.withPosition(Units.degreesToRotations(m_parkAngleDeg.get())).withSlot(0));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
    * Sets the desired pivot angle in degrees
    *
@@ -185,6 +270,25 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
   public void setAngleDeg(double degrees) {
     double rotations = Units.degreesToRotations(degrees);
     SmartDashboard.putNumber("pivot/targetAngleRot", rotations);
+
+    TalonFXConfigurator configurator = m_pivotLeader.getConfigurator();
+
+    // Re-apply closed-loop gains
+    m_slot0Configs.kP = m_kP.get();
+    m_slot0Configs.kI = m_kI.get();
+    m_slot0Configs.kD = m_kD.get();
+    m_slot0Configs.kV = m_kV.get();
+    m_slot0Configs.kS = m_kS.get();
+    configurator.apply(m_slot0Configs);
+
+    // Apply motion magic configs for regular angle set
+    m_motionMagicConfigs.MotionMagicAcceleration =
+        m_mmAcceleration.get(); // acceleration in rotations per second ^2
+    m_motionMagicConfigs.MotionMagicCruiseVelocity =
+        m_mmCruiseVelocity.get(); // velocity in rotations per second
+    m_motionMagicConfigs.MotionMagicJerk = m_mmJerk.get();
+    configurator.apply(m_motionMagicConfigs);
+
     m_pivotLeader.setControl(m_mmReq.withPosition(rotations).withSlot(0));
   }
 
@@ -233,6 +337,10 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     m_canCoder.getConfigurator().apply(cancoderConfig);
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  private void applyClosedLoopGains() {}
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   private void configureMotors() {
     ////////////////////////////////
     // Configure Falcon motors
@@ -258,10 +366,12 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     fbCfg.FeedbackRotorOffset = 0.0;
 
     // Configure trapezoidal motion profile using Motion Magic
-    MotionMagicConfigs mm = falconConfig.MotionMagic;
-    mm.MotionMagicAcceleration = 2.0; // acceleration in rotations per second ^2
-    mm.MotionMagicCruiseVelocity = 1.0; // velocity in rotations per second
-    mm.MotionMagicJerk = 30;
+    m_motionMagicConfigs.MotionMagicAcceleration =
+        m_mmAcceleration.get(); // acceleration in rotations per second ^2
+    m_motionMagicConfigs.MotionMagicCruiseVelocity =
+        m_mmCruiseVelocity.get(); // velocity in rotations per second
+    m_motionMagicConfigs.MotionMagicJerk = m_mmJerk.get();
+    falconConfig.MotionMagic = m_motionMagicConfigs;
 
     // set slot 0 gains
     //   Ks - output to overcome static friction (output)
@@ -270,13 +380,12 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     //   Kp - output per unit of error in position (output/rotation)
     //   Ki - output per unit of integrated error in position (output/(rotation*s))
     //   Kd - output per unit of error in velocity (output/rps)
-    Slot0Configs slot0 = falconConfig.Slot0;
-
-    slot0.kP = 9;
-    slot0.kI = 0.0;
-    slot0.kD = 2;
-    slot0.kV = 0.0;
-    slot0.kS = 0.0; // Approximately 0.25V to get the mechanism moving
+    m_slot0Configs.kP = m_kP.get();
+    m_slot0Configs.kI = m_kI.get();
+    m_slot0Configs.kD = m_kD.get();
+    m_slot0Configs.kV = m_kV.get();
+    m_slot0Configs.kS = m_kS.get(); // Approximately 0.25V to get the mechanism moving
+    falconConfig.Slot0 = m_slot0Configs;
 
     // fbCfg.RotorToSensorRatio = m_config.pivotGearRatio;
 

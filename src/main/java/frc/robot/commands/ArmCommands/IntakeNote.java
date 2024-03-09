@@ -51,7 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.commands.ArmCommands;
 
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.lib.logging.BotLog.DebugPrintCommand;
 import frc.lib.logging.BotLog.InfoPrintCommand;
@@ -77,22 +77,16 @@ public class IntakeNote extends SequentialCommandGroup {
 
     addCommands(
         new InfoPrintCommand("IntakeNote start"),
-        new ParallelCommandGroup(
+        new ParallelRaceGroup(
+            new RunFlywheel(flywheel, FlywheelPreset.IntakeRing),
             new SequentialCommandGroup(
                 new DebugPrintCommand("Pivot to intake position"),
-                new PivotCommand(pivot, AnglePreset.Intake)),
-            new SequentialCommandGroup(
-                new DebugPrintCommand("Spin the Flywheel"),
-                RunFlywheel.perpetual(flywheel, FlywheelPreset.IntakeRing))),
-        new DebugPrintCommand("Run indexer"),
-        new RunIndexer(indexer, IndexerPreset.IntakeRing)
-            .until(() -> indexer.gamepieceIsDetected()),
-        new DebugPrintCommand("Gamepiece detected - store it"),
-        new ParallelCommandGroup(
-            new SequentialCommandGroup(
-                new DebugPrintCommand("Pivot to park position"),
-                new PivotCommand(pivot, AnglePreset.Park)),
-            RunFlywheel.stop(flywheel),
-            RunIndexer.stop(indexer)));
+                new PivotCommand(pivot, AnglePreset.Intake),
+                new DebugPrintCommand("Run indexer"),
+                new RunIndexer(indexer, IndexerPreset.IntakeRing)
+                    .until(() -> indexer.gamepieceIsDetected()),
+                new DebugPrintCommand("Gamepiece detected - store it"))),
+        new DebugPrintCommand("Pivot to park position"),
+        new PivotCommand(pivot, AnglePreset.Park));
   }
 }
