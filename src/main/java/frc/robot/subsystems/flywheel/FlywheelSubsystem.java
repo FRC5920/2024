@@ -123,18 +123,18 @@ public class FlywheelSubsystem extends SubsystemBase {
   /**
    * Sets the desired velocity of the flywheel mechanism
    *
-   * @param rotPerSec Desired velocity in rotations per second
+   * @param rotPerSec Desired velocity in rotations per minute
    */
-  public void setFlywheelVelocity(double rotPerSec) {
-    m_inputs.targetVelocity = rotPerSec;
-    m_io.setFlywheelVelocity(rotPerSec);
+  public void setFlywheelVelocity(double rpm) {
+    m_inputs.targetVelocity = rpm;
+    m_io.setFlywheelVelocity(rpm);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
    * Returns the current velocity of the flywheel mechanism
    *
-   * @return The velocity of the flywheel mechanism in rotations per second
+   * @return The velocity of the flywheel mechanism in rotations per minute
    */
   public double getFlywheelVelocity() {
     return m_inputs.velocity;
