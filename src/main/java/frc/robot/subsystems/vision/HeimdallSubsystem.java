@@ -224,7 +224,7 @@ public class HeimdallSubsystem extends SubsystemBase {
   /** Called periodically when the robot runs in simulation mode */
   @Override
   public void simulationPeriodic() {
-    if (m_frontCamInputs.isFresh) {
+    if (m_frontCamInputs.isFresh) { 
       m_frontCameraIO.updateSimPose(
           m_frontEstimatorOutputs.noEstimate ? null : m_frontEstimatorOutputs.pose.toPose2d());
     }
