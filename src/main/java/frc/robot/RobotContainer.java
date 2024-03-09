@@ -93,7 +93,6 @@ import frc.robot.subsystems.vision.HeimdallSubsystemCameraIO;
 import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOReal;
 import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOSim;
 import frc.robot.subsystems.vision.PoseEstimateProcessor;
-import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.VisionSystemSim;
 
 public class RobotContainer {
@@ -102,8 +101,8 @@ public class RobotContainer {
   public final JoystickSubsystem joystickSubsystem = new JoystickSubsystem();
 
   /* Cameras */
-  public final PhotonCamera frontTagCamera = new PhotonCamera(CameraID.FrontCamera.name);
-  public final PhotonCamera rearTagCamera = new PhotonCamera(CameraID.RearCamera.name);
+  // public final PhotonCamera frontTagCamera = new PhotonCamera(CameraID.FrontCamera.name);
+  // public final PhotonCamera rearTagCamera = new PhotonCamera(CameraID.RearCamera.name);
 
   /** Simulated vision system (only used when running in simulation mode) */
   public final VisionSystemSim visionSystemSim;
