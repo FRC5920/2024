@@ -85,7 +85,7 @@ public class HeimdallSubsystem extends SubsystemBase {
               FrontCamera.Location.xOffset,
               FrontCamera.Location.yOffset,
               FrontCamera.Location.zOffset),
-          new Rotation3d(0, 0, FrontCamera.Location.yaw));
+          new Rotation3d(0, FrontCamera.Location.pitch, FrontCamera.Location.yaw));
 
   /** Transformation used to convey the physical location of the front camera on the robot */
   public static final Transform3d kRearCameraLocationTransform =
@@ -94,7 +94,7 @@ public class HeimdallSubsystem extends SubsystemBase {
               RearCamera.Location.xOffset,
               RearCamera.Location.yOffset,
               RearCamera.Location.zOffset),
-          new Rotation3d(0, 0, RearCamera.Location.yaw));
+          new Rotation3d(0, RearCamera.Location.pitch, RearCamera.Location.yaw));
 
   // The layout of the AprilTags on the field
   public static final AprilTagFieldLayout kTagLayout =
@@ -224,7 +224,7 @@ public class HeimdallSubsystem extends SubsystemBase {
   /** Called periodically when the robot runs in simulation mode */
   @Override
   public void simulationPeriodic() {
-    if (m_frontCamInputs.isFresh) { 
+    if (m_frontCamInputs.isFresh) {
       m_frontCameraIO.updateSimPose(
           m_frontEstimatorOutputs.noEstimate ? null : m_frontEstimatorOutputs.pose.toPose2d());
     }

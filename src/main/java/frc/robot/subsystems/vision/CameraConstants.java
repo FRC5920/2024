@@ -70,6 +70,8 @@ public class CameraConstants {
       public static final double zOffset = 0.1;
       /** Rotation of the camera about its Z-axis */
       public static final double yaw = Units.degreesToRadians(-45.0);
+
+      public static final double pitch = Units.degreesToRadians(-35);
     }
   }
 
@@ -86,6 +88,8 @@ public class CameraConstants {
       public static final double zOffset = 0.1; // Measured 2/25/2024
       /** Rotation of the camera about its Z-axis */
       public static final double yaw = Units.degreesToRadians(135.0);
+
+      public static final double pitch = Units.degreesToRadians(-35);
     }
   }
 
