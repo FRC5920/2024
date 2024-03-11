@@ -73,7 +73,7 @@ import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 public class JoystickSubsystem extends JoystickSubsystemBase {
 
   /** true to support a second "operator" controller */
-  public static final boolean kOperatorControllerIsEnabled = false;
+  public static final boolean kOperatorControllerIsEnabled = true;
 
   /** A placeholder command that does nothing for unused button bindings */
   public static final InstantCommand kDoNothing = new InstantCommand();
@@ -195,8 +195,10 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
     operatorController.B.onTrue(
         new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootBackward));
-    operatorController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
-    operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park));
+    operatorController.X.onTrue(
+        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootAmp));
+    operatorController.Y.onTrue(
+        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootSpeaker));
 
     // Map POV
     operatorController.povUp.onTrue(
@@ -223,7 +225,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     operatorController.rightStickPress.onTrue(kDoNothing);
 
     // Map small center buttons
-    operatorController.back.onTrue(kDoNothing);
+    operatorController.back.onTrue(new InstantCommand(() -> botContainer.pivotSubsystem.park()));
     operatorController.start.onTrue(kDoNothing);
   }
 

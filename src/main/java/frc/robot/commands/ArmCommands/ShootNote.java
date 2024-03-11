@@ -51,6 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.commands.ArmCommands;
 
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -103,19 +104,24 @@ public class ShootNote extends SequentialCommandGroup {
     addRequirements(pivot, flywheel, indexer);
 
     addCommands(
-        new InfoPrintCommand("ShootNote at " + target.name()),
-        new ParallelRaceGroup(
-            new RunFlywheel(flywheel, flywheelPreset),
+        new ConditionalCommand(
             new SequentialCommandGroup(
-                new PivotCommand(pivot, pivotAngle),
-                new WaitUntilCommand(() -> flywheelReachedSpeed(flywheel, flywheelPreset))
-                    .withTimeout(5.0),
-                new DebugPrintCommand("Run the indexer"),
-                new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
-                new DebugPrintCommand("Indexer finished"))),
-        new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)),
-        new InfoPrintCommand("Pivot back to park"),
-        new PivotCommand(pivot, AnglePreset.Park));
+                new InfoPrintCommand("ShootNote at " + target.name()),
+                new ParallelRaceGroup(
+                    new RunFlywheel(flywheel, flywheelPreset),
+                    new SequentialCommandGroup(
+                        new PivotCommand(pivot, pivotAngle),
+                        new WaitUntilCommand(() -> flywheelReachedSpeed(flywheel, flywheelPreset))
+                            .withTimeout(5.0),
+                        new DebugPrintCommand("Run the indexer"),
+                        new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
+                        new DebugPrintCommand("Indexer finished"))),
+                new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)),
+                new InfoPrintCommand("Pivot back to park"),
+                new PivotCommand(pivot, AnglePreset.Park)),
+            // If no gamepiece is present, don't do anything
+            new InfoPrintCommand("ShootNote aborted because intake is empty"),
+            indexer::gamepieceIsDetected));
 
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
