@@ -351,9 +351,6 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     // Configure Falcon motors
     ////////////////////////////////
 
-    // Initialize the motor position to the CANCoder position
-    m_pivotLeader.setPosition(0.0);
-
     // Initialize leader and follower to factory configuration
     TalonFXConfiguration falconConfig = new TalonFXConfiguration();
 
@@ -370,7 +367,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     // Set up the CANcoder as the feedback sensor
     FeedbackConfigs fbCfg = falconConfig.Feedback;
     fbCfg.FeedbackRemoteSensorID = CANDevice.PivotCANcoder.id();
-    fbCfg.FeedbackSensorSource = FeedbackSensorSourceValue.SyncCANcoder;
+    fbCfg.FeedbackSensorSource = FeedbackSensorSourceValue.FusedCANcoder;
     fbCfg.SensorToMechanismRatio = 1.0;
     fbCfg.RotorToSensorRatio = PivotSubsystem.kFalconToPivotGearRatio;
     fbCfg.FeedbackRotorOffset = 0.0;
@@ -412,6 +409,12 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
 
     // Configure pivot follower motor to follow pivot leader in the opposite direction
     m_pivotFollower.setControl(new Follower(CANDevice.PivotLeaderMotor.id(), true));
+
+    // Initialize the motor position to the CANCoder position
+    do {
+      status =
+          m_pivotLeader.setPosition(m_canCoder.getAbsolutePosition().refresh().getValueAsDouble());
+    } while (!status.isOK());
 
     m_pivotLeader.clearStickyFaults();
   }

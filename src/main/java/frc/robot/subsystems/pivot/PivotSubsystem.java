@@ -86,7 +86,7 @@ public class PivotSubsystem extends SubsystemBase {
   public static final CANDevice kCANcoderDevice = CANDevice.PivotCANcoder;
 
   /** Gear ratio between the Falcon motors and the pivot axle */
-  public static final double kFalconToPivotGearRatio = 40.0;
+  public static final double kFalconToPivotGearRatio = 40.0 / 1.43; // Experimentally determined 03/12/2024
 
   /** Offset of the CANcoder magnet in rotations */
   public static final double kCANcoderMagnetOffsetRot = -0.950; // Measured 02/27/2024
