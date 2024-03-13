@@ -49,52 +49,44 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.flywheel;
+package frc.robot.commands.ArmCommands;
 
-import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ParallelRaceGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.lib.logging.BotLog.DebugPrintCommand;
+import frc.lib.logging.BotLog.InfoPrintCommand;
+import frc.robot.RobotContainer;
+import frc.robot.commands.ArmCommands.PivotCommand.PivotPreset;
+import frc.robot.commands.subsystemCommands.RunFlywheel;
+import frc.robot.commands.subsystemCommands.RunFlywheel.FlywheelPreset;
+import frc.robot.commands.subsystemCommands.RunIndexer;
+import frc.robot.commands.subsystemCommands.RunIndexer.IndexerPreset;
+import frc.robot.subsystems.flywheel.FlywheelSubsystem;
+import frc.robot.subsystems.indexer.IndexerSubsystem;
+import frc.robot.subsystems.pivot.PivotSubsystem;
 
-//////////////////////////////////////////////////////////////////////////////////////////////////
-public class RunFlywheelAtSpeed extends Command {
-  private final FlywheelSubsystem m_intakeSubsystem;
-  private final FlywheelPreset m_preset;
+// NOTE:  Consider using this command inline, rather than writing a subclass.  For more
+// information, see:
+// https://docs.wpilib.org/en/stable/docs/software/commandbased/convenience-features.html
+public class IntakeNote extends SequentialCommandGroup {
+  /** Creates a new IntakeNote. */
+  public IntakeNote(RobotContainer bc) {
+    FlywheelSubsystem flywheel = bc.flywheelSubsystem;
+    IndexerSubsystem indexer = bc.indexerSubsystem;
+    PivotSubsystem pivot = bc.pivotSubsystem;
 
-  /** Creates a new ClimberJoystickTeleOp. */
-  public RunFlywheelAtSpeed(FlywheelSubsystem intakeSubsystem, FlywheelPreset preset) {
-    m_intakeSubsystem = intakeSubsystem;
-    m_preset = preset;
-    addRequirements(m_intakeSubsystem);
-  }
-
-  // Called when the command is initially scheduled.
-  @Override
-  public void initialize() {
-    m_intakeSubsystem.setFlywheelVelocity(m_preset.flywheelRPS);
-  }
-
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {}
-
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {
-    m_intakeSubsystem.setFlywheelVelocity(0.0);
-  }
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return false;
-  }
-
-  public enum FlywheelPreset {
-    IntakeRing(10.0),
-    ShootRing(-3000.0);
-
-    public final double flywheelRPS;
-
-    private FlywheelPreset(double flywheelRPS) {
-      this.flywheelRPS = flywheelRPS;
-    }
+    addCommands(
+        new InfoPrintCommand("IntakeNote start"),
+        new ParallelRaceGroup(
+            new RunFlywheel(flywheel, FlywheelPreset.IntakeRing),
+            new SequentialCommandGroup(
+                new DebugPrintCommand("Pivot to intake position"),
+                new PivotCommand(pivot, PivotPreset.Intake),
+                new DebugPrintCommand("Run indexer"),
+                new RunIndexer(indexer, IndexerPreset.IntakeRing)
+                    .until(() -> indexer.gamepieceIsDetected()),
+                new DebugPrintCommand("Gamepiece detected - store it"))),
+        new DebugPrintCommand("Pivot to park position"),
+        new PivotCommand(pivot, PivotPreset.Park));
   }
 }

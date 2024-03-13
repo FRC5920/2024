@@ -61,16 +61,20 @@ import frc.robot.Constants.CameraTarget;
 import frc.robot.RobotContainer;
 import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
+import frc.robot.commands.ArmCommands.IntakeNote;
 import frc.robot.commands.ArmCommands.PivotCommand;
-import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.commands.ArmCommands.PivotCommand.PivotPreset;
 import frc.robot.commands.DriveWithZTargeting;
+import frc.robot.commands.autoCommands.ShootAmpClose;
+import frc.robot.commands.autoCommands.ShootSpeakerClose;
+import frc.robot.commands.autoCommands.ShootSpeakerReverse;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 
 /** A subsystem providing Xbox controllers for driving the robot manually */
 public class JoystickSubsystem extends JoystickSubsystemBase {
 
   /** true to support a second "operator" controller */
-  public static final boolean kOperatorControllerIsEnabled = false;
+  public static final boolean kOperatorControllerIsEnabled = true;
 
   /** A placeholder command that does nothing for unused button bindings */
   public static final InstantCommand kDoNothing = new InstantCommand();
@@ -112,7 +116,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // Map buttons on driver controller
     ProcessedXboxController driverController = getDriverController();
 
-    driverController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park));
+    driverController.A.whileTrue(new ShootSpeakerReverse(botContainer));
     // Map B button to swerve brake command
     driverController.B.whileTrue(
         driveTrain.applyRequest(() -> new SwerveRequest.SwerveDriveBrake()));
@@ -123,8 +127,8 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     driverController.povDown.onTrue(
         new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
-    driverController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
-    driverController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
+    driverController.X.whileTrue(new ShootAmpClose(botContainer));
+    driverController.Y.whileTrue(new ShootSpeakerClose(botContainer));
 
     // // Map right bumper
     // driverController.rightBumper.whileTrue(kDoNothing);
@@ -172,8 +176,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // driverController.start.whileTrue(kDoNothing);
 
     // // Map right trigger
-    // driverController.rightTriggerAsButton.whileTrue(kDoNothing);
-
+    driverController.rightTriggerAsButton.whileTrue(new IntakeNote(botContainer));
   }
 
   /**
@@ -188,11 +191,13 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     ProcessedXboxController operatorController = getOperatorController();
 
     // Map buttons
-    operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
+    operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, PivotPreset.Intake));
     operatorController.B.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootBackward));
-    operatorController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
-    operatorController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park));
+        new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootBackward));
+    operatorController.X.onTrue(
+        new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootAmp));
+    operatorController.Y.onTrue(
+        new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootSpeaker));
 
     // Map POV
     operatorController.povUp.onTrue(
@@ -219,7 +224,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     operatorController.rightStickPress.onTrue(kDoNothing);
 
     // Map small center buttons
-    operatorController.back.onTrue(kDoNothing);
+    operatorController.back.onTrue(new InstantCommand(() -> botContainer.pivotSubsystem.park()));
     operatorController.start.onTrue(kDoNothing);
   }
 

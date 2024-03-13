@@ -51,11 +51,9 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.indexer;
 
-import au.grapplerobotics.LaserCan;
-import au.grapplerobotics.LaserCan.RegionOfInterest;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.logging.BotLog;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
 import org.littletonrobotics.junction.Logger;
@@ -93,24 +91,6 @@ public class IndexerSubsystem extends SubsystemBase {
   /** Set to -1.0 to invert the direction of the indexer motor */
   public static final double kMotorInvert = -1.0;
 
-  ////////////////////////////////////
-  // LaserCAN Configuration
-  ////////////////////////////////////
-
-  /** CAN device ID of the flywheel motor */
-  public static final CANDevice kLaserCANDevice = CANDevice.IntakeGamepieceSensor;
-
-  /** LaserCAN ranging mode */
-  public static final LaserCan.RangingMode kLaserCANRangingMode = LaserCan.RangingMode.SHORT;
-
-  /** LaserCAN Region of Interest */
-  public static final RegionOfInterest kLaserCANRegionOfInterest =
-      new LaserCan.RegionOfInterest(8, 8, 16, 16);
-
-  /** LaserCAN Timing budget */
-  public static final LaserCan.TimingBudget kLaserCANTimingBudget =
-      LaserCan.TimingBudget.TIMING_BUDGET_33MS;
-
   /** Subsystem I/O to use */
   private final IndexerSubsystemIO m_io;
 
@@ -126,6 +106,16 @@ public class IndexerSubsystem extends SubsystemBase {
   public IndexerSubsystem(IndexerSubsystemIO io) {
     m_io = io;
     m_io.initialize();
+
+    // By default, the subsystem will automatically stop the indexer
+    this.setDefaultCommand(
+        run(
+            () -> {
+              if (Math.abs(this.getIndexerSpeed()) > 0.0) {
+                BotLog.Debug("Flywheel auto-stop");
+                this.setIndexerSpeed(0.0);
+              }
+            }));
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -154,12 +144,12 @@ public class IndexerSubsystem extends SubsystemBase {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
-   * Returns the distance measured by the gamepiece sensor
+   * Returns true if a gamepiece is detected inside the intake assembly
    *
-   * @return The distance measured by the gamepiece sensor in meters
+   * @return true if a gamepiece is detected inside the intake assembly; else false
    */
-  public double getGamepieceDistance() {
-    return (m_inputs.laserCAN.isValid) ? m_inputs.laserCAN.distanceMeters : -1.0;
+  public boolean gamepieceIsDetected() {
+    return m_inputs.limitSwitch;
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,53 +164,6 @@ public class IndexerSubsystem extends SubsystemBase {
     // Display velocities on dashboard
     SmartDashboard.putNumber("Indexer/setSpeed", m_inputs.indexer.targetVelocity);
     SmartDashboard.putNumber("Indexer/speed", m_inputs.indexer.velocity);
-    SmartDashboard.putNumber("Indexer/laserCAN/distance", m_inputs.laserCAN.distanceMeters);
-    SmartDashboard.putString("Indexer/laserCAN/status", m_inputs.laserCAN.status);
-  }
-
-  public enum IntakePreset {
-    IntakeRing(-0.5),
-    ShootRing(0.5);
-
-    public final double indexerSpeed;
-
-    private IntakePreset(double indexerSpeed) {
-      this.indexerSpeed = indexerSpeed;
-    }
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  public static class RunIndexerAtSpeed extends Command {
-    private final IndexerSubsystem m_intakeSubsystem;
-    private final IntakePreset m_preset;
-
-    /** Creates a new ClimberJoystickTeleOp. */
-    public RunIndexerAtSpeed(IndexerSubsystem intakeSubsystem, IntakePreset preset) {
-      m_intakeSubsystem = intakeSubsystem;
-      m_preset = preset;
-      addRequirements(m_intakeSubsystem);
-    }
-
-    // Called when the command is initially scheduled.
-    @Override
-    public void initialize() {
-      m_intakeSubsystem.setIndexerSpeed(m_preset.indexerSpeed);
-    }
-
-    // Called every time the scheduler runs while the command is scheduled.
-    @Override
-    public void execute() {}
-
-    // Called once the command ends or is interrupted.
-    @Override
-    public void end(boolean interrupted) {
-      m_intakeSubsystem.setIndexerSpeed(0.0);
-    }
-
-    // Returns true when the command should end.
-    @Override
-    public boolean isFinished() {
-      return false;
-    }
+    SmartDashboard.putBoolean("Indexer/limitSwitch", m_inputs.limitSwitch);
   }
 }

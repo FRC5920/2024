@@ -52,7 +52,9 @@
 package frc.robot.subsystems.pivot;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.thirdparty.LoggedTunableNumber;
 import frc.robot.Constants.CANDevice;
 import frc.robot.Constants.RobotCANBus;
 import org.littletonrobotics.junction.Logger;
@@ -65,7 +67,7 @@ public class PivotSubsystem extends SubsystemBase {
   ////////////////////////////////////
 
   /** Set this to true to publish values to the dashboard */
-  public static final boolean kPublishToDashboard = false;
+  public static final boolean kPublishToDashboard = true;
 
   /** CAN bus used to communicate with the subsystem */
   public static final RobotCANBus kCANBus = RobotCANBus.Rio;
@@ -84,7 +86,8 @@ public class PivotSubsystem extends SubsystemBase {
   public static final CANDevice kCANcoderDevice = CANDevice.PivotCANcoder;
 
   /** Gear ratio between the Falcon motors and the pivot axle */
-  public static final double kFalconToPivotGearRatio = 40.0;
+  public static final double kFalconToPivotGearRatio =
+      40.0 / 1.43; // Experimentally determined 03/12/2024
 
   /** Offset of the CANcoder magnet in rotations */
   public static final double kCANcoderMagnetOffsetRot = -0.950; // Measured 02/27/2024
@@ -93,10 +96,13 @@ public class PivotSubsystem extends SubsystemBase {
   public static final double kPeakPivotMotorOutputVoltage = 2.0;
 
   /** Minimum pivot angle in degrees */
-  public static final double kMinPivotAngleDeg = 0.0;
+  public static final double kMinPivotAngleDeg = 2.0;
 
   /** Maximum pivot angle in degrees */
   public static final double kMaxPivotAngleDeg = 178.5;
+
+  /** Default angle (degrees) used for parking the pivot */
+  private static final double kDefaultParkAngleDeg = 1.8;
 
   ////////////////////////////////////
   // Attributes
@@ -108,10 +114,23 @@ public class PivotSubsystem extends SubsystemBase {
   /** Measured subsystem inputs */
   private final PivotSubsystemInputs m_inputs = new PivotSubsystemInputs();
 
-  /** Creates a new PivotSubsystem. */
+  LoggedTunableNumber m_parkAngleDeg =
+      new LoggedTunableNumber("Pivot/parkDeg", kDefaultParkAngleDeg);
+
+  /** Creates a new PivotSubsystem */
   public PivotSubsystem(PivotSubsystemIO io) {
     m_io = io;
     m_io.initialize();
+
+    this.setDefaultCommand(this.makeDefaultCommand());
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns the pivot to the parked position in a slow manner */
+  public void park() {
+    double parkAngle = m_parkAngleDeg.get();
+    m_inputs.leader.targetPosition = parkAngle;
+    m_io.park(parkAngle);
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -154,8 +173,15 @@ public class PivotSubsystem extends SubsystemBase {
       // Display velocities on dashboard
       SmartDashboard.putNumber("pivot/targetAngleDeg", m_inputs.leader.targetPosition);
       SmartDashboard.putNumber("pivot/motorAngleDeg", m_inputs.leader.position);
-      SmartDashboard.putNumber("pivot/cancoderAngleRot", m_inputs.cancoderAngleRot);
       SmartDashboard.putNumber("pivot/cancoderAngleDeg", m_inputs.cancoderAngleDeg);
     }
+  }
+
+  /** Returns a command that returns */
+  public Command makeDefaultCommand() {
+    return run(
+        () -> {
+          this.park();
+        });
   }
 }

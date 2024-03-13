@@ -52,31 +52,67 @@
 package frc.robot.commands.ArmCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.logging.BotLog;
+import frc.lib.thirdparty.LoggedTunableNumber;
 import frc.robot.subsystems.pivot.PivotSubsystem;
 
 public class PivotCommand extends Command {
+
+  public enum PivotPreset {
+    ShootForward(100.0),
+    ShootBackward(45.0),
+    ShootAmp(90),
+    ShootSpeaker(75.0),
+    ShootSpeaker45(77.0),
+    ShootSpeakerReverse(12.0),
+    ShootSpeakerReverse45(14.0),
+    Intake(175.0),
+    Park(1.8),
+
+    TestLow(176.4),
+    TestHi(90.0);
+
+    /** Tunable value for the preset */
+    private final LoggedTunableNumber tunableValue;
+
+    /**
+     * Creates the enum element
+     *
+     * @param defaultAngleDeg Default angle value for the element in degrees
+     */
+    private PivotPreset(double defaultAngleDeg) {
+      tunableValue = new LoggedTunableNumber("PivotPreset/" + this.name(), defaultAngleDeg);
+    }
+
+    /** Returns the preset's angle in degrees */
+    public double getDegrees() {
+      return tunableValue.get();
+    }
+  }
+
   /** The PivotSubsystem operated on by the command */
   private final PivotSubsystem m_pivotSubsystem;
 
-  /** The desired pivot angle */
-  private final double m_angleDegrees;
+  private final PivotPreset m_preset;
 
   /**
    * Creates a command that will move the pivot to a specified preset angle
    *
    * @param pivotSubsystem The PivotSubsystem to operate on
-   * @param angle Angle preset the pivot should be moved to
+   * @param preset Angle preset the pivot should be moved to
    */
-  public PivotCommand(PivotSubsystem pivotSubsystem, AnglePreset angle) {
+  public PivotCommand(PivotSubsystem pivotSubsystem, PivotPreset preset) {
     m_pivotSubsystem = pivotSubsystem;
-    m_angleDegrees = angle.angleDeg;
+    m_preset = preset;
     addRequirements(pivotSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_pivotSubsystem.setAngleDeg(m_angleDegrees);
+    double degrees = m_preset.getDegrees();
+    BotLog.Debugf("PivotCommand: set angle to %f deg", degrees);
+    m_pivotSubsystem.setAngleDeg(degrees);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -85,28 +121,13 @@ public class PivotCommand extends Command {
 
   // Called once the command ends or is interrupted.
   @Override
-  public void end(boolean interrupted) {}
+  public void end(boolean interrupted) {
+    BotLog.Debugf("PivotCommand %s ", (interrupted ? "was interrupted" : "finished"));
+  }
 
   // Returns true to end the command when the pivot reaches the target angle within one degree
   @Override
   public boolean isFinished() {
-    return Math.abs(m_pivotSubsystem.getAngleDeg() - m_angleDegrees) < 1.0;
-  }
-
-  public enum AnglePreset {
-    ShootForward(100.0),
-    ShootBackward(45.0),
-    Intake(176.5),
-    Park(1.8),
-
-    TestLow(176.4),
-    TestHi(90.0);
-
-    /** Pivot angle in degrees */
-    public final double angleDeg;
-
-    private AnglePreset(double deg) {
-      angleDeg = deg;
-    }
+    return Math.abs(m_pivotSubsystem.getAngleDeg() - m_preset.getDegrees()) < 1.0;
   }
 }

@@ -71,7 +71,7 @@ public final class Constants {
   public static final RobotType kRobotType = RobotType.PrototypeBot;
 
   /** This constant should be set to true when tuning or characterizing the robot */
-  public static final boolean kTuningMode = false;
+  public static final boolean tuningMode = false;
 
   /** Returns the current mode the robot is executing in */
   public static RobotRunMode getRobotMode() {
@@ -199,5 +199,12 @@ public final class Constants {
     public int PVIndex() {
       return PVIndex;
     }
+  }
+
+  public enum ScoringTarget {
+    Amp,
+    Speaker,
+    SpeakerReverse,
+    Trap
   }
 }

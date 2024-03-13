@@ -51,6 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot;
 
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -109,6 +110,9 @@ public class Robot extends LoggedRobot {
   /** Command scheduled to change the LEDs for teleop mode */
   private Command m_testLEDCommand;
 
+  /** Used to save and restore the pivot subsystem's default command during test mode */
+  private Command m_testModePivotCommandCache;
+
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -124,7 +128,7 @@ public class Robot extends LoggedRobot {
 
     // Initialize AdvantageKit logging
     AdvantageKitLogInitializer logInit =
-        new AdvantageKitLogInitializer(this, Constants.getMode(), Constants.kTuningMode);
+        new AdvantageKitLogInitializer(this, Constants.getMode(), Constants.tuningMode);
 
     logInit.initializeLogging(Constants.kLoggingIsEnabled, Constants.getLogDirectory());
 
@@ -158,10 +162,13 @@ public class Robot extends LoggedRobot {
 
     // TODO: low battery alert
 
-    // Update display of robot mechanisms
-    m_botMechanisms.updatePivotAngle(bc.pivotSubsystem.getAngleDeg());
-    m_botMechanisms.updateClimberExtension(bc.climberSubsystem.getExtensionPercent());
-    m_botMechanisms.sendToDashboard();
+    if (RobotBase.isSimulation()) {
+      // Update display of robot mechanisms
+      m_botMechanisms.updatePivotAngle(m_robotContainer.pivotSubsystem.getAngleDeg());
+      m_botMechanisms.updateClimberExtension(
+          m_robotContainer.climberSubsystem.getExtensionPercent());
+      m_botMechanisms.sendToDashboard();
+    }
   }
 
   //////////////////////////////////////
@@ -258,6 +265,10 @@ public class Robot extends LoggedRobot {
     LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
     m_testLEDCommand = LEDsToPattern.newRainbowPatternCommand(ledSubsystem);
     m_testLEDCommand.schedule();
+
+    // DEBUG: disable the pivot subsystem's default park command during test mode
+    m_testModePivotCommandCache = m_robotContainer.pivotSubsystem.getDefaultCommand();
+    m_robotContainer.pivotSubsystem.removeDefaultCommand();
   }
 
   /** This function is called every 20 ms when the robot is running in TEST mode */
@@ -266,5 +277,7 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot leaves TEST mode */
   @Override
-  public void testExit() {}
+  public void testExit() {
+    m_robotContainer.pivotSubsystem.setDefaultCommand(m_testModePivotCommandCache);
+  }
 }

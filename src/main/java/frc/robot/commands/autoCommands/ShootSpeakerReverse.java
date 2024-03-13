@@ -49,48 +49,29 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.indexer;
+package frc.robot.commands.autoCommands;
 
-import frc.lib.logging.LoggableMotorInputs;
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import frc.lib.logging.BotLog;
+import frc.robot.Constants.ScoringTarget;
+import frc.robot.RobotContainer;
+import frc.robot.commands.ArmCommands.ShootNote;
 
-/** Logged inputs for the IntakeSubsystem */
-public class IndexerSubsystemInputs implements LoggableInputs {
-  /** Indexer motor inputs */
-  public LoggableMotorInputs indexer;
-  /** Gamepiece sensor inputs */
-  public boolean limitSwitch = false;
-
-  /**
-   * Creates an instance of the inputs and sets the prefix to log them under
-   *
-   * @param prefix Prefix the inputs will be logged under
-   */
-  public IndexerSubsystemInputs(String prefix) {
-    indexer = new LoggableMotorInputs("Motor");
-  }
-
-  /** Creates an instance of the loggable object during clone() calls */
-  private IndexerSubsystemInputs(IndexerSubsystemInputs other) {
-    this.indexer = other.indexer;
-    this.limitSwitch = other.limitSwitch;
-  }
-
-  /** Write input values to log */
-  public void toLog(LogTable table) {
-    indexer.toLog(table);
-    table.put("limitSwitch", limitSwitch);
-  }
-
-  /** Read input values from log */
-  public void fromLog(LogTable table) {
-    indexer.fromLog(table);
-    limitSwitch = table.get("limitSwitch", limitSwitch);
-  }
-
-  /** Create a clone of input values */
-  public IndexerSubsystemInputs clone() {
-    return new IndexerSubsystemInputs(this);
+/**
+ * TODO: replace this class with an actual implementation that shoots a note into the speaker from a
+ * close position
+ */
+public class ShootSpeakerReverse extends SequentialCommandGroup {
+  /** Creates a new instance of the command(s) */
+  public ShootSpeakerReverse(RobotContainer botContainer) {
+    // Add your commands in the addCommands() call, e.g.
+    // addCommands(new FooCommand(), new BarCommand());
+    addCommands(
+        new BotLog.InfoPrintCommand("Running ShootSpeakerReverse command"),
+        new ShootNote(
+            ScoringTarget.SpeakerReverse,
+            botContainer.pivotSubsystem,
+            botContainer.flywheelSubsystem,
+            botContainer.indexerSubsystem));
   }
 }

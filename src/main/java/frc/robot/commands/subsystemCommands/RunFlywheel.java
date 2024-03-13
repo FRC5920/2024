@@ -49,48 +49,95 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.subsystems.indexer;
+package frc.robot.commands.subsystemCommands;
 
-import frc.lib.logging.LoggableMotorInputs;
-import org.littletonrobotics.junction.LogTable;
-import org.littletonrobotics.junction.inputs.LoggableInputs;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.logging.BotLog;
+import frc.lib.thirdparty.LoggedTunableNumber;
+import frc.robot.commands.subsystemCommands.RunFlywheel.FlywheelPreset;
+import frc.robot.subsystems.flywheel.FlywheelSubsystem;
 
-/** Logged inputs for the IntakeSubsystem */
-public class IndexerSubsystemInputs implements LoggableInputs {
-  /** Indexer motor inputs */
-  public LoggableMotorInputs indexer;
-  /** Gamepiece sensor inputs */
-  public boolean limitSwitch = false;
+//////////////////////////////////////////////////////////////////////////////////////////////////
+public class RunFlywheel extends Command {
 
-  /**
-   * Creates an instance of the inputs and sets the prefix to log them under
-   *
-   * @param prefix Prefix the inputs will be logged under
-   */
-  public IndexerSubsystemInputs(String prefix) {
-    indexer = new LoggableMotorInputs("Motor");
+  public enum FlywheelPreset {
+    Stop(0.0),
+    IntakeRing(-2000.0),
+    ShootNoteAmp(225.0),
+    ShootNoteSpeaker(2250.0),
+    ShootNoteSpeaker45(2400.0),
+    ShootNoteSpeakerReverse(2250.0),
+    ShootNoteSpeakerReverse45(2500.0);
+
+    /** Tunable value for the preset */
+    private final LoggedTunableNumber tunableValue;
+
+    /**
+     * Creates the enum element
+     *
+     * @param defaultRPM Default value used for the element
+     */
+    private FlywheelPreset(double defaultRPM) {
+      tunableValue = new LoggedTunableNumber("FlywheelPreset/" + this.name(), defaultRPM);
+    }
+
+    /** Returns the preset's value in RPM */
+    public double getRPM() {
+      return tunableValue.get();
+    }
   }
 
-  /** Creates an instance of the loggable object during clone() calls */
-  private IndexerSubsystemInputs(IndexerSubsystemInputs other) {
-    this.indexer = other.indexer;
-    this.limitSwitch = other.limitSwitch;
+  /** The Flywheel subsystem to operate on */
+  private final FlywheelSubsystem m_flywheel;
+
+  /** Flywheel speed preset to be run */
+  private final FlywheelPreset m_preset;
+
+  private final double m_timeoutSec;
+  private final Timer m_timer = new Timer();
+
+  /** Creates a command that will run the Flywheel for a specified max number of seconds */
+  public RunFlywheel(FlywheelSubsystem flywheel, FlywheelPreset preset, double timeoutSec) {
+    m_flywheel = flywheel;
+    m_preset = preset;
+    m_timeoutSec = timeoutSec;
+    addRequirements(flywheel);
   }
 
-  /** Write input values to log */
-  public void toLog(LogTable table) {
-    indexer.toLog(table);
-    table.put("limitSwitch", limitSwitch);
+  /** Creates a command that will run the Flywheel perpetually */
+  public RunFlywheel(FlywheelSubsystem flywheel, FlywheelPreset preset) {
+    this(flywheel, preset, -1.0);
   }
 
-  /** Read input values from log */
-  public void fromLog(LogTable table) {
-    indexer.fromLog(table);
-    limitSwitch = table.get("limitSwitch", limitSwitch);
+  @Override
+  public void initialize() {
+    BotLog.Debugf(
+        "Run Flywheel at %f RPM%s",
+        m_preset.getRPM(),
+        (m_timeoutSec > 0.0) ? String.format(" for %f seconds", m_timeoutSec) : " perpetually");
+
+    // Set the flywheel speed
+    m_flywheel.setFlywheelVelocity(m_preset.getRPM());
+
+    m_timer.reset();
+    m_timer.start();
   }
 
-  /** Create a clone of input values */
-  public IndexerSubsystemInputs clone() {
-    return new IndexerSubsystemInputs(this);
+  @Override
+  public boolean isFinished() {
+    boolean finished = false;
+    if (m_timeoutSec > 0.0) {
+      finished = m_timer.hasElapsed(m_timeoutSec);
+      if (finished) {
+        BotLog.Debugf("RunFlywheel timed out after %f sec", m_timer.get());
+      }
+    }
+    return finished;
+  }
+
+  @Override
+  public void end(boolean interrupted) {
+    BotLog.Debug("RunFlywheel " + (interrupted ? "interrupted" : "finished"));
   }
 }
