@@ -54,7 +54,6 @@ package frc.lib.logging;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import java.util.function.Consumer;
-import org.littletonrobotics.junction.Logger;
 
 /** Add your docs here. */
 public class BotLog {
@@ -91,20 +90,9 @@ public class BotLog {
   public static MessageType verbosity = MessageType.Debug;
 
   /** Consumer that receives non-error log messages */
-  public Consumer<String> logSink = (msg) -> defaultLogSink(msg);
-  ;
+  public Consumer<String> logSink = (str) -> System.out.println(str);
   /** Consumer that receives error log messages */
-  public Consumer<String> errorSink = (msg) -> defaultErrorSink(msg);
-
-  private void defaultLogSink(String message) {
-    Logger.recordOutput("BotLog/Log", message);
-    System.out.println(message);
-  }
-
-  private void defaultErrorSink(String message) {
-    Logger.recordOutput("BotLog/Error", message);
-    System.err.println(message);
-  }
+  public Consumer<String> errorSink = (str) -> System.err.println(str);
 
   /** Prints an error message to the log in runtime and simulation mode */
   public static void Error(String message) {

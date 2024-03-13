@@ -272,8 +272,6 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
   @Override
   public void setAngleDeg(double degrees) {
     double rotations = Units.degreesToRotations(degrees);
-    SmartDashboard.putNumber("pivot/targetAngleRot", rotations);
-
     TalonFXConfigurator configurator = m_pivotLeader.getConfigurator();
 
     // Re-apply closed-loop gains
@@ -404,7 +402,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
     }
     if (!status.isOK()) {
       s_motorConfigFailedAlert.set(true);
-      System.err.println("Could not configure device. Error: " + status.toString());
+      System.err.println("Failed to configure Pivot motor. Error: " + status.toString());
     }
 
     // Configure pivot follower motor to follow pivot leader in the opposite direction

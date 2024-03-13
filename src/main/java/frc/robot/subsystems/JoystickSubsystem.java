@@ -126,8 +126,6 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     driverController.povDown.onTrue(
         new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
-    // driverController.X.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.TestHi));
-    // driverController.Y.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
     driverController.X.onTrue(new ShootAmpClose(botContainer));
     driverController.Y.onTrue(new ShootSpeakerClose(botContainer));
 
