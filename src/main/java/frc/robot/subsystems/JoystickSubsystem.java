@@ -126,8 +126,8 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     driverController.povDown.onTrue(
         new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
-    driverController.X.onTrue(new ShootAmpClose(botContainer));
-    driverController.Y.onTrue(new ShootSpeakerClose(botContainer));
+    driverController.X.whileTrue(new ShootAmpClose(botContainer));
+    driverController.Y.whileTrue(new ShootSpeakerClose(botContainer));
 
     // // Map right bumper
     // driverController.rightBumper.whileTrue(kDoNothing);

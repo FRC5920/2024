@@ -94,7 +94,7 @@ public class PivotSubsystemIOReal implements PivotSubsystemIO {
   //   Kp - output per unit of error in position (output/rotation)
   //   Ki - output per unit of integrated error in position (output/(rotation*s))
   //   Kd - output per unit of error in velocity (output/rps)
-  private static final double kDefault_kP = 100.0;
+  private static final double kDefault_kP = 85.0;
   private static final double kDefault_kI = 0.0;
   private static final double kDefault_kD = 1.5;
   private static final double kDefault_kV = 0.0;
