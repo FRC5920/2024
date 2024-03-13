@@ -62,7 +62,7 @@ public class PivotCommand extends Command {
     ShootForward(100.0),
     ShootBackward(45.0),
     ShootAmp(90),
-    ShootSpeaker(100.0),
+    ShootSpeaker(75.0),
     Intake(175.0),
     Park(1.8),
 
@@ -90,26 +90,26 @@ public class PivotCommand extends Command {
   /** The PivotSubsystem operated on by the command */
   private final PivotSubsystem m_pivotSubsystem;
 
-  /** The desired pivot angle */
-  private final double m_angleDegrees;
+  private final PivotPreset m_preset;
 
   /**
    * Creates a command that will move the pivot to a specified preset angle
    *
    * @param pivotSubsystem The PivotSubsystem to operate on
-   * @param angle Angle preset the pivot should be moved to
+   * @param preset Angle preset the pivot should be moved to
    */
-  public PivotCommand(PivotSubsystem pivotSubsystem, PivotPreset angle) {
+  public PivotCommand(PivotSubsystem pivotSubsystem, PivotPreset preset) {
     m_pivotSubsystem = pivotSubsystem;
-    m_angleDegrees = angle.getDegrees();
+    m_preset = preset;
     addRequirements(pivotSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    BotLog.Debugf("PivotCommand: set angle to %f deg", m_angleDegrees);
-    m_pivotSubsystem.setAngleDeg(m_angleDegrees);
+    double degrees = m_preset.getDegrees();
+    BotLog.Debugf("PivotCommand: set angle to %f deg", degrees);
+    m_pivotSubsystem.setAngleDeg(degrees);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -125,6 +125,6 @@ public class PivotCommand extends Command {
   // Returns true to end the command when the pivot reaches the target angle within one degree
   @Override
   public boolean isFinished() {
-    return Math.abs(m_pivotSubsystem.getAngleDeg() - m_angleDegrees) < 1.0;
+    return Math.abs(m_pivotSubsystem.getAngleDeg() - m_preset.getDegrees()) < 1.0;
   }
 }
