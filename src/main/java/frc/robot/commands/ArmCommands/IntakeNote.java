@@ -56,7 +56,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import frc.lib.logging.BotLog.DebugPrintCommand;
 import frc.lib.logging.BotLog.InfoPrintCommand;
 import frc.robot.RobotContainer;
-import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.commands.ArmCommands.PivotCommand.PivotPreset;
 import frc.robot.commands.subsystemCommands.RunFlywheel;
 import frc.robot.commands.subsystemCommands.RunFlywheel.FlywheelPreset;
 import frc.robot.commands.subsystemCommands.RunIndexer;
@@ -81,12 +81,12 @@ public class IntakeNote extends SequentialCommandGroup {
             new RunFlywheel(flywheel, FlywheelPreset.IntakeRing),
             new SequentialCommandGroup(
                 new DebugPrintCommand("Pivot to intake position"),
-                new PivotCommand(pivot, AnglePreset.Intake),
+                new PivotCommand(pivot, PivotPreset.Intake),
                 new DebugPrintCommand("Run indexer"),
                 new RunIndexer(indexer, IndexerPreset.IntakeRing)
                     .until(() -> indexer.gamepieceIsDetected()),
                 new DebugPrintCommand("Gamepiece detected - store it"))),
         new DebugPrintCommand("Pivot to park position"),
-        new PivotCommand(pivot, AnglePreset.Park));
+        new PivotCommand(pivot, PivotPreset.Park));
   }
 }

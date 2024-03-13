@@ -54,6 +54,7 @@ package frc.robot.commands.subsystemCommands;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.logging.BotLog;
+import frc.lib.thirdparty.LoggedTunableNumber;
 import frc.robot.commands.subsystemCommands.RunFlywheel.FlywheelPreset;
 import frc.robot.subsystems.flywheel.FlywheelSubsystem;
 
@@ -66,10 +67,21 @@ public class RunFlywheel extends Command {
     ShootNoteAmp(1000.0),
     ShootNoteSpeaker(4500.0);
 
-    public final double flywheelRPM;
+    /** Tunable value for the preset */
+    private final LoggedTunableNumber tunableValue;
 
-    private FlywheelPreset(double flywheelRPS) {
-      this.flywheelRPM = flywheelRPS;
+    /**
+     * Creates the enum element
+     *
+     * @param defaultRPM Default value used for the element
+     */
+    private FlywheelPreset(double defaultRPM) {
+      tunableValue = new LoggedTunableNumber("FlywheelPreset/" + this.name(), defaultRPM);
+    }
+
+    /** Returns the preset's value in RPM */
+    public double getRPM() {
+      return tunableValue.get();
     }
   }
 
@@ -99,11 +111,11 @@ public class RunFlywheel extends Command {
   public void initialize() {
     BotLog.Debugf(
         "Run Flywheel at %f RPM%s",
-        m_preset.flywheelRPM,
+        m_preset.getRPM(),
         (m_timeoutSec > 0.0) ? String.format(" for %f seconds", m_timeoutSec) : " perpetually");
 
     // Set the flywheel speed
-    m_flywheel.setFlywheelVelocity(m_preset.flywheelRPM);
+    m_flywheel.setFlywheelVelocity(m_preset.getRPM());
 
     m_timer.reset();
     m_timer.start();

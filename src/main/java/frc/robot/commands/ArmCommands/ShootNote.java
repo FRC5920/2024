@@ -59,7 +59,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.lib.logging.BotLog.DebugPrintCommand;
 import frc.lib.logging.BotLog.InfoPrintCommand;
 import frc.robot.Constants.ScoringTarget;
-import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.commands.ArmCommands.PivotCommand.PivotPreset;
 import frc.robot.commands.subsystemCommands.RunFlywheel;
 import frc.robot.commands.subsystemCommands.RunFlywheel.FlywheelPreset;
 import frc.robot.commands.subsystemCommands.RunIndexer;
@@ -76,7 +76,8 @@ public class ShootNote extends SequentialCommandGroup {
   private static final double kIndexerTimeoutSec = 1.0;
 
   private final FlywheelPreset flywheelPreset;
-  private final AnglePreset pivotAngle;
+  private final double targetFlywheelRPM;
+  private final PivotPreset pivotAngle;
 
   /** Creates a new ShootNote. */
   public ShootNote(
@@ -88,17 +89,19 @@ public class ShootNote extends SequentialCommandGroup {
     switch (target) {
       case Amp:
         flywheelPreset = FlywheelPreset.ShootNoteAmp;
-        pivotAngle = AnglePreset.ShootAmp;
+        pivotAngle = PivotPreset.ShootAmp;
         break;
       case Speaker:
         flywheelPreset = FlywheelPreset.ShootNoteSpeaker;
-        pivotAngle = AnglePreset.ShootSpeaker;
+        pivotAngle = PivotPreset.ShootSpeaker;
         break;
       case Trap:
       default:
         flywheelPreset = FlywheelPreset.Stop;
-        pivotAngle = AnglePreset.Park;
+        pivotAngle = PivotPreset.Park;
     }
+
+    targetFlywheelRPM = flywheelPreset.getRPM();
 
     // Register subsystem requirements
     addRequirements(pivot, flywheel, indexer);
@@ -111,14 +114,15 @@ public class ShootNote extends SequentialCommandGroup {
                     new RunFlywheel(flywheel, flywheelPreset),
                     new SequentialCommandGroup(
                         new PivotCommand(pivot, pivotAngle),
-                        new WaitUntilCommand(() -> flywheelReachedSpeed(flywheel, flywheelPreset))
+                        new WaitUntilCommand(
+                                () -> flywheelReachedSpeed(flywheel, targetFlywheelRPM))
                             .withTimeout(5.0),
                         new DebugPrintCommand("Run the indexer"),
                         new RunIndexer(indexer, IndexerPreset.ShootRing, kIndexerTimeoutSec),
                         new DebugPrintCommand("Indexer finished"))),
                 new InstantCommand(() -> flywheel.setFlywheelVelocity(0.0)),
                 new InfoPrintCommand("Pivot back to park"),
-                new PivotCommand(pivot, AnglePreset.Park)),
+                new PivotCommand(pivot, PivotPreset.Park)),
             // If no gamepiece is present, don't do anything
             new InfoPrintCommand("ShootNote aborted because intake is empty"),
             indexer::gamepieceIsDetected));
@@ -128,7 +132,7 @@ public class ShootNote extends SequentialCommandGroup {
 
   }
 
-  private static boolean flywheelReachedSpeed(FlywheelSubsystem flywheel, FlywheelPreset preset) {
-    return Math.abs(flywheel.getFlywheelVelocity()) >= (0.9 * Math.abs(preset.flywheelRPM));
+  private boolean flywheelReachedSpeed(FlywheelSubsystem flywheel, double targetSpeed) {
+    return Math.abs(flywheel.getFlywheelVelocity()) >= (0.9 * Math.abs(targetFlywheelRPM));
   }
 }

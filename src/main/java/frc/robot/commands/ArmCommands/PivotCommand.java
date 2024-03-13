@@ -53,11 +53,12 @@ package frc.robot.commands.ArmCommands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.logging.BotLog;
+import frc.lib.thirdparty.LoggedTunableNumber;
 import frc.robot.subsystems.pivot.PivotSubsystem;
 
 public class PivotCommand extends Command {
 
-  public enum AnglePreset {
+  public enum PivotPreset {
     ShootForward(100.0),
     ShootBackward(45.0),
     ShootAmp(90),
@@ -68,11 +69,21 @@ public class PivotCommand extends Command {
     TestLow(176.4),
     TestHi(90.0);
 
-    /** Pivot angle in degrees */
-    public final double angleDeg;
+    /** Tunable value for the preset */
+    private final LoggedTunableNumber tunableValue;
 
-    private AnglePreset(double deg) {
-      angleDeg = deg;
+    /**
+     * Creates the enum element
+     *
+     * @param defaultAngleDeg Default angle value for the element in degrees
+     */
+    private PivotPreset(double defaultAngleDeg) {
+      tunableValue = new LoggedTunableNumber("PivotPreset/" + this.name(), defaultAngleDeg);
+    }
+
+    /** Returns the preset's angle in degrees */
+    public double getDegrees() {
+      return tunableValue.get();
     }
   }
 
@@ -88,9 +99,9 @@ public class PivotCommand extends Command {
    * @param pivotSubsystem The PivotSubsystem to operate on
    * @param angle Angle preset the pivot should be moved to
    */
-  public PivotCommand(PivotSubsystem pivotSubsystem, AnglePreset angle) {
+  public PivotCommand(PivotSubsystem pivotSubsystem, PivotPreset angle) {
     m_pivotSubsystem = pivotSubsystem;
-    m_angleDegrees = angle.angleDeg;
+    m_angleDegrees = angle.getDegrees();
     addRequirements(pivotSubsystem);
   }
 

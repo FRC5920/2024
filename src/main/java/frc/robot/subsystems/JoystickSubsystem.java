@@ -63,7 +63,7 @@ import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.IntakeNote;
 import frc.robot.commands.ArmCommands.PivotCommand;
-import frc.robot.commands.ArmCommands.PivotCommand.AnglePreset;
+import frc.robot.commands.ArmCommands.PivotCommand.PivotPreset;
 import frc.robot.commands.DriveWithZTargeting;
 import frc.robot.commands.autoCommands.ShootAmpClose;
 import frc.robot.commands.autoCommands.ShootSpeakerClose;
@@ -115,7 +115,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // Map buttons on driver controller
     ProcessedXboxController driverController = getDriverController();
 
-    driverController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Park));
+    driverController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, PivotPreset.Park));
     // Map B button to swerve brake command
     driverController.B.whileTrue(
         driveTrain.applyRequest(() -> new SwerveRequest.SwerveDriveBrake()));
@@ -190,13 +190,13 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     ProcessedXboxController operatorController = getOperatorController();
 
     // Map buttons
-    operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, AnglePreset.Intake));
+    operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, PivotPreset.Intake));
     operatorController.B.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootBackward));
+        new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootBackward));
     operatorController.X.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootAmp));
+        new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootAmp));
     operatorController.Y.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, AnglePreset.ShootSpeaker));
+        new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootSpeaker));
 
     // Map POV
     operatorController.povUp.onTrue(
