@@ -155,11 +155,6 @@ public class RobotContainer {
       visionSystemSim = null;
     }
 
-    // Configure the PathPlanner AutoBuilder, the set up the auto dashboard tab.
-    // NOTE: these must occur in this order
-    configureAutoBuilder();
-    autoDashboardTab = new AutoDashboardTab();
-
     ClimberSubsystemIO climberIO = null;
     FlywheelSubsystemIO flywheelIO = null;
     IndexerSubsystemIO indexerIO = null;

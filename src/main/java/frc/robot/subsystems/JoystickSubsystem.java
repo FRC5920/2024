@@ -67,6 +67,7 @@ import frc.robot.commands.ArmCommands.PivotCommand.PivotPreset;
 import frc.robot.commands.DriveWithZTargeting;
 import frc.robot.commands.autoCommands.ShootAmpClose;
 import frc.robot.commands.autoCommands.ShootSpeakerClose;
+import frc.robot.commands.autoCommands.ShootSpeakerReverse;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 
 /** A subsystem providing Xbox controllers for driving the robot manually */
@@ -115,7 +116,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // Map buttons on driver controller
     ProcessedXboxController driverController = getDriverController();
 
-    driverController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, PivotPreset.Park));
+    driverController.A.whileTrue(new ShootSpeakerReverse(botContainer));
     // Map B button to swerve brake command
     driverController.B.whileTrue(
         driveTrain.applyRequest(() -> new SwerveRequest.SwerveDriveBrake()));

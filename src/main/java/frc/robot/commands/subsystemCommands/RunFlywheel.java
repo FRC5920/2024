@@ -64,8 +64,11 @@ public class RunFlywheel extends Command {
   public enum FlywheelPreset {
     Stop(0.0),
     IntakeRing(-2000.0),
-    ShootNoteAmp(1000.0),
-    ShootNoteSpeaker(2250.0);
+    ShootNoteAmp(225.0),
+    ShootNoteSpeaker(2250.0),
+    ShootNoteSpeaker45(2400.0),
+    ShootNoteSpeakerReverse(2250.0),
+    ShootNoteSpeakerReverse45(2500.0);
 
     /** Tunable value for the preset */
     private final LoggedTunableNumber tunableValue;

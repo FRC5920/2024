@@ -90,7 +90,7 @@ public class HeimdallCameraInputs implements LoggableInputs {
     // Only log remaining data if the estimate is fresh
     if (isFresh) {
       table.put(kKeyTimestamp, timestamp);
-      table.put(kKeyPipelineResult, pipelineResult);
+      // table.put(kKeyPipelineResult, pipelineResult);
     }
   }
 
@@ -102,7 +102,7 @@ public class HeimdallCameraInputs implements LoggableInputs {
     // Only load remaining data if it is flagged as fresh
     if (isFresh) {
       timestamp = table.get(kKeyTimestamp, timestamp);
-      pipelineResult = table.get(kKeyPipelineResult, pipelineResult);
+      // pipelineResult = table.get(kKeyPipelineResult, pipelineResult);
     }
   }
 

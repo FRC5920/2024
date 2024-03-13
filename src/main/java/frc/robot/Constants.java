@@ -204,6 +204,7 @@ public final class Constants {
   public enum ScoringTarget {
     Amp,
     Speaker,
+    SpeakerReverse,
     Trap
   }
 }
