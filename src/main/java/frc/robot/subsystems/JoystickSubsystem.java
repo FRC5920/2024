@@ -55,6 +55,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import frc.lib.joystick.JoystickSubsystemBase;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.Constants.CameraTarget;
@@ -63,6 +64,7 @@ import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
 import frc.robot.commands.ArmCommands.IntakeNote;
 import frc.robot.commands.ArmCommands.PivotCommand;
+import frc.robot.commands.ArmCommands.ZTargetIntake;
 import frc.robot.commands.ArmCommands.PivotCommand.PivotPreset;
 import frc.robot.commands.DriveWithZTargeting;
 import frc.robot.commands.autoCommands.ShootAmpClose;
@@ -116,7 +118,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // Map buttons on driver controller
     ProcessedXboxController driverController = getDriverController();
 
-    driverController.A.whileTrue(new ShootSpeakerReverse(botContainer));
+    driverController.A.whileTrue(new ShootAmpClose(botContainer));
     // Map B button to swerve brake command
     driverController.B.whileTrue(
         driveTrain.applyRequest(() -> new SwerveRequest.SwerveDriveBrake()));
@@ -127,7 +129,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     driverController.povDown.onTrue(
         new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
-    driverController.X.whileTrue(new ShootAmpClose(botContainer));
+    driverController.X.whileTrue(kDoNothing);
     driverController.Y.whileTrue(new ShootSpeakerClose(botContainer));
 
     // // Map right bumper
@@ -136,34 +138,16 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // // Map back button
     // reset the field-centric heading on left bumper press
     driverController.back.onTrue(driveTrain.runOnce(() -> driveTrain.seedFieldRelative()));
-
-    // driverController.leftBumper.whileTrue(
-    //     new RunIndexerAtSpeed.RunIntakeAtSpeed(botContainer.intakeSubsystem,
-    // IntakePreset.ShootRing));
+    driverController.leftBumper.whileTrue(new ShootAmpClose(botContainer));
+    driverController.rightBumper.whileTrue(new ShootSpeakerReverse(botContainer));
 
     // driverController.rightBumper.whileTrue(
     //     new RunIndexerAtSpeed.RunIntakeAtSpeed(botContainer.intakeSubsystem,
     // IntakePreset.ShootRing));
 
-    // Driver indexer button
-    // Old
-    // driverController.rightTriggerAsButton.whileTrue(
-    // new IntakeSubsystem.RunIntakeAtSpeed(
-    // botContainer.intakeSubsystem, IntakePreset.IntakeRing));
-    // New
-    // driverController.rightTriggerAsButton.whileTrue(
-    //     new PivotCommand(botContainer.pivotSubsystem, AnglePreset.indexer)
-    //         .andThen(
-    //             new RunIndexerAtSpeed.RunIntakeAtSpeed(
-    //                 botContainer.indexerSubsystem, IndexerPreset.IntakeRing))
-    //         .andThen(new DriveWithZTargeting(driveTrain, driverController,
-    // CameraTarget.GameNote))
-    //         .finallyDo(
-    //             (interrupted) -> new PivotCommand(botContainer.pivotSubsystem,
-    // AnglePreset.Park)));
 
-    driverController.leftBumper.whileTrue(
-        new DriveWithZTargeting(driveTrain, driverController, CameraTarget.AprilTag2D));
+    //driverController.leftBumper.whileTrue(
+    //    new DriveWithZTargeting(driveTrain, driverController, CameraTarget.AprilTag2D));
 
     // // Map stick press buttons
     // driverController.leftStickPress.onTrue(kDoNothing);
@@ -175,8 +159,8 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // // Map START button (small button on the left in the middle of the controller)
     // driverController.start.whileTrue(kDoNothing);
 
-    // // Map right trigger
-    driverController.rightTriggerAsButton.whileTrue(new IntakeNote(botContainer));
+    // Driver indexer button
+    driverController.rightTriggerAsButton.whileTrue(new ZTargetIntake(botContainer, driveTrain, driverController, CameraTarget.GameNote));
   }
 
   /**
