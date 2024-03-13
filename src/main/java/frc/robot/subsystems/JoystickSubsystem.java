@@ -157,7 +157,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
 
     // Driver indexer button
     driverController.rightTriggerAsButton.whileTrue(
-        new ZTargetIntake(botContainer, driveTrain, driverController, CameraTarget.GameNote));
+        new ZTargetIntake(botContainer, driverController, CameraTarget.GameNote));
   }
 
   /**

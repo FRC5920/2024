@@ -54,11 +54,15 @@ package frc.robot.commands;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.lib.LED.ColorConstants;
+import frc.lib.LED.LEDStrip;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.lib.utility.ZTargeter;
 import frc.robot.Constants.CameraInfo.GamePieceCamera;
 import frc.robot.Constants.CameraTarget;
+import frc.robot.subsystems.LEDs.LEDSubsystem;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import org.photonvision.PhotonCamera;
 
@@ -90,6 +94,11 @@ public class DriveWithZTargeting extends Command {
   /** Request object for target */
   private final CameraTarget m_Target;
 
+  /** LED strips on the */
+  private final LEDStrip m_leftLEDStrip;
+
+  private final LEDStrip m_rightLEDStrip;
+
   /** ZTargeting Library */
   private final ZTargeter m_zTargeter;
 
@@ -97,14 +106,21 @@ public class DriveWithZTargeting extends Command {
    * Creates an instance of the command
    *
    * @param swerve Swerve drive to be controlled
+   * @param ledSubsystem Subsystem used to access LEDs
    * @param controller XBox controller used to control the swerve drive
    */
   public DriveWithZTargeting(
-      CommandSwerveDrivetrain swerve, ProcessedXboxController controller, CameraTarget target) {
-    addRequirements(swerve);
+      CommandSwerveDrivetrain swerve,
+      LEDSubsystem ledSubsystem,
+      ProcessedXboxController controller,
+      CameraTarget target) {
+    addRequirements(swerve, ledSubsystem);
     m_swerve = swerve;
     m_controller = controller;
     m_Target = target;
+    m_leftLEDStrip = ledSubsystem.getLeftStrip();
+    m_rightLEDStrip = ledSubsystem.getRightStrip();
+
     // Set up for driving open-loop using field-centric motion
     m_swerveRequest =
         new SwerveRequest.FieldCentric()
@@ -131,12 +147,14 @@ public class DriveWithZTargeting extends Command {
     // Get the rotation to a target.  Returns null if no target is found
     Rotation2d zRotation = m_zTargeter.getRotationToTarget();
     boolean targetExists = (zRotation != null);
+    Color ledColor = ColorConstants.kOff;
+
     if (targetExists) {
       angularRate = zRotation.getRadians() * kMaxAngularRate;
 
-      if (m_Target == CameraTarget.GameNote) {
-        // TODO: Set LEDs Orange
-      }
+      // If a note is being targeted, make all the LED's orange.  Otherwise, turn them off
+      ledColor = (m_Target == CameraTarget.GameNote) ? Color.kOrange : ledColor;
+
       // Code for bot relative drive.
       if ((m_Target == CameraTarget.GameNote)
           && ((Math.abs(m_controller.getRightY()) > 0.1)
@@ -152,6 +170,9 @@ public class DriveWithZTargeting extends Command {
         m_swerve.driveFieldCentric(m_swerveRequest);
       }
     }
+
+    m_leftLEDStrip.fillColor(ledColor);
+    m_rightLEDStrip.fillColor(ledColor);
   }
 
   // Called once the command ends or is interrupted.

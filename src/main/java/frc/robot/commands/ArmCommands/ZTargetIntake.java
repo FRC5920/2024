@@ -56,7 +56,6 @@ import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.Constants.CameraTarget;
 import frc.robot.RobotContainer;
 import frc.robot.commands.DriveWithZTargeting;
-import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -64,12 +63,12 @@ import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 public class ZTargetIntake extends ParallelCommandGroup {
   /** Creates a new ZTargetIntake. */
   public ZTargetIntake(
-      RobotContainer botContainer,
-      CommandSwerveDrivetrain swerve,
-      ProcessedXboxController controller,
-      CameraTarget target) {
+      RobotContainer botContainer, ProcessedXboxController controller, CameraTarget target) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(new IntakeNote(botContainer), new DriveWithZTargeting(swerve, controller, target));
+    addCommands(
+        new IntakeNote(botContainer),
+        new DriveWithZTargeting(
+            botContainer.driveTrain, botContainer.ledSubsystem, controller, target));
   }
 }
