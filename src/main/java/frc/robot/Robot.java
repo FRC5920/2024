@@ -51,8 +51,12 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot;
 
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.lib.LED.ColorConstants;
@@ -64,6 +68,7 @@ import frc.robot.commands.LEDCommands.LEDsToPattern;
 import frc.robot.commands.LEDCommands.LEDsToSolidColor;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
+import java.util.Optional;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
 
@@ -100,15 +105,6 @@ public class Robot extends LoggedRobot {
   // private static Alert s_logReceiverQueueAlert =
   //     new Alert("Logging queue exceeded capacity, data will NOT be logged.",
   // Alert.AlertType.ERROR);
-
-  /** Command scheduled to change the LEDs for teleop mode */
-  private Command m_teleOpLEDCommand;
-
-  /** Command scheduled to change the LEDs for disabled mode */
-  private Command m_autonomousLEDCommand;
-
-  /** Command scheduled to change the LEDs for teleop mode */
-  private Command m_testLEDCommand;
 
   /** Used to save and restore the pivot subsystem's default command during test mode */
   private Command m_testModePivotCommandCache;
@@ -163,6 +159,7 @@ public class Robot extends LoggedRobot {
     // TODO: low battery alert
 
     if (RobotBase.isSimulation()) {
+      SmartDashboard.putData(m_robotContainer.ledSubsystem);
       // Update display of robot mechanisms
       m_botMechanisms.updatePivotAngle(m_robotContainer.pivotSubsystem.getAngleDeg());
       m_botMechanisms.updateClimberExtension(
@@ -211,8 +208,8 @@ public class Robot extends LoggedRobot {
   public void autonomousInit() {
     // Set LEDs
     LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
-    m_autonomousLEDCommand = LEDsToPattern.newBlasterBoltPatternCommand(ledSubsystem);
-    m_autonomousLEDCommand.schedule();
+    ledSubsystem.allOff();
+    ledSubsystem.setDefaultCommand(LEDsToPattern.newBlasterBoltPatternCommand(ledSubsystem));
 
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
@@ -238,8 +235,9 @@ public class Robot extends LoggedRobot {
   public void teleopInit() {
     // Set LEDs
     LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
-    m_teleOpLEDCommand = new LEDsToSolidColor(ledSubsystem, ColorConstants.getAllianceColor());
-    m_teleOpLEDCommand.schedule();
+    ledSubsystem.allOff();
+    ledSubsystem.setDefaultCommand(
+        new LEDsToSolidColor(ledSubsystem, getAllianceColor(), "TeleopAllianceColor"));
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
@@ -263,8 +261,8 @@ public class Robot extends LoggedRobot {
   public void testInit() {
     CommandScheduler.getInstance().cancelAll();
     LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
-    m_testLEDCommand = LEDsToPattern.newRainbowPatternCommand(ledSubsystem);
-    m_testLEDCommand.schedule();
+    ledSubsystem.allOff();
+    ledSubsystem.setDefaultCommand(LEDsToPattern.newRainbowPatternCommand(ledSubsystem));
 
     // DEBUG: disable the pivot subsystem's default park command during test mode
     m_testModePivotCommandCache = m_robotContainer.pivotSubsystem.getDefaultCommand();
@@ -279,5 +277,18 @@ public class Robot extends LoggedRobot {
   @Override
   public void testExit() {
     m_robotContainer.pivotSubsystem.setDefaultCommand(m_testModePivotCommandCache);
+  }
+
+  /** Returns the Color of the active alliance */
+  public static Color getAllianceColor() {
+    Optional<Alliance> alliance = DriverStation.getAlliance();
+
+    if (alliance.isPresent()) {
+      return (alliance.get() == Alliance.Blue)
+          ? ColorConstants.kAllianceBlue
+          : ColorConstants.kAllianceRed;
+    } else {
+      return ColorConstants.kOff;
+    }
   }
 }

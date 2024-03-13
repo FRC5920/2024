@@ -64,30 +64,29 @@ public class LEDsToSolidColor extends Command {
 
   /** Creates a new SolidColorCommand. */
   public LEDsToSolidColor(LEDSubsystem ledSubsystem, Color color) {
+    this(ledSubsystem, color, LEDsToSolidColor.class.getName());
+  }
+
+  /** Creates a new SolidColorCommand. */
+  public LEDsToSolidColor(LEDSubsystem ledSubsystem, Color color, String name) {
     m_leftStrip = ledSubsystem.getLeftStrip();
     m_rightStrip = ledSubsystem.getRightStrip();
     m_color = color;
-
+    this.setName(name);
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(ledSubsystem);
   }
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {
-    // Set the color of all LEDs
-    for (int i = 0; i < m_leftStrip.getNumLEDs(); ++i) {
-      m_leftStrip.setLED(i, m_color);
-    }
-
-    for (int i = 0; i < m_rightStrip.getNumLEDs(); ++i) {
-      m_rightStrip.setLED(i, m_color);
-    }
-  }
+  public void initialize() {}
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
-  public void execute() {}
+  public void execute() {
+    m_leftStrip.fillColor(m_color);
+    m_rightStrip.fillColor(m_color);
+  }
 
   // Called once the command ends or is interrupted.
   @Override

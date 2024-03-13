@@ -109,19 +109,20 @@ public class LEDStrip {
   public void setLED(int offset, Color color) {
     m_ledBuffer.setRGB(
         translateAddress(offset),
-        (int) color.green * 255,
-        (int) color.red * 255,
-        (int) color.blue * 255);
+        (int) (color.red * 255),
+        (int) (color.green * 255),
+        (int) (color.blue * 255));
   }
 
   /**
-   * Sets the LED at a given offset inside the LEDStrip to a specified 8-bit Color
+   * Sets all LEDs in the strip to a given color
    *
-   * @param offset Offset of the target LED in the strip (0 ... (numLEDs - 1))
-   * @param color Color to set the LED to
+   * @param color Color to set the LEDs to
    */
-  public void setLED8Bit(int offset, Color8Bit color) {
-    m_ledBuffer.setRGB(translateAddress(offset), color.green, color.red, color.blue);
+  public void fillColor(Color color) {
+    for (int i = 0; i < m_numLEDs; ++i) {
+      this.setLED(i, color);
+    }
   }
 
   /** Returns the absolute address of the first LED targeted by the object */

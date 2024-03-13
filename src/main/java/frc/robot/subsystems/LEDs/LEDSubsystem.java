@@ -54,6 +54,7 @@ package frc.robot.subsystems.LEDs;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -100,7 +101,10 @@ public class LEDSubsystem extends SubsystemBase {
   /** Creates an instance of the LEDSubsystem */
   public LEDSubsystem(Color defaultLEDColor) {
     m_ledStrip = new AddressableLED(kLEDPort);
-    m_ledStripBuffer = new AddressableLEDBuffer(kNumAddressableLEDs);
+    m_ledStripBuffer =
+        RobotBase.isReal()
+            ? new AddressableLEDBufferGRB(kNumAddressableLEDs)
+            : new AddressableLEDBuffer(kNumAddressableLEDs);
 
     m_leftSubStrip = new LEDStrip(kFirstLeftLED, kNumLeftLEDs, m_ledStripBuffer);
     m_rightSubStrip = new LEDStrip(kFirstRightLED, kNumRightLEDs, m_ledStripBuffer);
@@ -118,7 +122,7 @@ public class LEDSubsystem extends SubsystemBase {
             new LEDStrip(0, kNumAddressableLEDs, m_ledStripBuffer), Color.kYellow, Color.kRed);
 
     // Set up a command to set the default LED color
-    setDefaultCommand(new LEDsToSolidColor(this, defaultLEDColor));
+    setDefaultCommand(new LEDsToSolidColor(this, defaultLEDColor, "DefaultLEDCommand"));
 
     m_ledStrip.setLength(m_ledStripBuffer.getLength());
     m_ledStrip.setData(m_ledStripBuffer);
@@ -138,6 +142,12 @@ public class LEDSubsystem extends SubsystemBase {
     m_ledStrip.setData(m_ledStripBuffer);
   }
 
+  /** Turns all the LEDs off on all strips */
+  public void allOff() {
+    m_leftSubStrip.fillColor(ColorConstants.kOff);
+    m_rightSubStrip.fillColor(ColorConstants.kOff);
+  }
+
   /** Returns a reference to the left LED strip */
   public LEDStrip getLeftStrip() {
     return m_leftSubStrip;
@@ -146,5 +156,18 @@ public class LEDSubsystem extends SubsystemBase {
   /** Returns a reference to the left LED strip */
   public LEDStrip getRightStrip() {
     return m_rightSubStrip;
+  }
+
+  /** Customized version of an AddressableLEDBuffer for LED strips that use GRB data format */
+  private static class AddressableLEDBufferGRB extends AddressableLEDBuffer {
+
+    public AddressableLEDBufferGRB(int length) {
+      super(length);
+    }
+
+    @Override
+    public void setRGB(int index, int r, int g, int b) {
+      super.setRGB(index, g, r, b);
+    }
   }
 }

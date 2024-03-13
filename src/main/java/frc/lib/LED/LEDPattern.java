@@ -52,7 +52,7 @@
 package frc.lib.LED;
 
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
-import edu.wpi.first.wpilibj.util.Color8Bit;
+import edu.wpi.first.wpilibj.util.Color;
 
 /** Base class for objects that implement displaying a pattern on an addressable LED strip */
 public class LEDPattern {
@@ -106,10 +106,10 @@ public class LEDPattern {
    * @param color The color to scale
    * @param intensity Scale factor to apply the color intensity (0.0 to 1.0)
    */
-  protected static Color8Bit scaleIntensity(Color8Bit color, double scaleFactor) {
-    int red = (int) (color.red * scaleFactor);
-    int green = (int) (color.green * scaleFactor);
-    int blue = (int) (color.blue * scaleFactor);
-    return new Color8Bit(red, green, blue);
+  protected static Color scaleIntensity(Color color, double scaleFactor) {
+    double red = color.red * scaleFactor;
+    double green = color.green * scaleFactor;
+    double blue = color.blue * scaleFactor;
+    return new Color(red, green, blue);
   }
 }

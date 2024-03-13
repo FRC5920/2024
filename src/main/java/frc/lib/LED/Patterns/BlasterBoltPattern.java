@@ -53,7 +53,7 @@ package frc.lib.LED.Patterns;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
+import frc.lib.LED.ColorConstants;
 import frc.lib.LED.LEDPattern;
 import frc.lib.LED.LEDStrip;
 import frc.robot.Constants;
@@ -61,7 +61,7 @@ import frc.robot.Constants;
 /** Add your docs here. */
 public class BlasterBoltPattern extends LEDPattern {
   private final int kPatternLength = 6;
-  private Color8Bit m_pattern[];
+  private Color m_pattern[];
   private int m_arraySize;
   /** length of LED strip */
   private int m_startIndex;
@@ -111,8 +111,8 @@ public class BlasterBoltPattern extends LEDPattern {
     reset();
 
     // Initialize the LED pattern array
-    m_pattern = new Color8Bit[kPatternLength];
-    setColor(new Color8Bit(color));
+    m_pattern = new Color[kPatternLength];
+    setColor(color);
 
     m_animationTimer.start();
   }
@@ -122,7 +122,7 @@ public class BlasterBoltPattern extends LEDPattern {
    *
    * @param color The color the pattern should display
    */
-  public void setColor(Color8Bit color) {
+  public void setColor(Color color) {
     m_pattern[0] = scaleIntensity(color, 1.0);
     m_pattern[1] = scaleIntensity(color, 0.75);
     m_pattern[2] = scaleIntensity(color, 0.5);
@@ -160,20 +160,20 @@ public class BlasterBoltPattern extends LEDPattern {
       return;
     }
 
-    Color8Bit off = new Color8Bit(0, 0, 0);
+    Color off = ColorConstants.kOff;
     LEDStrip strip = getLEDStrip();
 
     // Default all LEDs in the strip to an OFF state
     for (int i = m_startIndex; i < m_startIndex + m_arraySize; ++i) {
-      strip.setLED8Bit(i, off);
+      strip.setLED(i, off);
     }
 
     // Copy the pattern into ledArray starting at the current
     // array index
     int a = m_startIndex + translateIndex(m_arrayPos);
     for (int p = m_patternStart; p <= m_patternEnd; ++p) {
-      Color8Bit c = m_pattern[p];
-      strip.setLED8Bit(a, c);
+      Color c = m_pattern[p];
+      strip.setLED(a, c);
       a += (m_direction == Direction.kForward) ? -1 : 1;
     }
 
