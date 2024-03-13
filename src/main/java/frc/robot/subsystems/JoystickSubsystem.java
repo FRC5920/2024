@@ -55,18 +55,15 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import frc.lib.joystick.JoystickSubsystemBase;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.Constants.CameraTarget;
 import frc.robot.RobotContainer;
 import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
-import frc.robot.commands.ArmCommands.IntakeNote;
 import frc.robot.commands.ArmCommands.PivotCommand;
-import frc.robot.commands.ArmCommands.ZTargetIntake;
 import frc.robot.commands.ArmCommands.PivotCommand.PivotPreset;
-import frc.robot.commands.DriveWithZTargeting;
+import frc.robot.commands.ArmCommands.ZTargetIntake;
 import frc.robot.commands.autoCommands.ShootAmpClose;
 import frc.robot.commands.autoCommands.ShootSpeakerClose;
 import frc.robot.commands.autoCommands.ShootSpeakerReverse;
@@ -145,8 +142,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     //     new RunIndexerAtSpeed.RunIntakeAtSpeed(botContainer.intakeSubsystem,
     // IntakePreset.ShootRing));
 
-
-    //driverController.leftBumper.whileTrue(
+    // driverController.leftBumper.whileTrue(
     //    new DriveWithZTargeting(driveTrain, driverController, CameraTarget.AprilTag2D));
 
     // // Map stick press buttons
@@ -160,7 +156,8 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // driverController.start.whileTrue(kDoNothing);
 
     // Driver indexer button
-    driverController.rightTriggerAsButton.whileTrue(new ZTargetIntake(botContainer, driveTrain, driverController, CameraTarget.GameNote));
+    driverController.rightTriggerAsButton.whileTrue(
+        new ZTargetIntake(botContainer, driveTrain, driverController, CameraTarget.GameNote));
   }
 
   /**
