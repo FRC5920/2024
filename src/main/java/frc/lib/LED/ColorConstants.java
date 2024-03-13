@@ -64,10 +64,10 @@ public class ColorConstants {
   public static final Color kVikoticsYellow = new Color(255, 100, 0);
 
   /** Official FIRST Blue for blue alliance */
-  public static final Color kAllianceBlue = Color.kFirstBlue;
+  public static final Color kAllianceBlue = Color.kDarkBlue; // Color.kFirstBlue;
 
   /** Official FIRST Red for red alliance */
-  public static final Color kAllianceRed = Color.kFirstRed;
+  public static final Color kAllianceRed = Color.kDarkRed; // Color.kFirstRed;
 
   /** Returns the Color of the active alliance */
   public static Color getAllianceColor() {
