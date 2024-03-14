@@ -80,7 +80,7 @@ public class TeleopSwerveCTRE extends Command {
   /**
    * Maximum rate of change applied to X/Y motion (0.0 to 1.0): larger values allow faster changes
    */
-  public static final double kRotationSlewRate = 0.8;
+  public static final double kRotationSlewRate = 1.0;
 
   ////////////////////////////////////////
   // Motion deadbanding
