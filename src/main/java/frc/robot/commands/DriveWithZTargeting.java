@@ -89,10 +89,10 @@ public class DriveWithZTargeting extends Command {
   private final ProcessedXboxController m_controller;
 
   /** Request object used to control the swerve drive */
-  private final SwerveRequest.FieldCentric m_fieldRelativeSwerveReq;
+  private final SwerveRequest.FieldCentric m_fieldCentricSwerveReq;
 
   /** Request object used to drive with bot-centric motion */
-  private final SwerveRequest.RobotCentric m_botRelativeSwerveReq;
+  private final SwerveRequest.RobotCentric m_botCentricSwerveReq;
 
   /** Request object for target */
   private final CameraTarget m_Target;
@@ -121,19 +121,22 @@ public class DriveWithZTargeting extends Command {
     m_swerve = swerve;
     m_controller = controller;
     m_Target = target;
-    m_leftLEDStrip = ledSubsystem.getLeftStrip();
-    m_rightLEDStrip = ledSubsystem.getRightStrip();
 
     // Set up for driving open-loop using field-centric motion
-    m_fieldRelativeSwerveReq =
+    m_fieldCentricSwerveReq =
         new SwerveRequest.FieldCentric()
             .withDeadband(kMaxSpeed * kSpeedDeadband)
             .withRotationalDeadband(kMaxAngularRate * kAngularRateDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-    m_botRelativeSwerveReq = new SwerveRequest.RobotCentric();
+    m_botCentricSwerveReq =
+        new SwerveRequest.RobotCentric()
+            .withDeadband(kMaxSpeed * kSpeedDeadband)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-    m_zTargeter = new ZTargeter(m_Target, ArmCamera);
+    m_leftLEDStrip = ledSubsystem.getLeftStrip();
+    m_rightLEDStrip = ledSubsystem.getRightStrip();
+    m_zTargeter = new ZTargeter(target, ArmCamera);
   }
 
   // Called when the command is initially scheduled.
@@ -145,47 +148,52 @@ public class DriveWithZTargeting extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
+    // Default translation to regular swerve X/Y and rotation from the joystick
     double xVelocity = -m_controller.getLeftY() * kMaxSpeed;
     double yVelocity = -m_controller.getLeftX() * kMaxSpeed;
     double angularRate = -m_controller.getRightX() * kMaxAngularRate;
+    Color ledColor = ColorConstants.kOff;
 
     // Get the rotation to a target.  Returns null if no target is found
     Rotation2d zRotation = m_zTargeter.getRotationToTarget();
     boolean targetExists = (zRotation != null);
-    Color ledColor = ColorConstants.kOff;
 
     // Default to using the regular swerve controller mapping.  If a gamepiece is detected,
     // this will be overridden below
-    SwerveRequest swerveReq = m_fieldRelativeSwerveReq;
+    m_fieldCentricSwerveReq
+        .withVelocityX(xVelocity)
+        .withVelocityY(yVelocity)
+        .withRotationalRate(angularRate);
 
-    if (targetExists) {
+    if (!targetExists) {
+      // Drive with normal swerve control if no target is present
+      m_swerve.driveFieldCentric(m_fieldCentricSwerveReq);
+    } else {
+      // STATUS: a target is in view of the camera
+
       // If a note is being targeted, make all the LED's orange.  Otherwise, turn them off
-      ledColor = (m_Target == CameraTarget.GameNote) ? Color.kOrangeRed : ledColor;
+      ledColor = Color.kOrangeRed;
 
       // Apply rate of rotation from Z-targeting
-      angularRate = zRotation.getRadians() * kMaxAngularRate;
+      double ztAngularRate = zRotation.getRadians() * kMaxAngularRate;
+      double rightY = m_controller.getRightY();
+      double rightX = m_controller.getRightX();
 
-      // Code for bot relative drive.
-      if (m_Target == CameraTarget.GameNote) {
-        // && ((Math.abs(m_controller.getRightY()) > 0.1)
-        //     || (Math.abs(m_controller.getRightX()) > 0.1))) {
-        swerveReq =
-            m_botRelativeSwerveReq
-                // Deadband joystick commands
-                .withDeadband(kMaxSpeed * kSpeedDeadband)
-                .withVelocityX(-m_controller.getRightY() * kMaxSpeed)
-                .withVelocityY(m_controller.getRightX() * kMaxSpeed)
-                .withRotationalRate(angularRate);
+      if ((Math.abs(rightY) > 0.1) || (Math.abs(rightX) > 0.1)) {
+        // Drive robot-centric if the right joystick is active
+        m_swerve.driveRobotCentric(
+            m_botCentricSwerveReq
+                .withVelocityX(-rightY * kMaxSpeed)
+                .withVelocityY(rightX * kMaxSpeed)
+                .withRotationalRate(ztAngularRate));
       } else {
-        // Apply 'normal' serve joystick driving
-        m_fieldRelativeSwerveReq
-            .withDeadband(kMaxSpeed * kSpeedDeadband)
-            .withRotationalDeadband(kMaxAngularRate * kAngularRateDeadband)
-            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+        // Drive field-centric using the left joystick if the right joystick is inactive
+        m_swerve.driveFieldCentric(
+            m_fieldCentricSwerveReq
+                .withRotationalRate(ztAngularRate)
+                .withDriveRequestType(DriveRequestType.OpenLoopVoltage));
       }
     }
-
-    m_swerve.setControl(swerveReq);
 
     m_leftLEDStrip.fillColor(ledColor);
     m_rightLEDStrip.fillColor(ledColor);
