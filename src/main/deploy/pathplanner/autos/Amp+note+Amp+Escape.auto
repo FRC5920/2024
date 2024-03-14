@@ -2,7 +2,7 @@
   "version": 1.0,
   "startingPose": {
     "position": {
-      "x": 0.425,
+      "x": 0.42,
       "y": 7.33
     },
     "rotation": 0
@@ -18,28 +18,58 @@
           }
         },
         {
-          "type": "wait",
+          "type": "named",
           "data": {
-            "waitTime": 4.0
+            "name": "ShootAmpClose"
           }
         },
         {
-          "type": "parallel",
+          "type": "wait",
+          "data": {
+            "waitTime": 3.0
+          }
+        },
+        {
+          "type": "race",
           "data": {
             "commands": [
               {
                 "type": "path",
                 "data": {
-                  "pathName": "Score 2nd Note Amp"
+                  "pathName": "Amp 2nd Note"
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "AutoZTargetIntake"
+                  "name": "AutoIntake"
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Back 2 Amp"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "ShootAmpClose"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 0.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Escape Amp"
           }
         }
       ]

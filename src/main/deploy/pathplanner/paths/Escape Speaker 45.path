@@ -3,38 +3,32 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 1.885721192293913,
-        "y": 7.6725224274684365
+        "x": 0.9099908212608824,
+        "y": 4.509177787544171
       },
       "prevControl": null,
       "nextControl": {
-        "x": 2.8857211922939134,
-        "y": 7.6725224274684365
+        "x": 1.6281784180892924,
+        "y": 3.0342152424070927
       },
       "isLocked": false,
-      "linkedName": "Amp Waypoint"
+      "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.402050466137969,
-        "y": 7.387060320416937
+        "x": 5.370868128432164,
+        "y": 0.5979695091700113
       },
       "prevControl": {
-        "x": 4.667941158638283,
-        "y": 7.729381112426904
+        "x": 4.0523803635326585,
+        "y": 0.30632092240061637
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": null
     }
   ],
-  "rotationTargets": [
-    {
-      "waypointRelativePos": 1,
-      "rotationDegrees": 0,
-      "rotateFast": false
-    }
-  ],
+  "rotationTargets": [],
   "constraintZones": [],
   "eventMarkers": [],
   "globalConstraints": {
@@ -45,13 +39,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.973119187203244,
+    "rotation": 0,
     "rotateFast": false
   },
   "reversed": false,
   "folder": "Sundome",
   "previewStartingState": {
-    "rotation": 89.49267671024906,
+    "rotation": -57.86997199219098,
     "velocity": 0
   },
   "useDefaultConstraints": true
