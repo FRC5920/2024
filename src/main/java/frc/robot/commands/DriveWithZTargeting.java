@@ -153,7 +153,7 @@ public class DriveWithZTargeting extends Command {
       angularRate = zRotation.getRadians() * kMaxAngularRate;
 
       // If a note is being targeted, make all the LED's orange.  Otherwise, turn them off
-      ledColor = (m_Target == CameraTarget.GameNote) ? Color.kOrange : ledColor;
+      ledColor = (m_Target == CameraTarget.GameNote) ? Color.kOrangeRed : ledColor;
 
       // Code for bot relative drive.
       if ((m_Target == CameraTarget.GameNote)
