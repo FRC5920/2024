@@ -89,7 +89,10 @@ public class DriveWithZTargeting extends Command {
   private final ProcessedXboxController m_controller;
 
   /** Request object used to control the swerve drive */
-  private final SwerveRequest.FieldCentric m_swerveRequest;
+  private final SwerveRequest.FieldCentric m_fieldRelativeSwerveReq;
+
+  /** Request object used to drive with bot-centric motion */
+  private final SwerveRequest.RobotCentric m_botRelativeSwerveReq;
 
   /** Request object for target */
   private final CameraTarget m_Target;
@@ -122,11 +125,13 @@ public class DriveWithZTargeting extends Command {
     m_rightLEDStrip = ledSubsystem.getRightStrip();
 
     // Set up for driving open-loop using field-centric motion
-    m_swerveRequest =
+    m_fieldRelativeSwerveReq =
         new SwerveRequest.FieldCentric()
             .withDeadband(kMaxSpeed * kSpeedDeadband)
             .withRotationalDeadband(kMaxAngularRate * kAngularRateDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+    m_botRelativeSwerveReq = new SwerveRequest.RobotCentric();
 
     m_zTargeter = new ZTargeter(m_Target, ArmCamera);
   }
@@ -149,27 +154,38 @@ public class DriveWithZTargeting extends Command {
     boolean targetExists = (zRotation != null);
     Color ledColor = ColorConstants.kOff;
 
-    if (targetExists) {
-      angularRate = zRotation.getRadians() * kMaxAngularRate;
+    // Default to using the regular swerve controller mapping.  If a gamepiece is detected,
+    // this will be overridden below
+    SwerveRequest swerveReq = m_fieldRelativeSwerveReq;
 
+    if (targetExists) {
       // If a note is being targeted, make all the LED's orange.  Otherwise, turn them off
       ledColor = (m_Target == CameraTarget.GameNote) ? Color.kOrangeRed : ledColor;
 
+      // Apply rate of rotation from Z-targeting
+      angularRate = zRotation.getRadians() * kMaxAngularRate;
+
       // Code for bot relative drive.
-      if ((m_Target == CameraTarget.GameNote)
-          && ((Math.abs(m_controller.getRightY()) > 0.1)
-              || (Math.abs(m_controller.getRightX()) > 0.1))) {
-        m_swerve.driveRobotCentric(-m_controller.getRightY(), m_controller.getRightX(), yVelocity);
+      if (m_Target == CameraTarget.GameNote) {
+        // && ((Math.abs(m_controller.getRightY()) > 0.1)
+        //     || (Math.abs(m_controller.getRightX()) > 0.1))) {
+        swerveReq =
+            m_botRelativeSwerveReq
+                // Deadband joystick commands
+                .withDeadband(kMaxSpeed * kSpeedDeadband)
+                .withVelocityX(-m_controller.getRightY() * kMaxSpeed)
+                .withVelocityY(m_controller.getRightX() * kMaxSpeed)
+                .withRotationalRate(angularRate);
       } else {
-        //
-        // Update our SwerveRequest with the requested velocities and apply them to the swerve drive
-        m_swerveRequest
-            .withVelocityX(xVelocity) // Drive forward with negative Y (forward)
-            .withVelocityY(yVelocity) // Drive left with negative X (left)
-            .withRotationalRate(angularRate); // Drive counterclockwise with negative X (left)
-        m_swerve.driveFieldCentric(m_swerveRequest);
+        // Apply 'normal' serve joystick driving
+        m_fieldRelativeSwerveReq
+            .withDeadband(kMaxSpeed * kSpeedDeadband)
+            .withRotationalDeadband(kMaxAngularRate * kAngularRateDeadband)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
       }
     }
+
+    m_swerve.setControl(swerveReq);
 
     m_leftLEDStrip.fillColor(ledColor);
     m_rightLEDStrip.fillColor(ledColor);
