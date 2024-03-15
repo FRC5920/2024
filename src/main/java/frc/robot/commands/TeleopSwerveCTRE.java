@@ -137,9 +137,14 @@ public class TeleopSwerveCTRE extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    double xSpeed = m_xRateLimiter.calculate(-1.0 * m_controller.getLeftY());
+
+    double xSpeed = m_controller.getLeftY();
+    double ySpeed = m_controller.getLeftX();
+    double angularRate = m_controller.getRightX();
+
+    /*double xSpeed = m_xRateLimiter.calculate(-1.0 * m_controller.getLeftY());
     double ySpeed = m_yRateLimiter.calculate(-1.0 * m_controller.getLeftX());
-    double angularRate = m_rotationRateLimiter.calculate(-1.0 * m_controller.getRightX());
+    double angularRate = m_rotationRateLimiter.calculate(-1.0 * m_controller.getRightX());*/
 
     // Update our SwerveRequest with the requested velocities and apply them to the swerve drive
     m_swerveRequest
