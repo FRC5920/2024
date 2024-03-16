@@ -58,6 +58,8 @@ import com.pathplanner.lib.util.HolonomicPathFollowerConfig;
 import com.pathplanner.lib.util.PIDConstants;
 import com.pathplanner.lib.util.ReplanningConfig;
 import edu.wpi.first.apriltag.AprilTagFields;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -95,7 +97,13 @@ import frc.robot.subsystems.vision.HeimdallSubsystemCameraIO;
 import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOReal;
 import frc.robot.subsystems.vision.HeimdallSubsystemCameraIOSim;
 import frc.robot.subsystems.vision.PoseEstimateProcessor;
+import frc.robot.subsystems.vision.TargetCameraIO;
+import frc.robot.subsystems.vision.TargetCameraIOReal;
+import frc.robot.subsystems.vision.TargetCameraIOSim;
+import frc.robot.subsystems.vision.TargetCameraSubsystem;
+import org.photonvision.estimation.TargetModel;
 import org.photonvision.simulation.VisionSystemSim;
+import org.photonvision.simulation.VisionTargetSim;
 
 public class RobotContainer {
 
@@ -127,6 +135,9 @@ public class RobotContainer {
   /** Vision subsystem */
   public final HeimdallSubsystem visionSubsystem;
 
+  /** Target camera subsystem */
+  public final TargetCameraSubsystem targetCameraSubsystem;
+
   // Subsystem facilitating display of dashboard tabs
   public final DashboardSubsystem dashboardSubsystem = new DashboardSubsystem();
 
@@ -153,6 +164,7 @@ public class RobotContainer {
     if (RobotBase.isSimulation()) {
       visionSystemSim = new VisionSystemSim("VisionSimulation");
       visionSystemSim.addAprilTags(AprilTagFields.kDefaultField.loadAprilTagLayoutField());
+      setupSimVisionEnvironment();
     } else {
       visionSystemSim = null;
     }
@@ -163,6 +175,7 @@ public class RobotContainer {
     PivotSubsystemIO pivotIO = null;
     HeimdallSubsystemCameraIO visionIOFront = null;
     HeimdallSubsystemCameraIO visionIORear = null;
+    TargetCameraIO targetCameraIO = null;
 
     switch (Constants.getMode()) {
       case REAL:
@@ -172,6 +185,7 @@ public class RobotContainer {
         pivotIO = new PivotSubsystemIOReal();
         visionIOFront = new HeimdallSubsystemCameraIOReal(CameraID.FrontCamera);
         visionIORear = new HeimdallSubsystemCameraIOReal(CameraID.RearCamera);
+        targetCameraIO = new TargetCameraIOReal(CameraID.GamePieceCamera);
         break;
 
       case SIM:
@@ -188,6 +202,11 @@ public class RobotContainer {
             new HeimdallSubsystemCameraIOSim(
                 CameraID.RearCamera,
                 HeimdallSubsystem.kRearCameraLocationTransform,
+                visionSystemSim);
+        targetCameraIO =
+            new TargetCameraIOSim(
+                CameraID.GamePieceCamera,
+                TargetCameraSubsystem.kCameraLocationTransform,
                 visionSystemSim);
         break;
 
@@ -223,6 +242,8 @@ public class RobotContainer {
             (update) ->
                 driveTrain.addVisionMeasurement(update.pose, update.timestamp, update.stddevs),
             driveTrain::getPose);
+
+    targetCameraSubsystem = new TargetCameraSubsystem(targetCameraIO);
 
     joystickSubsystem.configureButtonBindings(this);
 
@@ -306,5 +327,18 @@ public class RobotContainer {
     // CameraTarget.GameNote));
     NamedCommands.registerCommand("AutoIntake", new IntakeNote(this));
     NamedCommands.registerCommand("AutoShootSpeaker", new ShootSpeakerReverse(this));
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Sets up the simulated vision environment */
+  private void setupSimVisionEnvironment() {
+    // Model a ring as a short cuboid
+    TargetModel ringModel = new TargetModel(0.34, 0.34, 0.05);
+
+    // The pose of where the target is on the field
+    Pose3d targetPose = new Pose3d(2.0, 2.0, 0.0, new Rotation3d(0, 0, Math.PI));
+    // The given target model at the given pose
+    VisionTargetSim ringTarget = new VisionTargetSim(targetPose, ringModel);
+    visionSystemSim.addVisionTargets(ringTarget);
   }
 }

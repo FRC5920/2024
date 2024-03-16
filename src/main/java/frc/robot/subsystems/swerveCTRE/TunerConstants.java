@@ -92,8 +92,8 @@ public class TunerConstants {
 
   private static final double kDriveGearRatio = 6.122448979591837;
   private static final double kSteerGearRatio = 21.428571428571427;
-  private static final double kWheelRadiusInches =2.0;
-     // 2.167; // Estimated at first, then fudge-factored to make odom match record
+  private static final double kWheelRadiusInches = 2.0;
+  // 2.167; // Estimated at first, then fudge-factored to make odom match record
 
   private static final boolean kSteerMotorReversed = true;
   private static final boolean kInvertLeftSide = false;
