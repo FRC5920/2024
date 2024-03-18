@@ -72,7 +72,7 @@ public class ZTargeter {
   public static final double kDefaultAngleToleranceRad = Units.degreesToRadians(2);
 
   /** Default proportional gain used for the rotation PID controller */
-  public static final double kDefault_kP = 0.7;
+  public static final double kDefault_kP = 0.6;
   /** Default integral gain used for the rotation PID controller */
   public static final double kDefault_kI = 0.0;
   /** Default derivative gain used for the rotation PID controller */
@@ -155,7 +155,7 @@ public class ZTargeter {
       // yaw to zero.
       double angleToTargetDeg = pipelineResult.getBestTarget().getYaw();
       double yawToTargetRad = Units.degreesToRadians(angleToTargetDeg);
-      double zRotationRad = -omegaController.calculate(yawToTargetRad);
+      double zRotationRad = omegaController.calculate(yawToTargetRad);
 
       if (kEnableDashboardDebug) {
         SmartDashboard.putNumber("zTarget/degreesToTarget", angleToTargetDeg);

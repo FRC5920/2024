@@ -55,7 +55,6 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.robot.Constants.CameraTarget;
 import frc.robot.RobotContainer;
-import frc.robot.commands.DriveWithZTargeting;
 
 // NOTE:  Consider using this command inline, rather than writing a subclass.  For more
 // information, see:
@@ -66,9 +65,8 @@ public class ZTargetIntake extends ParallelCommandGroup {
       RobotContainer botContainer, ProcessedXboxController controller, CameraTarget target) {
     // Add your commands in the addCommands() call, e.g.
     // addCommands(new FooCommand(), new BarCommand());
-    addCommands(
-        new IntakeNote(botContainer),
+    addCommands(new IntakeNote(botContainer) /* ,
         new DriveWithZTargeting(
-            botContainer.driveTrain, botContainer.ledSubsystem, controller, target));
+            botContainer.driveTrain, botContainer.ledSubsystem, controller, CameraTarget.GameNote)*/);
   }
 }

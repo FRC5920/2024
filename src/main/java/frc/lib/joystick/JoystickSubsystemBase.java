@@ -71,7 +71,7 @@ public abstract class JoystickSubsystemBase extends SubsystemBase {
   /** Default deadbands applied to the left stick on the driver controller */
   public static final double kDriverLeftStickDeadbands[] = {0.1, 0.95};
   /** Default sensitivity to use for the right stick on the driver controller */
-  public static final double kDriverRightStickSensitivity = 0.5;
+  public static final double kDriverRightStickSensitivity = 1.0;
   /** Default deadbands applied to the right stick on the driver controller */
   public static final double kDriverRightStickDeadbands[] = {0.1, 0.95};
   /** Default sensitivity to use for triggers on the driver controller */

@@ -67,8 +67,8 @@ public class RunFlywheel extends Command {
     ShootNoteAmp(300.0),
     ShootNoteSpeaker(2250.0),
     ShootNoteSpeaker45(2400.0),
-    ShootNoteSpeakerReverse(2250.0),
-    ShootNoteSpeakerReverse45(2500.0);
+    ShootNoteSpeakerReverse(2500.0),
+    ShootNoteSpeakerReverse45(2700.0);
 
     /** Tunable value for the preset */
     private final LoggedTunableNumber tunableValue;

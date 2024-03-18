@@ -71,7 +71,7 @@ public class DriveWithZTargeting extends Command {
   public final PhotonCamera ArmCamera = new PhotonCamera(GamePieceCamera.cameraName);
 
   /** Default maximum linear speed the swerve drive should move at in meters per second */
-  public static final double kMaxSpeed = 6.0;
+  public static final double kMaxSpeed = 4.0;
 
   /** Default maximum rate the swerve drive should rotate in radians per second */
   public static final double kMaxAngularRate = 10; // Math.PI; Math.Pi was the default

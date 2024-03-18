@@ -61,8 +61,6 @@ import frc.robot.Constants.CameraTarget;
 import frc.robot.RobotContainer;
 import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
-import frc.robot.commands.ArmCommands.PivotCommand;
-import frc.robot.commands.ArmCommands.PivotCommand.PivotPreset;
 import frc.robot.commands.ArmCommands.ZTargetIntake;
 import frc.robot.commands.autoCommands.ShootAmpClose;
 import frc.robot.commands.autoCommands.ShootSpeakerClose;
@@ -169,53 +167,54 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
    * @param botContainer Object providing access to robot subsystems
    */
   private void configureOperatorControllerBindings(RobotContainer botContainer) {
-    ProcessedXboxController operatorController = getOperatorController();
+    /*
+      ProcessedXboxController operatorController = getOperatorController();
 
-    // Map buttons
-    operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, PivotPreset.Intake));
-    operatorController.B.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootBackward));
-    operatorController.X.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootAmp));
-    operatorController.Y.onTrue(
-        new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootSpeaker));
+      // Map buttons
+      operatorController.A.onTrue(new PivotCommand(botContainer.pivotSubsystem, PivotPreset.Intake));
+      operatorController.B.onTrue(
+          new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootBackward));
+      operatorController.X.onTrue(
+          new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootAmp));
+      operatorController.Y.onTrue(
+          new PivotCommand(botContainer.pivotSubsystem, PivotPreset.ShootSpeaker));
 
-    // Map POV
-    operatorController.povUp.onTrue(
-        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersUp));
-    operatorController.povDown.onTrue(
-        new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
+      // Map POV
+      operatorController.povUp.onTrue(
+          new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersUp));
+      operatorController.povDown.onTrue(
+          new ClimberCommand(botContainer.climberSubsystem, ClimberPreset.ClimbersDown));
 
-    // operatorController.leftTriggerAsButton.whileTrue(
-    //     new RunIndexerAtSpeed.RunIntakeAtSpeed(
-    //         botContainer.intakeSubsystem, IntakePreset.IntakeRing));
-    // operatorController.rightTriggerAsButton.whileTrue(
-    //     new RunIndexerAtSpeed.RunIntakeAtSpeed(botContainer.intakeSubsystem,
-    // IntakePreset.ShootRing));
+      // operatorController.leftTriggerAsButton.whileTrue(
+      //     new RunIndexerAtSpeed.RunIntakeAtSpeed(
+      //         botContainer.intakeSubsystem, IntakePreset.IntakeRing));
+      // operatorController.rightTriggerAsButton.whileTrue(
+      //     new RunIndexerAtSpeed.RunIntakeAtSpeed(botContainer.intakeSubsystem,
+      // IntakePreset.ShootRing));
 
-    // Map bumpers
-    operatorController.leftBumper.whileTrue(kDoNothing);
-    operatorController.rightBumper.whileTrue(kDoNothing);
+      // Map bumpers
+      operatorController.leftBumper.whileTrue(kDoNothing);
+      operatorController.rightBumper.whileTrue(kDoNothing);
 
-    // Map triggers
-    operatorController.leftTriggerAsButton.onTrue(kDoNothing);
+      // Map triggers
+      operatorController.leftTriggerAsButton.onTrue(kDoNothing);
 
-    // Map stick press
-    operatorController.leftStickPress.onTrue(kDoNothing);
-    operatorController.rightStickPress.onTrue(kDoNothing);
+      // Map stick press
+      operatorController.leftStickPress.onTrue(kDoNothing);
+      operatorController.rightStickPress.onTrue(kDoNothing);
 
-    // Map small center buttons
-    operatorController.back.onTrue(new InstantCommand(() -> botContainer.pivotSubsystem.park()));
-    operatorController.start.onTrue(kDoNothing);
-  }
-
-  public static class JoystickInputs {
-    public double xAxis;
-    public double yAxis;
-
-    public JoystickInputs() {
-      xAxis = 0.0;
-      yAxis = 0.0;
+      // Map small center buttons
+      operatorController.back.onTrue(new InstantCommand(() -> botContainer.pivotSubsystem.park()));
+      operatorController.start.onTrue(kDoNothing);
     }
+
+    public static class JoystickInputs {
+      public double xAxis;
+      public double yAxis;
+
+      public JoystickInputs() {
+        xAxis = 0.0;
+        yAxis = 0.0;
+      } */
   }
 }
