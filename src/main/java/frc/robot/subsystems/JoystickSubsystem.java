@@ -208,14 +208,4 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     operatorController.back.onTrue(new InstantCommand(() -> botContainer.pivotSubsystem.park()));
     operatorController.start.onTrue(kDoNothing);
   }
-
-  public static class JoystickInputs {
-    public double xAxis;
-    public double yAxis;
-
-    public JoystickInputs() {
-      xAxis = 0.0;
-      yAxis = 0.0;
-    }
-  }
 }

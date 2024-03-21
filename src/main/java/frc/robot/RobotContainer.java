@@ -236,12 +236,7 @@ public class RobotContainer {
     // Create a vision pose estimator subsystem and set the processor used to
     // assign standard deviations to its estimated poses
     visionSubsystem =
-        new HeimdallSubsystem(
-            visionIOFront,
-            visionIORear,
-            (update) ->
-                driveTrain.addVisionMeasurement(update.pose, update.timestamp, update.stddevs),
-            driveTrain::getPose);
+        new HeimdallSubsystem(visionIOFront, visionIORear, (update) -> {}, driveTrain::getPose);
 
     targetCameraSubsystem = new TargetCameraSubsystem(targetCameraIO);
 

@@ -54,6 +54,7 @@ package frc.robot.commands;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.LED.ColorConstants;
@@ -66,6 +67,9 @@ import frc.robot.subsystems.vision.CameraConstants.TargetPipeline;
 import frc.robot.subsystems.vision.TargetCameraSubsystem;
 
 public class DriveWithZTargeting extends Command {
+
+  /** Set to true to publish values to SmartDashboard */
+  public static final boolean kPublishToDashboard = true;
 
   /** Default maximum linear speed the swerve drive should move at in meters per second */
   public static final double kMaxSpeed = 6.0;
@@ -168,6 +172,8 @@ public class DriveWithZTargeting extends Command {
         .withVelocityY(yVelocity)
         .withRotationalRate(angularRate);
 
+    String driveMode = "FieldCentric";
+
     if (!targetExists) {
       // Drive with normal swerve control if no target is present
       m_swerve.driveFieldCentric(m_fieldCentricSwerveReq);
@@ -183,19 +189,33 @@ public class DriveWithZTargeting extends Command {
       double rightX = m_controller.getRightX();
 
       if ((Math.abs(rightY) > 0.1) || (Math.abs(rightX) > 0.1)) {
+        xVelocity = -rightY * kMaxSpeed;
+        yVelocity = rightX * kMaxSpeed;
+        angularRate = ztAngularRate;
         // Drive robot-centric if the right joystick is active
         m_swerve.driveRobotCentric(
             m_botCentricSwerveReq
-                .withVelocityX(-rightY * kMaxSpeed)
-                .withVelocityY(rightX * kMaxSpeed)
-                .withRotationalRate(ztAngularRate));
+                .withVelocityX(xVelocity)
+                .withVelocityY(yVelocity)
+                .withRotationalRate(angularRate));
+        driveMode = "RobotCentric";
+
       } else {
+        angularRate = ztAngularRate;
         // Drive field-centric using the left joystick if the right joystick is inactive
         m_swerve.driveFieldCentric(
             m_fieldCentricSwerveReq
-                .withRotationalRate(ztAngularRate)
+                .withRotationalRate(angularRate)
                 .withDriveRequestType(DriveRequestType.OpenLoopVoltage));
       }
+    }
+
+    if (kPublishToDashboard) {
+      SmartDashboard.putBoolean("DriveWithZTargeting/targetExists", targetExists);
+      SmartDashboard.putString("DriveWithZTargeting/driveMode", driveMode);
+      SmartDashboard.putNumber("DriveWithZTargeting/xVelocity", xVelocity);
+      SmartDashboard.putNumber("DriveWithZTargeting/yVelocity", yVelocity);
+      SmartDashboard.putNumber("DriveWithZTargeting/angularRate", angularRate);
     }
 
     m_leftLEDStrip.fillColor(ledColor);

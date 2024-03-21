@@ -71,7 +71,7 @@ public class TargetCameraSubsystem extends SubsystemBase {
   /** Transformation used to convey the physical location of the front camera on the robot */
   public static final Transform3d kCameraLocationTransform =
       new Transform3d(
-          new Translation3d(0.5, 0.5, 0.5), new Rotation3d(0, Units.degreesToRadians(20), 0.0));
+          new Translation3d(0.0, 0.0, 0.5), new Rotation3d(0, Units.degreesToRadians(20), 0.0));
 
   /** I/O implementation used by the subsystem */
   private final TargetCameraIO m_io;
@@ -131,6 +131,7 @@ public class TargetCameraSubsystem extends SubsystemBase {
 
     // Get the latest result from the tag camera
     PhotonPipelineResult pipelineResult = m_io.getLatestResult();
+    m_inputs.pipelineResult = pipelineResult;
     m_inputs.targetIsDetected = pipelineResult.hasTargets();
     m_inputs.pipelineResult = pipelineResult;
   }

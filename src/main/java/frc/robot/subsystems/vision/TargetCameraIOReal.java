@@ -54,6 +54,7 @@ package frc.robot.subsystems.vision;
 import frc.robot.Constants.CameraID;
 import frc.robot.subsystems.vision.CameraConstants.TargetPipeline;
 import org.photonvision.PhotonCamera;
+import org.photonvision.targeting.PhotonPipelineResult;
 
 /** HeimdallSubsystem I/O implementation using real PhotonVision cameras */
 public class TargetCameraIOReal implements TargetCameraIO {
@@ -65,6 +66,12 @@ public class TargetCameraIOReal implements TargetCameraIO {
   /** Creates an instance of the I/O */
   public TargetCameraIOReal(CameraID camera) {
     m_camera = new PhotonCamera(camera.name);
+  }
+
+  /** Returns the latest pipeline result from the camera */
+  @Override
+  public PhotonPipelineResult getLatestResult() {
+    return m_camera.getLatestResult();
   }
 
   /** Returns true if the camera is connected; else false */

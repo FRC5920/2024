@@ -143,7 +143,7 @@ public class ZTargeter {
       // yaw to zero.
       double angleToTargetDeg = pipelineResult.getBestTarget().getYaw();
       double yawToTargetRad = Units.degreesToRadians(angleToTargetDeg);
-      double zRotationRad = -omegaController.calculate(yawToTargetRad);
+      double zRotationRad = omegaController.calculate(yawToTargetRad);
 
       if (kEnableDashboardDebug) {
         SmartDashboard.putNumber("zTarget/degreesToTarget", angleToTargetDeg);
