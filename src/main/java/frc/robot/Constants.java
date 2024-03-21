@@ -186,21 +186,6 @@ public final class Constants {
     }
   }
 
-  public enum CameraTarget {
-    GameNote(0),
-    AprilTag2D(1);
-
-    public final int PVIndex;
-
-    private CameraTarget(int PipelineIndex) {
-      this.PVIndex = PipelineIndex;
-    }
-
-    public int PVIndex() {
-      return PVIndex;
-    }
-  }
-
   public enum ScoringTarget {
     Amp,
     Speaker,

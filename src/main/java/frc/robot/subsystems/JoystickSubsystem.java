@@ -57,7 +57,6 @@ import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.lib.joystick.JoystickSubsystemBase;
 import frc.lib.joystick.ProcessedXboxController;
-import frc.robot.Constants.CameraTarget;
 import frc.robot.RobotContainer;
 import frc.robot.commands.ArmCommands.ClimberCommand;
 import frc.robot.commands.ArmCommands.ClimberCommand.ClimberPreset;
@@ -68,6 +67,7 @@ import frc.robot.commands.autoCommands.ShootAmpClose;
 import frc.robot.commands.autoCommands.ShootSpeakerClose;
 import frc.robot.commands.autoCommands.ShootSpeakerReverse;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
+import frc.robot.subsystems.vision.CameraConstants.TargetPipeline;
 
 /** A subsystem providing Xbox controllers for driving the robot manually */
 public class JoystickSubsystem extends JoystickSubsystemBase {
@@ -143,7 +143,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
     // IntakePreset.ShootRing));
 
     // driverController.leftBumper.whileTrue(
-    //    new DriveWithZTargeting(driveTrain, driverController, CameraTarget.AprilTag2D));
+    //    new DriveWithZTargeting(driveTrain, driverController, TargetPipeline.AprilTag2D));
 
     // // Map stick press buttons
     // driverController.leftStickPress.onTrue(kDoNothing);
@@ -157,7 +157,7 @@ public class JoystickSubsystem extends JoystickSubsystemBase {
 
     // Driver indexer button
     driverController.rightTriggerAsButton.whileTrue(
-        new ZTargetIntake(botContainer, driverController, CameraTarget.GameNote));
+        new ZTargetIntake(botContainer, driverController, TargetPipeline.Note));
   }
 
   /**

@@ -324,7 +324,7 @@ public class RobotContainer {
     NamedCommands.registerCommand("ShootAmpClose", new ShootAmpClose(this));
     NamedCommands.registerCommand("ShootSpeakerClose", new ShootSpeakerClose(this));
     // NamedCommands.registerCommand("AutoZTargetIntake", new ZTargetIntake(this, ,
-    // CameraTarget.GameNote));
+    // TargetPipeline.Note));
     NamedCommands.registerCommand("AutoIntake", new IntakeNote(this));
     NamedCommands.registerCommand("AutoShootSpeaker", new ShootSpeakerReverse(this));
   }

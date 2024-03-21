@@ -55,8 +55,7 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants.CameraTarget;
-import org.photonvision.PhotonCamera;
+import java.util.function.Supplier;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 /**
@@ -83,10 +82,7 @@ public class ZTargeter {
       new PIDGains(kDefault_kP, kDefault_kI, kDefault_kD);
 
   /** Camera used to target the gamepiece */
-  private final PhotonCamera m_camera;
-
-  /** Type of gamepiece to target */
-  private final CameraTarget m_CameraTarget;
+  private final Supplier<PhotonPipelineResult> m_pipelineResultSupplier;
 
   /**
    * PID controller used to produce a control effort that will bring the rotation of the camera to
@@ -98,38 +94,30 @@ public class ZTargeter {
    * Creates an instance of the targeter that uses a given camera to target a given type of
    * gamepiece
    *
-   * @param TargetWhat The type of gamepiece to target
-   * @param camera Camera used to locate and target the gamepiece
-   * @param gains PID gains to use for converging on the target
+   * @param pipelineResultSupplier Supplier used to obtain the latest camera pipeline result
    */
-  public ZTargeter(CameraTarget TargetWhat, PhotonCamera camera) {
-    this(TargetWhat, camera, kDefaultPIDGains, kDefaultAngleToleranceRad);
+  public ZTargeter(Supplier<PhotonPipelineResult> pipelineResultSupplier) {
+    this(pipelineResultSupplier, kDefaultPIDGains, kDefaultAngleToleranceRad);
   }
 
   /**
    * Creates an instance of the targeter that uses a given camera to target a given type of
    * gamepiece
    *
-   * @param TargetWhat The type of gamepiece to target
-   * @param camera Camera used to locate and target the gamepiece
+   * @param cameraSubsystem Camera subsystem used to locate and target the gamepiece
    * @param gains PID gains to use for converging on the target
    * @param angleToleranceRad Error tolerance to control to in radians
    */
   public ZTargeter(
-      CameraTarget TargetWhat, PhotonCamera camera, PIDGains gains, double angleToleranceRad) {
-    m_camera = camera;
-    m_CameraTarget = TargetWhat;
+      Supplier<PhotonPipelineResult> pipelineResultSupplier,
+      PIDGains gains,
+      double angleToleranceRad) {
+    m_pipelineResultSupplier = pipelineResultSupplier;
 
     omegaController = new PIDController(gains.kP, gains.kI, gains.kD);
     omegaController.setTolerance(angleToleranceRad);
     omegaController.enableContinuousInput(-Math.PI, Math.PI);
     omegaController.setSetpoint(0);
-  }
-
-  /** This method must be called to initialize the camera used by the ZTargeter */
-  public void initialize() {
-    m_camera.setPipelineIndex(m_CameraTarget.PVIndex);
-    // BotLog.Debugf("<Z-Targeter> targeting " + String.valueOf(m_CameraTarget));
   }
 
   /**
@@ -142,7 +130,7 @@ public class ZTargeter {
   public Rotation2d getRotationToTarget() {
     Rotation2d result = null;
 
-    PhotonPipelineResult pipelineResult = m_camera.getLatestResult();
+    PhotonPipelineResult pipelineResult = m_pipelineResultSupplier.get();
 
     // If vision has acquired a target, we will overwrite the rotation with a value
     // that will rotate the bot toward the target

@@ -60,15 +60,12 @@ import frc.lib.LED.ColorConstants;
 import frc.lib.LED.LEDStrip;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.lib.utility.ZTargeter;
-import frc.robot.Constants.CameraInfo.GamePieceCamera;
-import frc.robot.Constants.CameraTarget;
-import frc.robot.subsystems.LEDs.LEDSubsystem;
+import frc.robot.RobotContainer;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
-import org.photonvision.PhotonCamera;
+import frc.robot.subsystems.vision.CameraConstants.TargetPipeline;
+import frc.robot.subsystems.vision.TargetCameraSubsystem;
 
 public class DriveWithZTargeting extends Command {
-
-  public final PhotonCamera ArmCamera = new PhotonCamera(GamePieceCamera.cameraName);
 
   /** Default maximum linear speed the swerve drive should move at in meters per second */
   public static final double kMaxSpeed = 6.0;
@@ -81,6 +78,9 @@ public class DriveWithZTargeting extends Command {
 
   /** Deadband applied to angular rotation as a normalized percentage (0.0 to 1.0) */
   private static final double kAngularRateDeadband = 0.1;
+
+  /** Camera subsystem used to provide target detection */
+  public final TargetCameraSubsystem m_cameraSubsystem;
 
   /** The swerve drive controlled by this command */
   private final CommandSwerveDrivetrain m_swerve;
@@ -95,7 +95,7 @@ public class DriveWithZTargeting extends Command {
   private final SwerveRequest.RobotCentric m_botCentricSwerveReq;
 
   /** Request object for target */
-  private final CameraTarget m_Target;
+  private final TargetPipeline m_targetPipeline;
 
   /** LED strips on the */
   private final LEDStrip m_leftLEDStrip;
@@ -113,36 +113,39 @@ public class DriveWithZTargeting extends Command {
    * @param controller XBox controller used to control the swerve drive
    */
   public DriveWithZTargeting(
-      CommandSwerveDrivetrain swerve,
-      LEDSubsystem ledSubsystem,
+      RobotContainer botContainer,
       ProcessedXboxController controller,
-      CameraTarget target) {
-    addRequirements(swerve, ledSubsystem);
-    m_swerve = swerve;
+      TargetPipeline targetPipeline) {
+    m_cameraSubsystem = botContainer.targetCameraSubsystem;
+    m_swerve = botContainer.driveTrain;
     m_controller = controller;
-    m_Target = target;
+    m_targetPipeline = targetPipeline;
 
-    // Set up for driving open-loop using field-centric motion
+    addRequirements(
+        botContainer.driveTrain, botContainer.ledSubsystem, botContainer.targetCameraSubsystem);
+
+    // Set up a command used to drive open-loop using field-centric motion
     m_fieldCentricSwerveReq =
         new SwerveRequest.FieldCentric()
             .withDeadband(kMaxSpeed * kSpeedDeadband)
             .withRotationalDeadband(kMaxAngularRate * kAngularRateDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
+    // Set up a command used to drive using robot-centric motion
     m_botCentricSwerveReq =
         new SwerveRequest.RobotCentric()
             .withDeadband(kMaxSpeed * kSpeedDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-    m_leftLEDStrip = ledSubsystem.getLeftStrip();
-    m_rightLEDStrip = ledSubsystem.getRightStrip();
-    m_zTargeter = new ZTargeter(target, ArmCamera);
+    m_leftLEDStrip = botContainer.ledSubsystem.getLeftStrip();
+    m_rightLEDStrip = botContainer.ledSubsystem.getRightStrip();
+    m_zTargeter = new ZTargeter(() -> m_cameraSubsystem.getLatestResult());
   }
 
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    m_zTargeter.initialize(); // Initialize Z-targeting
+    m_cameraSubsystem.setPipeline(m_targetPipeline);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
