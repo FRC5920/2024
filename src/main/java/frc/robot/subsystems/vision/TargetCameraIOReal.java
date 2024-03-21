@@ -51,45 +51,41 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
-import frc.lib.utility.Alert;
 import frc.robot.Constants.CameraID;
+import frc.robot.subsystems.vision.CameraConstants.TargetPipeline;
 import org.photonvision.PhotonCamera;
-import org.photonvision.targeting.PhotonPipelineResult;
 
 /** HeimdallSubsystem I/O implementation using real PhotonVision cameras */
 public class TargetCameraIOReal implements TargetCameraIO {
 
   /** Tag camera accessed by this I/O implementation */
-  private final PhotonCamera m_camera;
-
-  /** Alert displayed on failure to configure pivot motors */
-  private final Alert m_cameraNotPresentAlert;
+  protected final PhotonCamera m_camera;
 
   //////////////////////////////////////////////////////////////////////////////////////////////////
   /** Creates an instance of the I/O */
   public TargetCameraIOReal(CameraID camera) {
     m_camera = new PhotonCamera(camera.name);
-
-    String alertMsg = String.format("Targeting camera %s is not connected!", camera.name);
-    m_cameraNotPresentAlert = new Alert(alertMsg, Alert.AlertType.ERROR);
   }
 
-  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns true if the camera is connected; else false */
+  @Override
+  public boolean cameraIsConnected() {
+    return m_camera.isConnected();
+  }
+
   /**
-   * Updates camera input values
+   * Sets the pipeline to be used for target detection
    *
-   * @param inputs Inputs to update
+   * @param pipeline Pipeline to be used by the camera
    */
   @Override
-  public void updateInputs(TargetCameraInputs inputs) {
+  public void setPipeline(TargetPipeline pipeline) {
+    m_camera.setPipelineIndex(pipeline.index);
+  }
 
-    inputs.cameraIsConnected = m_camera.isConnected();
-    // Alert if the camera is not connected
-    m_cameraNotPresentAlert.set(!inputs.cameraIsConnected);
-
-    // Get the latest result from the tag camera
-    PhotonPipelineResult pipelineResult = m_camera.getLatestResult();
-    inputs.targetIsDetected = pipelineResult.hasTargets();
-    inputs.pipelineResult = pipelineResult;
+  /** Returns the pipeline used for target detection */
+  @Override
+  public TargetPipeline getPipeline() {
+    return TargetPipeline.fromInt(m_camera.getPipelineIndex());
   }
 }

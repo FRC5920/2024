@@ -51,9 +51,11 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
+import org.littletonrobotics.junction.AutoLog;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 /** TargetCameraSubsystem inputs */
+@AutoLog
 public class TargetCameraInputs {
 
   public boolean cameraIsConnected = false;

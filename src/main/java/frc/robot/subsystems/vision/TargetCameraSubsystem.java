@@ -56,6 +56,10 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.utility.Alert;
+import frc.robot.subsystems.vision.CameraConstants.TargetPipeline;
+import org.littletonrobotics.junction.Logger;
+import org.photonvision.targeting.PhotonPipelineResult;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /** A subsystem for the camera used to target gamepieces */
@@ -72,8 +76,13 @@ public class TargetCameraSubsystem extends SubsystemBase {
   /** I/O implementation used by the subsystem */
   private final TargetCameraIO m_io;
 
-  private final TargetCameraInputs m_inputs = new TargetCameraInputs();
+  private final TargetCameraInputsAutoLogged m_inputs = new TargetCameraInputsAutoLogged();
 
+  /** Alert displayed on failure to configure pivot motors */
+  private static final Alert m_cameraNotPresentAlert =
+      new Alert("Target camera is not connected!", Alert.AlertType.ERROR);
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   /**
    * Creates a new instance of the subsystem
    *
@@ -83,8 +92,46 @@ public class TargetCameraSubsystem extends SubsystemBase {
     m_io = io;
   }
 
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /**
+   * Sets the pipeline to be used for target detection
+   *
+   * @param pipeline Pipeline to be used by the camera
+   */
+  public void setPipeline(TargetPipeline pipeline) {
+    m_io.setPipeline(pipeline);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns the pipeline used for target detection */
+  public TargetPipeline getPipeline() {
+    return m_io.getPipeline();
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Returns the current camera Pipeline result */
+  public PhotonPipelineResult getLatestResult() {
+    return m_inputs.pipelineResult;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
   @Override
   public void periodic() {
-    m_io.updateInputs(m_inputs);
+    updateInputs();
+    Logger.processInputs("TargetCamera", m_inputs);
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////
+  /** Updates subsystem inputs */
+  private void updateInputs() {
+
+    m_inputs.cameraIsConnected = m_io.cameraIsConnected();
+    // Alert if the camera is not connected
+    m_cameraNotPresentAlert.set(!m_inputs.cameraIsConnected);
+
+    // Get the latest result from the tag camera
+    PhotonPipelineResult pipelineResult = m_io.getLatestResult();
+    m_inputs.targetIsDetected = pipelineResult.hasTargets();
+    m_inputs.pipelineResult = pipelineResult;
   }
 }

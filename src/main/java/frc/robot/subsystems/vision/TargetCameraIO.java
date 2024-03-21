@@ -51,6 +51,7 @@
 \-----------------------------------------------------------------------------*/
 package frc.robot.subsystems.vision;
 
+import frc.robot.subsystems.vision.CameraConstants.TargetPipeline;
 import org.photonvision.targeting.PhotonPipelineResult;
 
 /** Interface for a TargetCameraSubsystem I/O implementation */
@@ -63,5 +64,21 @@ public interface TargetCameraIO {
   default PhotonPipelineResult getLatestResult() {
     return new PhotonPipelineResult();
   }
-  ;
+
+  /** Returns true if the camera is connected; else false */
+  default boolean cameraIsConnected() {
+    return false;
+  }
+
+  /**
+   * Sets the pipeline to be used for target detection
+   *
+   * @param pipeline Pipeline to be used by the camera
+   */
+  default void setPipeline(TargetPipeline pipeline) {}
+
+  /** Returns the pipeline used for target detection */
+  default TargetPipeline getPipeline() {
+    return TargetPipeline.Note;
+  }
 }

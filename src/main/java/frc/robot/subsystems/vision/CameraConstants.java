@@ -53,6 +53,7 @@ package frc.robot.subsystems.vision;
 
 import edu.wpi.first.math.util.Units;
 import frc.robot.Constants.CameraID;
+import java.util.Map;
 
 /** Add your docs here. */
 public class CameraConstants {
@@ -98,5 +99,24 @@ public class CameraConstants {
     public static final int widthPx = 1280;
     public static final int heightPx = 720;
     public static final double FOVDegrees = 70;
+  }
+
+  /** Target detection pipelines used in conjunction with the Target Camera */
+  public enum TargetPipeline {
+    Note(0),
+    AprilTag2D(1);
+
+    /** Pipeline index used for target detection */
+    public final int index;
+
+    private TargetPipeline(int index) {
+      this.index = index;
+    }
+
+    private static final Map<Integer, TargetPipeline> intToEnumMap = Map.of(0, Note, 1, AprilTag2D);
+
+    public static TargetPipeline fromInt(int index) {
+      return intToEnumMap.get(index);
+    }
   }
 }

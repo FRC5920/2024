@@ -55,14 +55,12 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import frc.robot.Constants.CameraID;
 import frc.robot.subsystems.vision.CameraConstants.TagCameraResolution;
-import org.photonvision.PhotonCamera;
 import org.photonvision.simulation.PhotonCameraSim;
 import org.photonvision.simulation.SimCameraProperties;
 import org.photonvision.simulation.VisionSystemSim;
-import org.photonvision.targeting.PhotonPipelineResult;
 
 /** Target Camera I/O implemented using PhotonVision simulation */
-public class TargetCameraIOSim implements TargetCameraIO {
+public class TargetCameraIOSim extends TargetCameraIOReal {
 
   /** Enable a raw camera stream for the simulated cameras */
   private static final boolean kEnableRawSimCameraStream = true;
@@ -88,9 +86,6 @@ public class TargetCameraIOSim implements TargetCameraIO {
   /** Calibration error standard deviation */
   private static final double kCalibrationErrorStdDev = 0.1;
 
-  /** Photon camera used for the simulation */
-  private final PhotonCamera m_camera;
-
   /** Simulated PhotonVision system */
   private static VisionSystemSim m_visionSim;
 
@@ -108,7 +103,7 @@ public class TargetCameraIOSim implements TargetCameraIO {
    */
   public TargetCameraIOSim(
       CameraID cameraID, Transform3d robot2CameraTransform, VisionSystemSim visionSystemSim) {
-    m_camera = new PhotonCamera(cameraID.name);
+    super(cameraID);
     m_visionSim = visionSystemSim;
 
     // Create simulated camera properties. These can be set to mimic your actual camera.
@@ -130,23 +125,5 @@ public class TargetCameraIOSim implements TargetCameraIO {
     m_cameraSim.enableRawStream(kEnableRawSimCameraStream);
     m_cameraSim.enableProcessedStream(kEnableProcessedSimCameraStream);
     m_cameraSim.enableDrawWireframe(kDrawWireFrameToVideoStream);
-  }
-
-  //////////////////////////////////////////////////////////////////////////////////////////////////
-  /**
-   * Updates camera input values
-   *
-   * @param inputs Inputs to update
-   * @param io I/O implementation used to update the inputs
-   */
-  @Override
-  public void updateInputs(TargetCameraInputs inputs) {
-
-    inputs.cameraIsConnected = true;
-
-    // Get the latest result from the tag camera
-    PhotonPipelineResult pipelineResult = m_camera.getLatestResult();
-    inputs.targetIsDetected = pipelineResult.hasTargets();
-    inputs.pipelineResult = pipelineResult;
   }
 }
