@@ -57,12 +57,12 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.lib.LED.ColorConstants;
-import frc.lib.LED.LEDPattern;
+import frc.lib.LED.LEDLayer;
 import frc.lib.LED.LEDStrip;
-import frc.lib.LED.Patterns.CandyCanePattern;
-import frc.robot.commands.LEDCommands.LEDsToSolidColor;
+import frc.robot.commands.LEDCommands.LEDPatternCommand.CandyCanePatternCommand;
 
 public class LEDSubsystem extends SubsystemBase {
   //////////////////////////////////
@@ -92,11 +92,11 @@ public class LEDSubsystem extends SubsystemBase {
   private final LEDStrip m_leftSubStrip;
   private final LEDStrip m_rightSubStrip;
 
-  /** Pattern to display on the LEDs when the robot is disconnected */
-  private final LEDPattern m_disconnectedPattern;
+  /** Command to execute on the subsystem when the robot is disconnected */
+  private Command m_disconnectedCommand;
 
-  /** Pattern to display on the LEDs when the robot is disabled */
-  private final LEDPattern m_disabledPattern;
+  /** Command to execute on the subsystem when the robot is disabled */
+  private Command m_disabledCommand;
 
   /** Creates an instance of the LEDSubsystem */
   public LEDSubsystem(Color defaultLEDColor) {
@@ -106,37 +106,31 @@ public class LEDSubsystem extends SubsystemBase {
             ? new AddressableLEDBufferGRB(kNumAddressableLEDs)
             : new AddressableLEDBuffer(kNumAddressableLEDs);
 
-    m_leftSubStrip = new LEDStrip(kFirstLeftLED, kNumLeftLEDs, m_ledStripBuffer);
-    m_rightSubStrip = new LEDStrip(kFirstRightLED, kNumRightLEDs, m_ledStripBuffer);
-
-    // Set up a White and yellow candy cane pattern when disconnected
-    m_disconnectedPattern =
-        new CandyCanePattern(
-            new LEDStrip(0, kNumAddressableLEDs, m_ledStripBuffer),
-            ColorConstants.kOff,
-            Color.kYellow);
-
-    // Set up a "Hazard" pattern in disabled mode
-    m_disabledPattern =
-        new CandyCanePattern(
-            new LEDStrip(0, kNumAddressableLEDs, m_ledStripBuffer), Color.kYellow, Color.kRed);
-
-    // Set up a command to set the default LED color
-    setDefaultCommand(new LEDsToSolidColor(this, defaultLEDColor, "DefaultLEDCommand"));
-
     m_ledStrip.setLength(m_ledStripBuffer.getLength());
     m_ledStrip.setData(m_ledStripBuffer);
     m_ledStrip.start();
+
+    m_leftSubStrip = new LEDStrip(kFirstLeftLED, kNumLeftLEDs);
+    m_rightSubStrip = new LEDStrip(kFirstRightLED, kNumRightLEDs);
+
+    // Set up patterns displayed when disconnected or disabled
+    m_disconnectedCommand =
+        new CandyCanePatternCommand(this, LayerID.Bottom, ColorConstants.kOff, Color.kYellow);
+    m_disabledCommand =
+        new CandyCanePatternCommand(this, LayerID.Bottom, Color.kYellow, Color.kRed);
   }
 
   /** This method gets called once each time the scheduler runs */
   @Override
   public void periodic() {
     if (!DriverStation.isDSAttached()) {
-      m_disconnectedPattern.process();
+      m_disconnectedCommand.execute();
     } else if (RobotState.isDisabled()) {
-      m_disabledPattern.process();
+      m_disabledCommand.execute();
     }
+
+    m_leftSubStrip.renderLayers(m_ledStripBuffer);
+    m_rightSubStrip.renderLayers(m_ledStripBuffer);
 
     // Apply the LED states in the addressable LED buffer to the LED hardware
     m_ledStrip.setData(m_ledStripBuffer);
@@ -144,18 +138,53 @@ public class LEDSubsystem extends SubsystemBase {
 
   /** Turns all the LEDs off on all strips */
   public void allOff() {
-    m_leftSubStrip.fillColor(ColorConstants.kOff);
-    m_rightSubStrip.fillColor(ColorConstants.kOff);
+    m_leftSubStrip.allLayersOff();
+    m_rightSubStrip.allLayersOff();
   }
 
-  /** Returns a reference to the left LED strip */
-  public LEDStrip getLeftStrip() {
-    return m_leftSubStrip;
+  /** Identifiers for individual LED strips on the robot */
+  public enum StripID {
+    Left,
+    Right
   }
 
-  /** Returns a reference to the left LED strip */
-  public LEDStrip getRightStrip() {
-    return m_rightSubStrip;
+  /** Identifiers for individual LED strips on the robot */
+  public enum LayerID {
+    Bottom(0),
+    Middle(1),
+    Top(2);
+
+    public final int priority;
+
+    private LayerID(int priority) {
+      this.priority = priority;
+    }
+  }
+
+  /** Returns a reference to a given LED strip */
+  public LEDLayer getLayer(StripID stripID, LayerID layerID) {
+    LEDStrip strip = (stripID == StripID.Left) ? m_leftSubStrip : m_rightSubStrip;
+    return strip.addLayer(layerID.priority);
+  }
+
+  /** Sets the command executed when the Driver Station is disconnected */
+  void setDisconnectedCommand(Command command) {
+    m_disconnectedCommand = command;
+  }
+
+  /** Returns the command executed when the Driver Station is disconnected */
+  Command getDisconnectedCommand() {
+    return m_disconnectedCommand;
+  }
+
+  /** Sets the command executed when the robot is disabled */
+  void setDisabledCommand(Command command) {
+    m_disabledCommand = command;
+  }
+
+  /** Returns the command executed when the robot is disabled */
+  Command getDisabledCommand() {
+    return m_disabledCommand;
   }
 
   /** Customized version of an AddressableLEDBuffer for LED strips that use GRB data format */

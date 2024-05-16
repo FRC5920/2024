@@ -58,10 +58,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.lib.LED.ColorConstants;
-import frc.lib.LED.LEDStrip;
+import frc.lib.LED.LEDLayer;
 import frc.lib.joystick.ProcessedXboxController;
 import frc.lib.utility.ZTargeter;
 import frc.robot.RobotContainer;
+import frc.robot.subsystems.LEDs.LEDSubsystem.LayerID;
+import frc.robot.subsystems.LEDs.LEDSubsystem.StripID;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import frc.robot.subsystems.vision.CameraConstants.TargetPipeline;
 import frc.robot.subsystems.vision.TargetCameraSubsystem;
@@ -101,10 +103,10 @@ public class DriveWithZTargeting extends Command {
   /** Request object for target */
   private final TargetPipeline m_targetPipeline;
 
-  /** LED strips on the */
-  private final LEDStrip m_leftLEDStrip;
+  /** LED layers to display on */
+  private final LEDLayer m_leftLEDs;
 
-  private final LEDStrip m_rightLEDStrip;
+  private final LEDLayer m_rightLEDs;
 
   /** ZTargeting Library */
   private final ZTargeter m_zTargeter;
@@ -141,8 +143,8 @@ public class DriveWithZTargeting extends Command {
             .withDeadband(kMaxSpeed * kSpeedDeadband)
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
 
-    m_leftLEDStrip = botContainer.ledSubsystem.getLeftStrip();
-    m_rightLEDStrip = botContainer.ledSubsystem.getRightStrip();
+    m_leftLEDs = botContainer.ledSubsystem.getLayer(StripID.Left, LayerID.Top);
+    m_rightLEDs = botContainer.ledSubsystem.getLayer(StripID.Right, LayerID.Top);
     m_zTargeter = new ZTargeter(() -> m_cameraSubsystem.getLatestResult());
   }
 
@@ -218,8 +220,8 @@ public class DriveWithZTargeting extends Command {
       SmartDashboard.putNumber("DriveWithZTargeting/angularRate", angularRate);
     }
 
-    m_leftLEDStrip.fillColor(ledColor);
-    m_rightLEDStrip.fillColor(ledColor);
+    m_leftLEDs.fillColor(ledColor);
+    m_rightLEDs.fillColor(ledColor);
   }
 
   // Called once the command ends or is interrupted.

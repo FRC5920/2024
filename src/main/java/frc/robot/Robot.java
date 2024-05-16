@@ -64,9 +64,10 @@ import frc.lib.utility.AdvantageKitLogInitializer;
 import frc.lib.utility.Alert;
 import frc.lib.utility.Alert.AlertType;
 import frc.lib.utility.CanBusErrorAlert;
-import frc.robot.commands.LEDCommands.LEDsToPattern;
-import frc.robot.commands.LEDCommands.LEDsToSolidColor;
+import frc.robot.commands.LEDCommands.LEDPatternCommand;
+import frc.robot.commands.LEDCommands.LEDSolidColorCommand;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
+import frc.robot.subsystems.LEDs.LEDSubsystem.LayerID;
 import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 import java.util.Optional;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -209,7 +210,8 @@ public class Robot extends LoggedRobot {
     // Set LEDs
     LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
     ledSubsystem.allOff();
-    ledSubsystem.setDefaultCommand(LEDsToPattern.newBlasterBoltPatternCommand(ledSubsystem));
+    ledSubsystem.setDefaultCommand(
+        new LEDPatternCommand.BlasterBoltPatternCommand(ledSubsystem, LayerID.Bottom));
 
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
@@ -237,7 +239,7 @@ public class Robot extends LoggedRobot {
     LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
     ledSubsystem.allOff();
     ledSubsystem.setDefaultCommand(
-        new LEDsToSolidColor(ledSubsystem, getAllianceColor(), "TeleopAllianceColor"));
+        new LEDSolidColorCommand(ledSubsystem, LayerID.Bottom, getAllianceColor()));
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
@@ -262,7 +264,8 @@ public class Robot extends LoggedRobot {
     CommandScheduler.getInstance().cancelAll();
     LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
     ledSubsystem.allOff();
-    ledSubsystem.setDefaultCommand(LEDsToPattern.newRainbowPatternCommand(ledSubsystem));
+    ledSubsystem.setDefaultCommand(
+        new LEDPatternCommand.RainbowPatternCommand(ledSubsystem, LayerID.Bottom));
 
     // DEBUG: disable the pivot subsystem's default park command during test mode
     m_testModePivotCommandCache = m_robotContainer.pivotSubsystem.getDefaultCommand();

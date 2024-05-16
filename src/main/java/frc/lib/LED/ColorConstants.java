@@ -60,8 +60,8 @@ import java.util.Optional;
 public class ColorConstants {
 
   public static final Color kOff = new Color(0, 0, 0);
-  public static final Color kWhite = new Color(255, 255, 255);
-  public static final Color kVikoticsYellow = new Color(255, 100, 0);
+  public static final Color kWhite = new Color(1.0, 1.0, 1.0);
+  public static final Color kVikoticsYellow = new Color(1.0, 100.0 / 255.0, 0);
 
   /** Official FIRST Blue for blue alliance */
   public static final Color kAllianceBlue = Color.kDarkBlue; // Color.kFirstBlue;

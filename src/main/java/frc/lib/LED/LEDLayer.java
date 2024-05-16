@@ -49,66 +49,80 @@
 |                  °***    @@@@@@@@@@@@@@@@@@@@@@@@@@@@@O                      |
 |                         .OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO                      |
 \-----------------------------------------------------------------------------*/
-package frc.robot.commands.LEDCommands;
+package frc.lib.LED;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.LED.ColorConstants;
-import frc.lib.LED.LEDPattern;
-import frc.lib.LED.Patterns.BlasterBoltPattern;
-import frc.lib.LED.Patterns.RainbowPattern;
-import frc.robot.subsystems.LEDs.LEDSubsystem;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.util.Color;
 
-public class LEDsToPattern extends Command {
+/**
+ * LEDLayer allows LEDs in a virtual LEDStrip to be written to in a layered fashion.
+ *
+ * @details Non-zero LED values in an LEDLayer will be applied to their target LED strip. LED's set
+ *     to an 'unlit' state (i.e. red, green, and blue elements all equal to zero) will not be
+ *     applied when the layer is rendered to the target strip.
+ */
+public class LEDLayer {
 
-  // Blaster bolt patterns applied to the LEDs
-  private LEDPattern m_leftPattern;
-  private LEDPattern m_rightPattern;
+  /** kTransparent gives the value of an LED element that should be treated as transparent */
+  public static final Color kTransparent = new Color(0, 0, 0);
 
-  /** Creates a new BlasterBoltPattern. */
-  public LEDsToPattern(LEDSubsystem ledSubsystem, LEDPattern leftPattern, LEDPattern rightPattern) {
-    addRequirements(ledSubsystem);
+  /** The LEDStrip the layer is targeting */
+  private final LEDStrip m_strip;
 
-    m_leftPattern = leftPattern;
-    m_rightPattern = rightPattern;
+  /** Buffer of LED states addressed by the layer */
+  private AddressableLEDBuffer m_ledBuffer;
+
+  /** Priority of the layer in its parent strip (zero is lowest priority) */
+  public final int priority;
+
+  /**
+   * Creates an instance of the object
+   *
+   * @param strip LEDStrip the object is targeting
+   * @param priority Priority of the layer
+   */
+  public LEDLayer(LEDStrip strip, int priority) {
+    m_strip = strip;
+    this.priority = priority;
+    m_ledBuffer = new AddressableLEDBuffer(strip.getNumLEDs());
   }
 
-  // Called when the command is initially scheduled.
-  @Override
-  public void initialize() {
-    m_leftPattern.reset();
-    m_rightPattern.reset();
+  /**
+   * Returns a Color representing the LED at a given offset inside the LEDStrip
+   *
+   * @param offset Offset of the target LED in the strip (0 ... (numLEDs - 1))
+   */
+  public Color getLED(int offset) {
+    return m_ledBuffer.getLED(m_strip.translateAddress(offset));
   }
 
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    m_leftPattern.process();
-    m_rightPattern.process();
+  /**
+   * Sets the LED at a given offset inside the LEDStrip to a specified Color
+   *
+   * @param offset Offset of the target LED in the strip (0 ... (numLEDs - 1))
+   * @param color Color to set the LED to
+   */
+  public void setLED(int offset, Color color) {
+    m_ledBuffer.setRGB(
+        m_strip.translateAddress(offset),
+        (int) (color.red * 255),
+        (int) (color.green * 255),
+        (int) (color.blue * 255));
   }
 
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {}
-
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return false;
+  /**
+   * Sets all LEDs in the strip to a given color
+   *
+   * @param color Color to set the LEDs to
+   */
+  public void fillColor(Color color) {
+    for (int i = 0; i < m_ledBuffer.getLength(); ++i) {
+      this.setLED(i, color);
+    }
   }
 
-  /** Returns a command that displays BlasterBolt patterns on the LEDs */
-  public static LEDsToPattern newBlasterBoltPatternCommand(LEDSubsystem ledSubsystem) {
-    return new LEDsToPattern(
-        ledSubsystem,
-        new BlasterBoltPattern(ledSubsystem.getLeftStrip(), ColorConstants.kVikoticsYellow, 4),
-        new BlasterBoltPattern(ledSubsystem.getRightStrip(), ColorConstants.kVikoticsYellow, 4));
-  }
-
-  /** Returns a command that displays a rainbow pattern on the LEDs */
-  public static LEDsToPattern newRainbowPatternCommand(LEDSubsystem ledSubsystem) {
-    return new LEDsToPattern(
-        ledSubsystem,
-        new RainbowPattern(ledSubsystem.getLeftStrip()),
-        new RainbowPattern(ledSubsystem.getRightStrip()));
+  /** Returns the number of LEDs targeted by the object */
+  public int getNumLEDs() {
+    return m_ledBuffer.getLength();
   }
 }

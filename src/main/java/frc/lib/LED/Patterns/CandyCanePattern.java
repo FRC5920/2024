@@ -53,10 +53,10 @@ package frc.lib.LED.Patterns;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
+import frc.lib.LED.LEDLayer;
 import frc.lib.LED.LEDPattern;
-import frc.lib.LED.LEDStrip;
 
-/** An object that displays a red and yellow "Hazard" pattern on an LED strip */
+/** An object that displays a red and yellow "Hazard" pattern on an LED layer */
 public class CandyCanePattern extends LEDPattern {
   /** Width of the primary segment of the pattern */
   private static final int kNumPrimarySegmentLEDs = 3;
@@ -79,14 +79,14 @@ public class CandyCanePattern extends LEDPattern {
   private int m_pixelOffset = 0;
 
   /** Creates an instance of the pattern */
-  public CandyCanePattern(LEDStrip ledStrip, Color primaryColor, Color secondaryColor) {
-    super(ledStrip);
+  public CandyCanePattern(LEDLayer layer, Color primaryColor, Color secondaryColor) {
+    super(layer);
     m_primaryColor = primaryColor;
     m_secondaryColor = secondaryColor;
     m_animationTimer.start();
   }
 
-  /** Resets the LED pattern to its initial position in the target LED strip */
+  /** Resets the LED pattern to its initial position in the target LED layer */
   public void reset() {
     m_pixelOffset = 0;
     m_animationTimer.restart();
@@ -94,7 +94,7 @@ public class CandyCanePattern extends LEDPattern {
 
   /** Display's this object's pattern */
   public void process() {
-    LEDStrip strip = getLEDStrip();
+    LEDLayer layer = getLEDLayer();
 
     // Periodically increment the pixel offset to implement animation of the pattern
     if (m_animationTimer.hasElapsed(kAnimationPeriodSec)) {
@@ -103,10 +103,9 @@ public class CandyCanePattern extends LEDPattern {
     }
 
     int counter = m_pixelOffset;
-    for (int i = 0; i < strip.getNumLEDs(); ++i) {
+    for (int i = 0; i < layer.getNumLEDs(); ++i) {
       Color pixelColor = (counter < kNumPrimarySegmentLEDs) ? m_primaryColor : m_secondaryColor;
-      strip.setLED(i, pixelColor);
-      // https://github.com/Mechanical-Advantage/RobotCode2023/blob/9884d13b2220b76d430e82248fd837adbc4a10bc/src/main/java/org/littletonrobotics/frc2023/Robot.java#L37
+      layer.setLED(i, pixelColor);
       counter = (counter + 1) % kNumPatternLEDs;
     }
   }

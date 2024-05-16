@@ -53,48 +53,54 @@ package frc.robot.commands.LEDCommands;
 
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.LED.LEDStrip;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import frc.lib.LED.LEDLayer;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
 
-public class LEDsToSolidColor extends Command {
-  private final LEDStrip m_leftStrip;
-  private final LEDStrip m_rightStrip;
+/** LEDsToSolidColor is a command that sets all the LEDs in a given LED layer to a solid color */
+public class LEDSolidColorCommand extends ParallelCommandGroup {
 
-  private final Color m_color;
+  public LEDSolidColorCommand(LEDSubsystem subsystem, LEDSubsystem.LayerID layer, Color color) {
+    LEDLayer leftLayer = subsystem.getLayer(LEDSubsystem.StripID.Left, layer);
+    LEDLayer rightLayer = subsystem.getLayer(LEDSubsystem.StripID.Right, layer);
 
-  /** Creates a new SolidColorCommand. */
-  public LEDsToSolidColor(LEDSubsystem ledSubsystem, Color color) {
-    this(ledSubsystem, color, LEDsToSolidColor.class.getName());
+    addCommands(
+        new LEDSolidColorCommandImpl(leftLayer, color),
+        new LEDSolidColorCommandImpl(rightLayer, color));
   }
 
-  /** Creates a new SolidColorCommand. */
-  public LEDsToSolidColor(LEDSubsystem ledSubsystem, Color color, String name) {
-    m_leftStrip = ledSubsystem.getLeftStrip();
-    m_rightStrip = ledSubsystem.getRightStrip();
-    m_color = color;
-    this.setName(name);
-    // Use addRequirements() here to declare subsystem dependencies.
-    addRequirements(ledSubsystem);
-  }
+  /** Inner class that implements an LEDsToSolidColor command for a single LED layer */
+  private class LEDSolidColorCommandImpl extends Command {
+    /** LED layer targeted by this command */
+    private final LEDLayer m_layer;
 
-  // Called when the command is initially scheduled.
-  @Override
-  public void initialize() {}
+    /** Color this command will assign to LEDs */
+    private final Color m_color;
 
-  // Called every time the scheduler runs while the command is scheduled.
-  @Override
-  public void execute() {
-    m_leftStrip.fillColor(m_color);
-    m_rightStrip.fillColor(m_color);
-  }
+    /** Creates a new SolidColorCommand. */
+    private LEDSolidColorCommandImpl(LEDLayer layer, Color color) {
+      m_layer = layer;
+      m_color = color;
+    }
 
-  // Called once the command ends or is interrupted.
-  @Override
-  public void end(boolean interrupted) {}
+    // Called when the command is initially scheduled.
+    @Override
+    public void initialize() {}
 
-  // Returns true when the command should end.
-  @Override
-  public boolean isFinished() {
-    return false;
+    // Called every time the scheduler runs while the command is scheduled.
+    @Override
+    public void execute() {
+      m_layer.fillColor(m_color);
+    }
+
+    // Called once the command ends or is interrupted.
+    @Override
+    public void end(boolean interrupted) {}
+
+    // Returns true when the command should end.
+    @Override
+    public boolean isFinished() {
+      return false;
+    }
   }
 }

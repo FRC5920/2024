@@ -54,18 +54,18 @@ package frc.lib.LED.Patterns;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import frc.lib.LED.ColorConstants;
+import frc.lib.LED.LEDLayer;
 import frc.lib.LED.LEDPattern;
-import frc.lib.LED.LEDStrip;
 import frc.robot.Constants;
 
-/** Add your docs here. */
+/** This class implements the "blaster bolt" pattern on a strip of LEDs */
 public class BlasterBoltPattern extends LEDPattern {
   private final int kPatternLength = 6;
   private Color m_pattern[];
   private int m_arraySize;
-  /** length of LED strip */
+  /** length of the target LED strip */
   private int m_startIndex;
-  /** starting index in the LED strip */
+  /** starting offset in the LED strip */
   private int m_iteration;
   /** number of times array has been processed */
   private int m_arrayPos;
@@ -94,18 +94,18 @@ public class BlasterBoltPattern extends LEDPattern {
   private Direction m_direction;
 
   /**
-   * Creates an LEDPattern object that will display a pattern in an LED strip
+   * Creates an LEDPattern object that will display a pattern in an LED layer
    *
-   * @param ledStrip The LED strip (or sub-strip) where the pattern will be applied
+   * @param layer The LED layer the pattern will be applied to
    * @param color Color to use for the pattern
    * @param cyclesPerPixel Number of robot cycles that must elapse between pixel animations (higher
    *     values create slower animation)
    */
-  public BlasterBoltPattern(LEDStrip ledStrip, Color color, int cyclesPerPixel) {
-    super(ledStrip);
+  public BlasterBoltPattern(LEDLayer layer, Color color, int cyclesPerPixel) {
+    super(layer);
     m_direction = Direction.kForward;
     m_startIndex = 0;
-    m_arraySize = ledStrip.getNumLEDs();
+    m_arraySize = layer.getNumLEDs();
 
     m_secondsPerPixel = Constants.robotPeriodSec * ((cyclesPerPixel < 1) ? 1 : cyclesPerPixel);
     reset();
@@ -131,7 +131,7 @@ public class BlasterBoltPattern extends LEDPattern {
     m_pattern[5] = scaleIntensity(color, 0.06);
   }
 
-  /** Resets the LED pattern to its initial position in the target LED strip */
+  /** Resets the LED pattern to its initial position in the target LED layer */
   public void reset() {
     m_iteration = 0;
     m_arrayPos = 0;
@@ -160,12 +160,11 @@ public class BlasterBoltPattern extends LEDPattern {
       return;
     }
 
-    Color off = ColorConstants.kOff;
-    LEDStrip strip = getLEDStrip();
+    LEDLayer layer = getLEDLayer();
 
-    // Default all LEDs in the strip to an OFF state
+    // Default all LEDs in the layer to an OFF/transparent state
     for (int i = m_startIndex; i < m_startIndex + m_arraySize; ++i) {
-      strip.setLED(i, off);
+      layer.setLED(i, ColorConstants.kOff);
     }
 
     // Copy the pattern into ledArray starting at the current
@@ -173,7 +172,7 @@ public class BlasterBoltPattern extends LEDPattern {
     int a = m_startIndex + translateIndex(m_arrayPos);
     for (int p = m_patternStart; p <= m_patternEnd; ++p) {
       Color c = m_pattern[p];
-      strip.setLED(a, c);
+      layer.setLED(a, c);
       a += (m_direction == Direction.kForward) ? -1 : 1;
     }
 

@@ -52,41 +52,41 @@
 package frc.lib.LED.Patterns;
 
 import edu.wpi.first.wpilibj.util.Color;
+import frc.lib.LED.LEDLayer;
 import frc.lib.LED.LEDPattern;
-import frc.lib.LED.LEDStrip;
 
 /** Add your docs here. */
 public class RainbowPattern extends LEDPattern {
   private int m_rainbowFirstPixelHue = 0;
 
   /**
-   * Creates an LEDPattern object that will display a pattern in an LED strip
+   * Creates an LEDPattern object that will display a pattern in an LED layer
    *
-   * @param ledStrip The LED strip (or sub-strip) where the pattern will be applied
+   * @param layer The LED layer the pattern will be applied to
    */
-  public RainbowPattern(LEDStrip ledStrip) {
-    super(ledStrip);
+  public RainbowPattern(LEDLayer layer) {
+    super(layer);
   }
 
-  /** Resets the LED pattern to its initial position in the target LED strip */
+  /** Resets the LED pattern to its initial position in the target LED layer */
   public void reset() {
-    LEDStrip strip = getLEDStrip();
+    LEDLayer layer = getLEDLayer();
     Color ledOff = new Color(0, 0, 0);
-    for (int i = 0; i < strip.getNumLEDs(); ++i) {
-      strip.setLED(i, ledOff);
+    for (int i = 0; i < layer.getNumLEDs(); ++i) {
+      layer.setLED(i, ledOff);
     }
   }
 
   /** Display's this object's pattern on a given LED array */
   public void process() {
-    LEDStrip strip = getLEDStrip();
+    LEDLayer layer = getLEDLayer();
 
     // --- make a rainbow pattern on LEDs ---//
-    int numLEDs = strip.getNumLEDs();
+    int numLEDs = layer.getNumLEDs();
     for (int i = 0; i < numLEDs; i++) {
       final var hue = (m_rainbowFirstPixelHue + (i * 180 / numLEDs)) % 180;
       Color ledColor = Color.fromHSV(hue, 255, 128);
-      strip.setLED(i, ledColor);
+      layer.setLED(i, ledColor);
     }
 
     m_rainbowFirstPixelHue += 3;

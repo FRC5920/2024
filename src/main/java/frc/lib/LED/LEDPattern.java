@@ -51,32 +51,31 @@
 \-----------------------------------------------------------------------------*/
 package frc.lib.LED;
 
-import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 
 /** Base class for objects that implement displaying a pattern on an addressable LED strip */
 public class LEDPattern {
-  /** The LED strip targeted by the pattern */
-  private final LEDStrip m_ledStrip;
+  /** The LED layer targeted by the pattern */
+  private final LEDLayer m_LEDLayer;
 
   /**
    * Creates an LEDPattern object that will display a pattern in an LED strip
    *
+   * @param layer LED layer the pattern will operate on
    * @param startIndex Starting index in the LED array where the pattern will be displayed
    * @param numLEDs Number of LEDs in the strip to walk the pattern through
-   * @param ledBuffer AddressableLEDBuffer that the pattern will operate on
    */
-  public LEDPattern(int startIndex, int numLEDs, AddressableLEDBuffer ledBuffer) {
-    m_ledStrip = new LEDStrip(startIndex, numLEDs, ledBuffer);
+  public LEDPattern(LEDLayer layer, int startIndex, int numLEDs) {
+    m_LEDLayer = layer;
   }
 
   /**
    * Creates an LEDPattern object that will display a pattern in an LED strip
    *
-   * @param ledStrip LEDStrip this pattern will be applied to
+   * @param layer LED layer this pattern will operate on
    */
-  public LEDPattern(LEDStrip ledStrip) {
-    m_ledStrip = ledStrip;
+  public LEDPattern(LEDLayer layer) {
+    m_LEDLayer = layer;
   }
 
   /** Resets the LED pattern to its initial state */
@@ -85,19 +84,14 @@ public class LEDPattern {
   /** Applies the pattern to the object's LED buffer */
   public void process() {}
 
-  /** Returns the address of the first LED modified by the pattern */
-  public int firstLEDAddress() {
-    return m_ledStrip.getFirstAddress();
-  }
-
   /** Returns the number of LEDs modified by the pattern */
   public int numLEDs() {
-    return m_ledStrip.getNumLEDs();
+    return m_LEDLayer.getNumLEDs();
   }
 
-  /** Returns a reference to the object's LED strip */
-  protected LEDStrip getLEDStrip() {
-    return m_ledStrip;
+  /** Returns a reference to the LEDLayer the object writes to */
+  protected LEDLayer getLEDLayer() {
+    return m_LEDLayer;
   }
 
   /**
