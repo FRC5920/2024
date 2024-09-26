@@ -65,7 +65,7 @@ import frc.robot.subsystems.swerveCTRE.CommandSwerveDrivetrain;
 public class TeleopSwerveCTRE extends Command {
   /** Default maximum linear speed the swerve drive should move at in meters per second */
   // public static final double kMaxSpeed = 6.0;
-  public static final double kMaxSpeed = 1.5;
+  public static final double kMaxSpeed = 6.0;
 
   /** Default maximum rate the swerve drive should rotate in radians per second */
   // public static final double kMaxAngularRate = 10; // Math.PI; Math.Pi was the default
