@@ -112,11 +112,6 @@ public class LEDStrip {
     }
   }
 
-  /** Returns the absolute address of the first LED targeted by the object */
-  public int getFirstAddress() {
-    return m_firstAddress;
-  }
-
   /** Returns the number of LEDs targeted by the object */
   public int getNumLEDs() {
     return m_numLEDs;

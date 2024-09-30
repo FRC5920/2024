@@ -93,7 +93,7 @@ public class LEDLayer {
    * @param offset Offset of the target LED in the strip (0 ... (numLEDs - 1))
    */
   public Color getLED(int offset) {
-    return m_ledBuffer.getLED(m_strip.translateAddress(offset));
+    return m_ledBuffer.getLED(offset);
   }
 
   /**
@@ -104,10 +104,7 @@ public class LEDLayer {
    */
   public void setLED(int offset, Color color) {
     m_ledBuffer.setRGB(
-        m_strip.translateAddress(offset),
-        (int) (color.red * 255),
-        (int) (color.green * 255),
-        (int) (color.blue * 255));
+        offset, (int) (color.red * 255), (int) (color.green * 255), (int) (color.blue * 255));
   }
 
   /**

@@ -102,6 +102,12 @@ public class LEDPatternCommand extends Command {
     return false;
   }
 
+  // Overload that allows the command to display on LEDs when the robot is disabled
+  @Override
+  public boolean runsWhenDisabled() {
+    return true;
+  }
+
   /** LED patterns available as commands */
   public enum Pattern {
     BlasterBolt,
@@ -129,9 +135,13 @@ public class LEDPatternCommand extends Command {
       LEDLayer leftLayer = subsystem.getLayer(StripID.Left, layerID);
       LEDLayer rightLayer = subsystem.getLayer(StripID.Right, layerID);
 
+      addRequirements(subsystem);
+
       this.addCommands(
-          new LEDPatternCommand(new BlasterBoltPattern(leftLayer, color, cyclesPerPixel)),
-          new LEDPatternCommand(new BlasterBoltPattern(rightLayer, color, cyclesPerPixel)));
+          new LEDPatternCommand(new BlasterBoltPattern(leftLayer, color, cyclesPerPixel))
+              .ignoringDisable(true),
+          new LEDPatternCommand(new BlasterBoltPattern(rightLayer, color, cyclesPerPixel))
+              .ignoringDisable(true));
     }
   }
 
@@ -155,9 +165,13 @@ public class LEDPatternCommand extends Command {
       LEDLayer leftLayer = subsystem.getLayer(StripID.Left, layerID);
       LEDLayer rightLayer = subsystem.getLayer(StripID.Right, layerID);
 
+      addRequirements(subsystem);
+
       this.addCommands(
-          new LEDPatternCommand(new CandyCanePattern(leftLayer, primaryColor, secondaryColor)),
-          new LEDPatternCommand(new CandyCanePattern(rightLayer, primaryColor, secondaryColor)));
+          new LEDPatternCommand(new CandyCanePattern(leftLayer, primaryColor, secondaryColor))
+              .ignoringDisable(true),
+          new LEDPatternCommand(new CandyCanePattern(rightLayer, primaryColor, secondaryColor))
+              .ignoringDisable(true));
     }
   }
 
@@ -168,9 +182,11 @@ public class LEDPatternCommand extends Command {
       LEDLayer leftLayer = subsystem.getLayer(StripID.Left, layerID);
       LEDLayer rightLayer = subsystem.getLayer(StripID.Right, layerID);
 
+      addRequirements(subsystem);
+
       this.addCommands(
-          new LEDPatternCommand(new RainbowPattern(leftLayer)),
-          new LEDPatternCommand(new RainbowPattern(rightLayer)));
+          new LEDPatternCommand(new RainbowPattern(leftLayer)).ignoringDisable(true),
+          new LEDPatternCommand(new RainbowPattern(rightLayer)).ignoringDisable(true));
     }
   }
 }

@@ -65,6 +65,7 @@ import frc.lib.utility.Alert;
 import frc.lib.utility.Alert.AlertType;
 import frc.lib.utility.CanBusErrorAlert;
 import frc.robot.commands.LEDCommands.LEDPatternCommand;
+import frc.robot.commands.LEDCommands.LEDPatternCommand.CandyCanePatternCommand;
 import frc.robot.commands.LEDCommands.LEDSolidColorCommand;
 import frc.robot.subsystems.LEDs.LEDSubsystem;
 import frc.robot.subsystems.LEDs.LEDSubsystem.LayerID;
@@ -190,7 +191,11 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot is starting Disabled mode. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    setDefaultLEDCommand(
+        new CandyCanePatternCommand(
+            m_robotContainer.ledSubsystem, LayerID.Bottom, Color.kYellow, Color.kRed));
+  }
 
   /** This function is called every 20 ms when the robot is disabled */
   @Override
@@ -208,10 +213,9 @@ public class Robot extends LoggedRobot {
   @Override
   public void autonomousInit() {
     // Set LEDs
-    LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
-    ledSubsystem.allOff();
-    ledSubsystem.setDefaultCommand(
-        new LEDPatternCommand.BlasterBoltPatternCommand(ledSubsystem, LayerID.Bottom));
+    setDefaultLEDCommand(
+        new LEDPatternCommand.BlasterBoltPatternCommand(
+            m_robotContainer.ledSubsystem, LayerID.Bottom));
 
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
@@ -235,11 +239,10 @@ public class Robot extends LoggedRobot {
   /** This function runs once when the robot is starting tele-operated mode */
   @Override
   public void teleopInit() {
-    // Set LEDs
-    LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
-    ledSubsystem.allOff();
-    ledSubsystem.setDefaultCommand(
-        new LEDSolidColorCommand(ledSubsystem, LayerID.Bottom, getAllianceColor()));
+    // Set LEDs to the color of the present alliance
+    setDefaultLEDCommand(
+        new LEDSolidColorCommand(
+            m_robotContainer.ledSubsystem, LayerID.Bottom, getAllianceColor()));
 
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
@@ -261,11 +264,8 @@ public class Robot extends LoggedRobot {
   /** This function runs once when the robot is starting TEST mode */
   @Override
   public void testInit() {
-    CommandScheduler.getInstance().cancelAll();
-    LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
-    ledSubsystem.allOff();
-    ledSubsystem.setDefaultCommand(
-        new LEDPatternCommand.RainbowPatternCommand(ledSubsystem, LayerID.Bottom));
+    setDefaultLEDCommand(
+        new LEDPatternCommand.RainbowPatternCommand(m_robotContainer.ledSubsystem, LayerID.Bottom));
 
     // DEBUG: disable the pivot subsystem's default park command during test mode
     m_testModePivotCommandCache = m_robotContainer.pivotSubsystem.getDefaultCommand();
@@ -293,5 +293,16 @@ public class Robot extends LoggedRobot {
     } else {
       return ColorConstants.kOff;
     }
+  }
+
+  /**
+   * Helper function to set the default LED command
+   *
+   * @param ledCommand Command to assign as the LED subsystem default command
+   */
+  private void setDefaultLEDCommand(Command ledCommand) {
+    LEDSubsystem ledSubsystem = m_robotContainer.ledSubsystem;
+    ledSubsystem.allOff();
+    ledSubsystem.setDefaultCommand(ledCommand);
   }
 }

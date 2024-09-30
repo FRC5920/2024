@@ -55,7 +55,6 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -115,22 +114,24 @@ public class LEDSubsystem extends SubsystemBase {
 
     // Set up patterns displayed when disconnected or disabled
     m_disconnectedCommand =
-        new CandyCanePatternCommand(this, LayerID.Bottom, ColorConstants.kOff, Color.kYellow);
-    m_disabledCommand =
-        new CandyCanePatternCommand(this, LayerID.Bottom, Color.kYellow, Color.kRed);
+        new CandyCanePatternCommand(this, LayerID.Bottom, ColorConstants.kOff, Color.kYellow)
+            .ignoringDisable(true);
+
+    // setDisabledCommand(
+    //     new CandyCanePatternCommand(this, LayerID.Bottom, Color.kYellow, Color.kRed));
   }
 
   /** This method gets called once each time the scheduler runs */
   @Override
   public void periodic() {
-    if (!DriverStation.isDSAttached()) {
-      m_disconnectedCommand.execute();
-    } else if (RobotState.isDisabled()) {
-      m_disabledCommand.execute();
-    }
 
-    m_leftSubStrip.renderLayers(m_ledStripBuffer);
-    m_rightSubStrip.renderLayers(m_ledStripBuffer);
+    if (DriverStation.isDSAttached()) {
+      m_leftSubStrip.renderLayers(m_ledStripBuffer);
+      m_rightSubStrip.renderLayers(m_ledStripBuffer);
+    } else {
+      // Handle LED display when the robot is disconnected
+      m_disconnectedCommand.execute();
+    }
 
     // Apply the LED states in the addressable LED buffer to the LED hardware
     m_ledStrip.setData(m_ledStripBuffer);
@@ -169,22 +170,12 @@ public class LEDSubsystem extends SubsystemBase {
 
   /** Sets the command executed when the Driver Station is disconnected */
   void setDisconnectedCommand(Command command) {
-    m_disconnectedCommand = command;
+    m_disconnectedCommand = command.ignoringDisable(true);
   }
 
   /** Returns the command executed when the Driver Station is disconnected */
   Command getDisconnectedCommand() {
     return m_disconnectedCommand;
-  }
-
-  /** Sets the command executed when the robot is disabled */
-  void setDisabledCommand(Command command) {
-    m_disabledCommand = command;
-  }
-
-  /** Returns the command executed when the robot is disabled */
-  Command getDisabledCommand() {
-    return m_disabledCommand;
   }
 
   /** Customized version of an AddressableLEDBuffer for LED strips that use GRB data format */

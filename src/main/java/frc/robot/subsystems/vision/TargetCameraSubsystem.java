@@ -133,6 +133,5 @@ public class TargetCameraSubsystem extends SubsystemBase {
     PhotonPipelineResult pipelineResult = m_io.getLatestResult();
     m_inputs.pipelineResult = pipelineResult;
     m_inputs.targetIsDetected = pipelineResult.hasTargets();
-    m_inputs.pipelineResult = pipelineResult;
   }
 }

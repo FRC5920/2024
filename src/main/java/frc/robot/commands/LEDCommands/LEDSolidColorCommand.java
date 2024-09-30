@@ -64,6 +64,8 @@ public class LEDSolidColorCommand extends ParallelCommandGroup {
     LEDLayer leftLayer = subsystem.getLayer(LEDSubsystem.StripID.Left, layer);
     LEDLayer rightLayer = subsystem.getLayer(LEDSubsystem.StripID.Right, layer);
 
+    addRequirements(subsystem);
+
     addCommands(
         new LEDSolidColorCommandImpl(leftLayer, color),
         new LEDSolidColorCommandImpl(rightLayer, color));
