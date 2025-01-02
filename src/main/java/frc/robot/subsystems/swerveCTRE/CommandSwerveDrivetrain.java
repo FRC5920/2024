@@ -63,7 +63,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import java.util.function.Supplier;
-import org.littletonrobotics.junction.AutoLog;
 import org.littletonrobotics.junction.Logger;
 
 /**
@@ -86,20 +85,28 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
   private static final double kSimLoopPeriod = 0.005; // 5 ms
 
-  public static final String kLogPrefix = "CommandSwerveDrivetrain/";
+  private static final int kNumSwerveModules = 4;
+
+  public static final String kLogPrefix = "CommandSwerveDrivetrain";
   private Notifier m_simNotifier = null;
   private double m_lastSimTime;
 
   private SwerveRequest.RobotCentric m_botCentricSwerveReq = new SwerveRequest.RobotCentric();
 
   /** Instance of an object used to log inputs fed to the swerve drive base */
-  private SwerveInputsAutoLogged m_swerveInputs = new SwerveInputsAutoLogged();
+  private CTRESwerveInputsAutoLogged m_loggedInputs = new CTRESwerveInputsAutoLogged();
+
+  /** m_motorOutputLogger is used to log swerve motor measurements as outputs */
+  private final CTRESwerveOutputLogger m_loggedOutputs;
 
   public CommandSwerveDrivetrain(
       SwerveDrivetrainConstants driveTrainConstants,
       double OdometryUpdateFrequency,
       SwerveModuleConstants... modules) {
     super(driveTrainConstants, OdometryUpdateFrequency, modules);
+
+    m_loggedOutputs = new CTRESwerveOutputLogger(kLogPrefix, this, kNumSwerveModules);
+
     if (Utils.isSimulation()) {
       startSimThread();
     }
@@ -108,6 +115,9 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
   public CommandSwerveDrivetrain(
       SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
     super(driveTrainConstants, modules);
+
+    m_loggedOutputs = new CTRESwerveOutputLogger(kLogPrefix, this, kNumSwerveModules);
+
     if (Utils.isSimulation()) {
       startSimThread();
     }
@@ -132,7 +142,11 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
   @Override
   public void periodic() {
-    Logger.processInputs(kLogPrefix + "swerveInputs", m_swerveInputs);
+    // Process and log inputs
+    Logger.processInputs(kLogPrefix + "/swerveInputs", m_loggedInputs);
+
+    // Log swerve outputs
+    m_loggedOutputs.toLog();
   }
 
   // Returns the current estimated pose of the robot
@@ -152,10 +166,10 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
    * @param request The request to apply
    */
   public void driveFieldCentric(SwerveRequest.FieldCentric request) {
-    m_swerveInputs.requestType = SwerveRequest.FieldCentric.class.getName();
-    m_swerveInputs.xVelocity = request.VelocityX;
-    m_swerveInputs.yVelocity = request.VelocityY;
-    m_swerveInputs.angularRate = request.RotationalRate;
+    m_loggedInputs.requestType = SwerveRequest.FieldCentric.class.getName();
+    m_loggedInputs.xVelocity = request.VelocityX;
+    m_loggedInputs.yVelocity = request.VelocityY;
+    m_loggedInputs.angularRate = request.RotationalRate;
 
     this.setControl(request);
   }
@@ -166,10 +180,10 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
    * @param botCentricReq Robot-centric swerve request with velocities
    */
   public void driveRobotCentric(SwerveRequest.RobotCentric botCentricReq) {
-    m_swerveInputs.requestType = SwerveRequest.RobotCentric.class.getName();
-    m_swerveInputs.xVelocity = botCentricReq.VelocityX;
-    m_swerveInputs.yVelocity = botCentricReq.VelocityY;
-    m_swerveInputs.angularRate = botCentricReq.RotationalRate;
+    m_loggedInputs.requestType = SwerveRequest.RobotCentric.class.getName();
+    m_loggedInputs.xVelocity = botCentricReq.VelocityX;
+    m_loggedInputs.yVelocity = botCentricReq.VelocityY;
+    m_loggedInputs.angularRate = botCentricReq.RotationalRate;
 
     this.setControl(botCentricReq);
   }
@@ -186,18 +200,5 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     return driveBaseRadius;
-  }
-
-  /** Inner class used to log input values issued to the swerve drive */
-  @AutoLog
-  public static class SwerveInputs {
-    /** The current type of request being issued to the swerve drive */
-    String requestType;
-    /** Requested velocity along the X axis (meters per second) */
-    double xVelocity = 0.0;
-    /** Requested velocity along the Y axis (meters per second) */
-    double yVelocity = 0.0;
-    /** Requested rate of rotation (radians per secon) */
-    double angularRate = 0.0;
   }
 }
